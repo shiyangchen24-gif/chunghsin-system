@@ -34,7 +34,8 @@
 3. **建立帳號**：Authentication → Users → Add user，然後修改 `11_members_template.sql` 裡的 Email 與角色後執行。
 4. **搬移資料**：用管理員帳號開啟 `tools/migrate.html` → 「檢查來源筆數」→「開始搬移」。工具只讀取舊專案，可以重複執行。
 5. **轉換與核對**：執行 `07_backfill.sql` → `08_verify.sql`。每一列 `ok` 都要是 `true`；最後一段列出的同名客戶（例如同一個店名對到兩個代號）請到 `legacy_name_review.resolved_code` 指定後，再跑一次 07。
-6. **試用三個新站**，確認沒問題後執行 `09_cutover.sql`。這一步會關閉舊站的 anon 全開權限，舊網站會停止運作；有安全鎖，要回復可用 `99_rollback.sql`。
+6. **收回匿名權限**：執行 `09_cutover.sql`（先把檔案開頭 `-- set zx.confirm = 'cutover';` 前面的 `-- ` 刪掉，這是防誤按的安全鎖）。新專案與舊專案是分開的，這一步**不會**影響舊網站，只是讓新專案的資料一律要登入才能存取；要回復可用 `99_rollback.sql`。
+7. **停用舊系統**：新網站用順、資料確認無誤後，再停用三個舊 Supabase 專案與舊的 GitHub Pages。
 
 ## 各站變更重點
 
