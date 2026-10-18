@@ -22,7 +22,7 @@ const sql = q => execSync(P, { input: q }).toString().trim();
   page.on('pageerror', e => errors.push(e.message));
   page.on('dialog', d => d.accept());
   await page.goto(BASE + '/tools/migrate.html');
-  if (await page.$('#zx-login-email')) {
+  if (await page.isVisible('#zx-login-email')) {
     await page.fill('#zx-login-email', 'admin@zx.test'); await page.fill('#zx-login-pw', 'admin123'); await page.click('.zx-login-btn');
   }
   await page.waitForSelector('#zx-user-chip .zx-role', { timeout: 15000 });

@@ -57,7 +57,7 @@ def main():
   </div>
 </header>''')
     page = re.sub(r'<span class="mark"><img src="data:image/png;base64,[^"]+" alt="logo"></span>',
-                  '<span class="mark"><img src="../shared/logo-teruteru.svg" alt="忠欣蔬果 晴天娃娃 LOGO"></span>', page, count=1)
+                  '<span class="mark"><img src="../shared/logo.svg" alt="忠欣蔬果 LOGO"></span>', page, count=1)
 
     def range_bar(pre):
         return (f'<div class="range-bar" id="{pre}-range" role="group" aria-label="日期範圍">'

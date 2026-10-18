@@ -2457,7 +2457,7 @@ renderExportTray();
 ZX.boot({
   site: 'quote',
   title: '報價單匯出系統',
-  logo: '../shared/logo-teruteru.svg',
+  logo: '../shared/logo.svg',
   onReady: async ctx => {
     sb = ctx.sb;
     ZXC = ctx;

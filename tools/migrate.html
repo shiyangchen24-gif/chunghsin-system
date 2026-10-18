@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資料搬移工具</title>
+<link rel="icon" href="../shared/logo.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/theme.css">
 <style>
@@ -11,7 +12,7 @@
   body { margin: 0; padding: 24px 16px 60px; }
   main { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
   header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  header img { width: 48px; height: 48px; padding: 5px; border-radius: 12px; background: var(--zx-primary-soft); }
+  header img { width: 48px; height: 48px; border-radius: 12px; }
   header h1 { margin: 0; font-size: 24px; }
   header .sub { color: var(--clay-text-2); font-size: 14px; }
   .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
@@ -34,7 +35,7 @@
 <body>
 <main>
   <header>
-    <img src="../shared/logo-teruteru.svg" alt="">
+    <img src="../shared/logo.svg" alt="">
     <div><h1>資料搬移工具</h1><div class="sub">三個舊 Supabase 專案 → 新專案暫存區（只限管理員）</div></div>
     <div class="right">
       <span id="zx-sync-badge" class="sync-badge" data-state="pending" role="status" aria-live="polite">連線中…</span>
@@ -223,7 +224,7 @@ document.getElementById('btn-check').addEventListener('click', checkSources);
 document.getElementById('btn-run').addEventListener('click', runAll);
 
 ZX.boot({
-  site: 'tools', title: '資料搬移工具', logo: '../shared/logo-teruteru.svg',
+  site: 'tools', title: '資料搬移工具', logo: '../shared/logo.svg', accountOnly: true,
   onReady: async ctx => {
     sb = ctx.sb;
     ZX.syncBadge('live', '已登入新專案');

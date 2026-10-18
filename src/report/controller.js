@@ -691,7 +691,7 @@ window.addEventListener('afterprint', () => {
 ZX.boot({
   site: 'report',
   title: '異常表與交接表',
-  logo: '../shared/logo-teruteru.svg',
+  logo: '../shared/logo.svg',
   onReady: async ctx => {
     sb = ctx.sb;
     ZXC = ctx;

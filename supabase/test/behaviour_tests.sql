@@ -167,3 +167,54 @@ do $$ begin
   set local role anon;
   perform public.dashboard_summary(30); raise exception 'should fail';
 exception when insufficient_privilege then raise notice 'PASS: anon cannot call dashboard_summary'; end $$;
+
+-- 17. 免帳號（暱稱）使用：匿名裝置輸入暱稱 → staff 成員，記錄 IP；管理員可查看與停用
+insert into auth.users(id) values ('00000000-0000-0000-0000-0000000000f1') on conflict do nothing;
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000f1',false);
+select set_config('request.headers', '{"x-forwarded-for":"203.0.113.7, 10.0.0.1","user-agent":"TestUA"}', false);
+select pg_temp.assert(not private.is_member(), 'anonymous device is not a member before nickname');
+select pg_temp.assert((public.device_register('小陳'))->>'role' = 'staff', 'nickname registers device as staff');
+select pg_temp.assert(private.can_write() and not private.can_delete(), 'nickname device can write, cannot delete');
+select set_config('request.headers', '{"x-forwarded-for":"198.51.100.9"}', false);
+select public.device_touch();
+do $$ begin perform public.admin_list_devices(); raise exception 'should fail'; exception when insufficient_privilege then raise notice 'PASS: staff cannot list devices'; end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000a',false);
+select set_config('zx.dev', (select e::text from jsonb_array_elements(public.admin_list_devices()) e where e->>'user_id' = '00000000-0000-0000-0000-0000000000f1'), false);
+select pg_temp.assert(current_setting('zx.dev')::jsonb->>'last_ip' = '198.51.100.9' and current_setting('zx.dev')::jsonb->>'first_ip' = '203.0.113.7', 'admin sees first and last IP (x-forwarded-for first hop)');
+select pg_temp.assert(jsonb_array_length(current_setting('zx.dev')::jsonb->'ips') = 2, 'IP history keeps both addresses');
+select pg_temp.assert((public.admin_set_device('00000000-0000-0000-0000-0000000000f1', false))->>'ok' = 'true', 'admin blocks device');
+select pg_temp.assert((public.admin_set_device('00000000-0000-0000-0000-00000000000a', false))->>'reason' = 'self', 'admin cannot block self');
+select pg_temp.assert((select count(*) from public.app_settings where key = 'nickname_access') = 1, 'admin can read settings');
+update public.app_settings set value = 'false' where key = 'nickname_access';
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000f1',false);
+select pg_temp.assert(not private.is_member() and (public.device_register('小陳'))->>'reason' = 'blocked', 'blocked device cannot re-register');
+reset role; insert into auth.users(id) values ('00000000-0000-0000-0000-0000000000f2') on conflict do nothing;
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-0000000000f2',false);
+select pg_temp.assert((public.device_register('新人'))->>'reason' = 'disabled', 'nickname access off → new devices refused');
+reset role;
+update public.app_settings set value = 'true' where key = 'nickname_access';
+
+-- 18. 異常分析與經營月報
+insert into public.abnormal_reports (report_date, store, car_no, category, exchange_type, responsibility, reason) values
+  ('2026-10-10', '全聯中正店', 'ABC-1', 'A 品質', '退貨', '倉儲', 'x'),
+  ('2026-10-11', '全聯中正店', 'ABC-1', 'A 品質', '換貨', ' 倉儲 ', 'y'),
+  ('2026-10-12', '神秘店', null, 'D 漏單', '補貨', null, 'z');
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000b',false);
+select set_config('zx.ra', public.report_analysis('2000-01-01', '2100-12-31')::text, false);
+select pg_temp.assert((current_setting('zx.ra')::jsonb->>'total')::int = (select count(*) from public.abnormal_reports where report_date is not null), 'report_analysis total = dated abnormal rows');
+select pg_temp.assert((select coalesce(sum((e->>'n')::int), 0) from jsonb_array_elements(current_setting('zx.ra')::jsonb->'by_category') e) = (current_setting('zx.ra')::jsonb->>'total')::int, 'category shares add up to total');
+select pg_temp.assert((select coalesce(sum((e->>'n')::int), 0) from jsonb_array_elements(current_setting('zx.ra')::jsonb->'by_responsibility') e) = (current_setting('zx.ra')::jsonb->>'total')::int, 'responsibility shares add up to total (top 7 + 其他)');
+select set_config('zx.ra10', public.report_analysis('2026-10-10', '2026-10-12')::text, false);
+select pg_temp.assert((current_setting('zx.ra10')::jsonb->>'total')::int = 3
+  and (select (e->>'n')::int from jsonb_array_elements(current_setting('zx.ra10')::jsonb->'by_category') e where e->>'k' = 'A 品質') = 2, 'category breakdown: A 品質 2 of 3');
+select pg_temp.assert((select (e->>'n')::int from jsonb_array_elements(current_setting('zx.ra10')::jsonb->'by_responsibility') e where e->>'k' = '倉儲') = 2
+  and (select (e->>'n')::int from jsonb_array_elements(current_setting('zx.ra10')::jsonb->'by_responsibility') e where e->>'k' = '未填') = 1, 'responsibility trimmed and blank → 未填');
+select pg_temp.assert((current_setting('zx.ra10')::jsonb->'top_stores'->0->>'store') = '全聯中正店' and (current_setting('zx.ra10')::jsonb->'top_stores'->0->>'top_category') = 'A 品質', 'top store with its main category');
+select set_config('zx.boss', public.boss_report('2026-10-01', '2026-10-31')::text, false);
+select pg_temp.assert((current_setting('zx.boss')::jsonb->'tick'->>'service_days')::int = (select count(*) from public.tick_service_days where status='closed' and service_date between '2026-10-01' and '2026-10-31'), 'boss_report counts closed service days');
+select pg_temp.assert(jsonb_typeof(current_setting('zx.boss')::jsonb->'tick'->'low_customers') = 'array' and length(current_setting('zx.boss')) < 20000, 'boss_report returns low-order customers, payload < 20 KB');
+reset role;
+do $$ begin
+  set local role anon;
+  perform public.boss_report('2026-10-01', '2026-10-31'); raise exception 'should fail';
+exception when insufficient_privilege then raise notice 'PASS: anon cannot call boss_report'; end $$;

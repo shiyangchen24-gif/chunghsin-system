@@ -3,6 +3,7 @@
 const { chromium } = require('playwright-core');
 const path = require('path');
 const routeCdn = require('./cdn_route');
+const { loginAcct } = require('./e2e_util');
 const BASE = 'http://localhost:8080';
 const SHOTS = path.join(__dirname, 'shots');
 let failures = 0;
@@ -29,8 +30,8 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   await A.goto(BASE + '/');
   check(await A.isVisible('.zx-sidebar'), 'home page shows the sidebar');
   check((await current(A)) === 'home', 'home item highlighted on home page');
-  check(await A.isVisible('#zx-login-email'), 'dashboard asks for login');
-  await A.fill('#zx-login-email', 'admin@zx.test'); await A.fill('#zx-login-pw', 'admin123'); await A.click('.zx-login-btn');
+  check(await A.isVisible('#zx-login-nick'), 'dashboard asks for a nickname (no account needed)');
+  await loginAcct(A, 'admin@zx.test', 'admin123');
   await A.waitForFunction(() => !document.querySelector('#kpis').classList.contains('skeleton'), null, { timeout: 15000 });
   check((await A.textContent('#hello')).includes('歡迎回來'), 'dashboard greets the member');
   check(await contentClear(A), 'dashboard content starts right of the sidebar');
@@ -38,10 +39,11 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   check(/^\d+\/ \d+$/.test(kTick.replace(/\s+/g, ' ').replace(/(\d) \//, '$1/')), `KPI 今日已叫貨 shows x / total (${kTick})`);
   const pts = () => A.$$eval('#trend-table tbody tr', r => r.length);
   const n30 = await pts();
-  check(n30 >= 5 && await A.$('#chart svg path[stroke-dasharray]'), `trend chart drawn with ${n30} service days (solid + dashed line)`);
-  const box = await A.$eval('#hit', e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+  check(n30 >= 5 && await A.$('#chart svg path[stroke-dasharray]') && /C/.test(await A.$eval('#chart svg path[stroke-dasharray]', e => e.getAttribute('d'))),
+        `trend chart drawn as smooth curves with ${n30} service days (solid + dashed)`);
+  const box = await A.$eval('#chart .hit', e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
   await A.mouse.move(box.x + box.w - 2, box.y + box.h / 2);
-  check(await A.isVisible('#tip') && (await A.textContent('#tip')).includes('已叫貨'), 'hover shows crosshair tooltip');
+  check(await A.isVisible('#chart .zxc-tip') && (await A.textContent('#chart .zxc-tip')).includes('已叫貨'), 'hover shows crosshair tooltip');
   await A.screenshot({ path: path.join(SHOTS, 'dashboard.png') });
   await A.click('.seg button[data-days="7"]');
   check((await pts()) === Math.min(7, n30) && (await A.getAttribute('.seg button[data-days="7"]', 'aria-pressed')) === 'true', '7-day range re-draws chart');
@@ -52,7 +54,7 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   // 另一台在打勾單勾選 → 儀表板（最快 60 秒重抓一次）更新已叫貨數
   const B = await mk(1280, 860);
   await B.goto(BASE + '/tick/');
-  await B.fill('#zx-login-email', 'staff1@zx.test'); await B.fill('#zx-login-pw', 'staff123'); await B.click('.zx-login-btn');
+  await loginAcct(B, 'staff1@zx.test', 'staff123');
   await B.waitForFunction(() => document.querySelectorAll('.ccard').length > 0, null, { timeout: 15000 });
   const before = parseInt(kTick, 10);
   const card = await B.$('.ccard.unordered, .ccard.warn3');
@@ -106,14 +108,14 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   // staff 看不到搬移工具
   const S = await mk(1440, 900);
   await S.goto(BASE + '/report/');
-  await S.fill('#zx-login-email', 'staff1@zx.test'); await S.fill('#zx-login-pw', 'staff123'); await S.click('.zx-login-btn');
+  await loginAcct(S, 'staff1@zx.test', 'staff123');
   await S.waitForSelector('#zx-user-chip .zx-role', { timeout: 15000 });
   check(await S.isHidden('.zx-nav-link[data-key="tools"]'), 'staff does not see 資料搬移');
 
   // 手機：抽屜
   const M = await mk(390, 844);
   await M.goto(BASE + '/');
-  await M.fill('#zx-login-email', 'staff2@zx.test'); await M.fill('#zx-login-pw', 'staff123'); await M.click('.zx-login-btn');
+  await loginAcct(M, 'staff2@zx.test', 'staff123');
   await M.waitForFunction(() => !document.querySelector('#kpis').classList.contains('skeleton'), null, { timeout: 15000 });
   check(await M.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'mobile dashboard: no horizontal scroll');
   await M.screenshot({ path: path.join(SHOTS, 'dashboard-mobile.png'), fullPage: true });

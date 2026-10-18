@@ -170,7 +170,7 @@ def build_app():
     js = js[:a] + """ZX.boot({
   site: 'quote',
   title: '報價單匯出系統',
-  logo: '../shared/logo-teruteru.svg',
+  logo: '../shared/logo.svg',
   onReady: async ctx => {
     sb = ctx.sb;
     ZXC = ctx;
@@ -201,7 +201,7 @@ def build_index():
       <span id="zx-user-chip"></span>
       <button class="btn btn-ghost" id="btnResetAll">重置本期匯出狀態</button>''')
     html = re.sub(r'<div class="glyph">\s*<img src="data:image/png;base64,[^"]+" width="24" height="24" alt="" style="display:block;">\s*</div>',
-                  '<div class="glyph"><img src="../shared/logo-teruteru.svg" width="40" height="40" alt="忠欣蔬果 晴天娃娃 LOGO" style="display:block;"></div>',
+                  '<div class="glyph"><img src="../shared/logo.svg" width="40" height="40" alt="忠欣蔬果 LOGO" style="display:block;"></div>',
                   html, count=1)
     html = must_replace(html, '<script src="app.js?v=2026-09-25-supabase-v22"></script>',
                         '<script src="../shared/zx-nav.js?v=' + FRONTEND_VERSION + '" data-site="quote" data-root="../"></script>\n'

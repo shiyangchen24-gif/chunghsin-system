@@ -45,8 +45,10 @@ add('報價', '批次匯出（讀取必要欄位）', 2 * 100 * resp(200 * 120),
 
 # ---------------- 共用 ----------------
 dash_devices = min(2, DEVICES)                 # 儀表板通常只開在 1～2 台（辦公室電腦）
-add('共用', '儀表板彙總 dashboard_summary', dash_devices * (6 + HOURS * 60) * resp(3500),
-    f'{dash_devices} 台；有異動時最快每 60 秒重抓一次（上限 {HOURS * 60} 次/日）× 約 3.5 KB')
+add('共用', '儀表板彙總＋異常分析', dash_devices * (6 + HOURS * 60) * (resp(3500) + resp(1500)),
+    f'{dash_devices} 台；有異動時最快每 60 秒重抓一次（上限 {HOURS * 60} 次/日）× 約 3.5 + 1.5 KB')
+add('共用', '經營月報', 2 * 2 * resp(6000), '每日約 2 次 × 本月＋上月兩份')
+add('共用', '裝置上線紀錄 device_touch', DEVICES * 6 * 2 * resp(0), '每次開頁一次（回應無內容）')
 add('共用', '儀表板收到的推播（三站全部事件）', dash_devices * (550 + 120 + 90) * BCAST, f'{dash_devices} 台 × 約 760 則/日')
 sockets = DEVICES * 2 + dash_devices           # 平均每台同時開 2 站，另加儀表板
 hb = sockets * (HOURS * 3600 / 25) * 89        # supabase-js 心跳約 25 秒一次，回覆實測約 89 B

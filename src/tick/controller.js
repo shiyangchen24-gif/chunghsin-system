@@ -583,7 +583,7 @@ window.addEventListener('load', () => {
   ZX.boot({
     site: 'tick',
     title: '忠欣打勾單系統',
-    logo: '../shared/logo-teruteru.svg',
+    logo: '../shared/logo.svg',
     onReady: async ctx => {
       sb = ctx.sb;
       ZXC = ctx;

@@ -1,7 +1,7 @@
 /* =====================================================================
  * zx-nav.js — 三站共用側邊欄（同一個網站內切換三個獨立頁面）
  * 用法：<script src="../shared/zx-nav.js" data-site="tick" data-root="../"></script>
- *   data-site：home | tick | report | quote | tools（目前頁面，決定反白項目）
+ *   data-site：home | tick | report | quote | monthly | devices | tools（目前頁面，決定反白項目）
  *   data-root：網站根目錄的相對路徑（根目錄 index.html 用 "./"，子頁用 "../"）
  * 桌機：固定在左側，可收合成圖示列（記住在本機）；手機／平板（< 900px）：左下角按鈕開啟抽屜。
  * 列印時完全隱藏、不佔版面，不影響原本的列印與 Excel 格式。
@@ -19,6 +19,8 @@
     report: '<path d="M12 4 3.5 19h17z"/><path d="M12 10v4.5M12 17.2v.3"/>',
     quote: '<path d="M7 3.5h7l4.5 4.5V19a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M14 3.5V8h4.5M8.5 12.5h7M8.5 16h7"/>',
     tools: '<path d="M4 7h11M4 12h16M4 17h9"/><path d="m17 5 3 2-3 2M15 15l3 2-3 2"/>',
+    monthly: '<path d="M5 20V10M10 20V5M15 20v-7M20 20V8"/>',
+    devices: '<rect x="3.5" y="5" width="17" height="11" rx="1.5"/><path d="M9 20h6M12 16v4"/>',
     help: '<circle cx="12" cy="12" r="8.5"/><path d="M9.7 9.4a2.4 2.4 0 1 1 3.4 2.2c-.7.4-1.1.9-1.1 1.7v.4M12 16.6v.3"/>',
     logout: '<path d="M14 4.5h3.5a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 16l-4-4 4-4M6 12h9"/>',
     collapse: '<path d="m14.5 6-6 6 6 6"/>',
@@ -33,9 +35,11 @@
     { key: 'home', icon: 'home', label: '儀表板', href: ROOT + 'index.html' },
     { key: 'tick', icon: 'tick', label: '打勾單', href: ROOT + 'tick/' },
     { key: 'report', icon: 'report', label: '異常表與交接表', href: ROOT + 'report/' },
-    { key: 'quote', icon: 'quote', label: '報價單匯出', href: ROOT + 'quote/' }
+    { key: 'quote', icon: 'quote', label: '報價單匯出', href: ROOT + 'quote/' },
+    { key: 'monthly', icon: 'monthly', label: '經營月報', href: ROOT + 'reports/monthly.html' }
   ];
   var GENERAL = [
+    { key: 'devices', icon: 'devices', label: '裝置管理', href: ROOT + 'tools/devices.html', admin: true },
     { key: 'tools', icon: 'tools', label: '資料搬移', href: ROOT + 'tools/migrate.html', admin: true },
     { key: 'help', icon: 'help', label: '使用說明', href: 'https://github.com/shiyangchen24-gif/chunghsin-system#readme', external: true },
     { key: 'logout', icon: 'logout', label: '登出', action: 'logout', authOnly: true }
@@ -51,7 +55,7 @@
     'html.zx-nav-mini .zx-sidebar{width:var(--zx-nav-w-mini)}' +
     '.zx-nav-brand{display:flex;align-items:center;gap:10px;padding:2px 6px 22px;text-decoration:none;color:var(--zx-text,#1C2520)}' +
     '.zx-nav-brand .zx-nav-logo{width:38px;height:38px;flex:none;border-radius:11px;background:var(--zx-primary,#15805A);display:flex;align-items:center;justify-content:center}' +
-    '.zx-nav-brand .zx-nav-logo img{width:30px;height:30px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}' +
+    '.zx-nav-brand .zx-nav-logo img{width:38px;height:38px;border-radius:11px}' +
     '.zx-nav-brand b{font:700 17px var(--font-body,system-ui);white-space:nowrap;letter-spacing:-.01em}' +
     '.zx-nav-sec{font:600 12px var(--font-body,system-ui);color:var(--zx-text-3,#66716B);padding:0 10px 8px;white-space:nowrap}' +
     '.zx-nav-list{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:2px}' +
@@ -122,7 +126,7 @@
     nav.setAttribute('aria-label', '系統選單');
     nav.innerHTML =
       '<a class="zx-nav-brand" href="' + ROOT + 'index.html" title="忠欣蔬果">' +
-        '<span class="zx-nav-logo"><img src="' + ROOT + 'shared/logo-teruteru.svg" alt=""></span><b>忠欣蔬果</b></a>' +
+        '<span class="zx-nav-logo"><img src="' + ROOT + 'shared/logo.svg" alt=""></span><b>忠欣蔬果</b></a>' +
       '<div class="zx-nav-sec" id="zx-nav-sec-menu">選單</div>' +
       '<ul class="zx-nav-list" aria-labelledby="zx-nav-sec-menu">' + MENU.map(itemHtml).join('') + '</ul>' +
       '<div class="zx-nav-sec" id="zx-nav-sec-general">一般</div>' +
@@ -176,7 +180,8 @@
     // 登入後才知道角色：管理員才顯示「資料搬移」
     document.addEventListener('zx:ready', function (e) {
       if (e.detail && e.detail.role === 'admin') nav.querySelectorAll('[data-admin]').forEach(function (li) { li.hidden = false; });
-      nav.querySelectorAll('[data-auth]').forEach(function (li) { li.hidden = false; });
+      // 暱稱裝置不顯示「登出」：登出後再進來會被當成新裝置（改暱稱在右上角）
+      if (!(e.detail && e.detail.anonymous)) nav.querySelectorAll('[data-auth]').forEach(function (li) { li.hidden = false; });
     });
     nav.addEventListener('click', function (e) {
       var b = e.target.closest('[data-action="logout"]');
@@ -194,7 +199,7 @@
       navSync.dataset.state = badge.dataset.state;
       navSync.textContent = TEXT[badge.dataset.state] || badge.textContent;
     }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['data-state'] });
-    try { if (SITE && SITE !== 'home' && SITE !== 'tools') localStorage.setItem('zx-last-site', SITE); } catch (e) {}
+    try { if (SITE && ['tick', 'report', 'quote'].indexOf(SITE) > -1) localStorage.setItem('zx-last-site', SITE); } catch (e) {}
   }
 
   if (document.body) build();

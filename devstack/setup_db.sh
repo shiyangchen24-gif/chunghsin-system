@@ -7,7 +7,7 @@ SQL="$(cd "$(dirname "$0")/../supabase/sql" && pwd)"
 $P -c "drop database if exists zxdev with (force)" -c "create database zxdev" >/dev/null
 $P -d zxdev -f ../supabase/test/supabase_stub.sql >/dev/null
 $P -d zxdev -f devstub_extra.sql >/dev/null
-for f in 01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard; do $P -d zxdev -f $SQL/$f.sql >/dev/null 2>&1 || { echo "FAIL $f"; exit 1; }; done
+for f in 01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard 13_nickname_access 14_analytics; do $P -d zxdev -f $SQL/$f.sql >/dev/null 2>&1 || { echo "FAIL $f"; exit 1; }; done
 [ "${1:-}" = "--empty" ] || $P -d zxdev -f ${SEED:-../supabase/test/staging_sim.sql} >/dev/null
 $P -d zxdev -f $SQL/07_backfill.sql >/dev/null 2>&1 || { echo "FAIL backfill"; exit 1; }
 python3 - <<'PY' | $P -d zxdev >/dev/null

@@ -28,14 +28,21 @@ function record(key, bytes) {
 const ANON_KEY = jwt.sign({ role: 'anon', iss: 'zx-dev' }, SECRET, { expiresIn: '10y' });
 fs.writeFileSync(path.join(__dirname, '.anon_key'), ANON_KEY);
 
+// 匿名登入（Supabase signInAnonymously）：裝置專屬 user id，不需帳密；重啟閘道後由 refresh token 還原
+const crypto = require('crypto');
+function findUser(id) {
+  return USERS.find(x => x.id === id) || (/^[0-9a-f-]{36}$/.test(id) ? { id, email: '', anonymous: true } : null);
+}
+
 function issue(user) {
   const exp = Math.floor(Date.now() / 1000) + 3600;
-  const access_token = jwt.sign({ sub: user.id, email: user.email, role: 'authenticated', aud: 'authenticated', exp }, SECRET);
+  const access_token = jwt.sign({ sub: user.id, email: user.email, role: 'authenticated', aud: 'authenticated', exp,
+                                  is_anonymous: !!user.anonymous }, SECRET);
   return {
     access_token, token_type: 'bearer', expires_in: 3600, expires_at: exp,
     refresh_token: Buffer.from(user.id).toString('base64'),
-    user: { id: user.id, aud: 'authenticated', role: 'authenticated', email: user.email,
-            app_metadata: { provider: 'email' }, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' }
+    user: { id: user.id, aud: 'authenticated', role: 'authenticated', email: user.email, is_anonymous: !!user.anonymous,
+            app_metadata: { provider: user.anonymous ? 'anonymous' : 'email' }, user_metadata: {}, created_at: '2026-01-01T00:00:00Z' }
   };
 }
 
@@ -79,7 +86,7 @@ const server = http.createServer(async (req, res) => {
       if (u.query.grant_type === 'password') user = USERS.find(x => x.email === body.email && x.password === body.password);
       else if (u.query.grant_type === 'refresh_token') {
         const id = Buffer.from(body.refresh_token || '', 'base64').toString();
-        user = USERS.find(x => x.id === id);
+        user = findUser(id);
       }
       if (!user) return sendJson(res, 400, { error: 'invalid_grant', error_description: 'Invalid login credentials', msg: 'Invalid login credentials' }, 'POST /auth/token');
       return sendJson(res, 200, issue(user), 'POST /auth/token');
@@ -87,9 +94,17 @@ const server = http.createServer(async (req, res) => {
     if (ep === 'user') {
       try {
         const claims = jwt.verify((req.headers.authorization || '').replace(/^Bearer /, ''), SECRET);
-        const user = USERS.find(x => x.id === claims.sub);
+        const user = findUser(claims.sub);
         return sendJson(res, 200, issue(user).user, 'GET /auth/user');
       } catch (e) { return sendJson(res, 401, { msg: 'invalid token' }); }
+    }
+    if (ep === 'signup') {
+      const body = JSON.parse((await readBody(req)) || '{}');
+      if (body.email) return sendJson(res, 422, { msg: 'email signup not supported in dev stack' });
+      const user = { id: crypto.randomUUID(), email: '', anonymous: true };
+      try { await pg.query('insert into auth.users(id) values ($1) on conflict do nothing', [user.id]); }
+      catch (e) { return sendJson(res, 500, { msg: 'db not ready' }); }
+      return sendJson(res, 200, issue(user), 'POST /auth/signup');
     }
     if (ep === 'logout') { cors(res); res.writeHead(204); return res.end(); }
     return sendJson(res, 404, { msg: 'not implemented in dev stack' });
@@ -104,6 +119,8 @@ const server = http.createServer(async (req, res) => {
     delete headers['content-length'];
     // Supabase 的 API gateway 會把 anon key 當成 JWT；開發閘道照做
     if (!headers.authorization && headers.apikey) headers.authorization = 'Bearer ' + headers.apikey;
+    // 與 Supabase 相同：在 x-forwarded-for 帶上用戶端 IP（測試可用 X-Forwarded-For 標頭模擬不同 IP）
+    headers['x-forwarded-for'] = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const p = http.request({ host: '127.0.0.1', port: oldProject ? 3002 : 3001, path: target, method: req.method, headers }, pr => {
       const chunks = [];
       pr.on('data', c => chunks.push(c));

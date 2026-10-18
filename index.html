@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>忠欣蔬果內部系統</title>
-<link rel="icon" href="shared/logo-teruteru.svg" type="image/svg+xml">
+<link rel="icon" href="shared/logo.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/theme.css">
 <style>
@@ -59,19 +59,6 @@
   .legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; }
   .legend i.dash { border-top-style: dashed; }
   .chart { position: relative; height: 280px; }
-  .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
-  .chart .grid line { stroke: var(--zx-border); }
-  .chart .axis text { fill: var(--zx-text-3); font: 500 11.5px var(--font-body); }
-  .chart .end text { font: 600 12px var(--font-body); fill: var(--zx-text-2); }
-  .tip { position: absolute; pointer-events: none; background: var(--zx-surface); border: 1px solid var(--zx-border);
-         box-shadow: var(--zx-shadow-pop); border-radius: 10px; padding: 8px 12px; font-size: 12.5px; white-space: nowrap;
-         transform: translate(-50%, calc(-100% - 12px)); z-index: 5; }
-  .tip[hidden] { display: none; }
-  .tip b { display: block; font-size: 13px; margin-bottom: 4px; }
-  .tip .r { display: flex; align-items: center; gap: 6px; color: var(--zx-text-2); }
-  .tip .r i { width: 10px; height: 0; border-top: 2px solid; }
-  .tip .r i.dash { border-top-style: dashed; }
-  .tip .r em { font-style: normal; font-weight: 600; color: var(--zx-text); margin-left: auto; padding-left: 12px; font-variant-numeric: tabular-nums; }
   .table-toggle { border: 0; background: none; color: var(--zx-primary-ink); font: 600 13px var(--font-body); cursor: pointer; padding: 4px 0; }
   .data-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
   .data-table th, .data-table td { padding: 6px 8px; border-bottom: 1px solid var(--zx-border); text-align: right; font-variant-numeric: tabular-nums; }
@@ -111,18 +98,32 @@
   .ab .car { font-size: 12.5px; color: var(--zx-text-3); margin-top: auto; }
   .empty { padding: 28px; text-align: center; color: var(--zx-text-3); grid-column: 1 / -1; }
   .skeleton .val, .skeleton .foot { color: transparent; }
+  .aa-summary { margin: 0 0 18px; padding: 12px 14px; border-radius: 10px; background: var(--zx-surface-2); border: 1px solid var(--zx-border);
+                font-size: 14px; color: var(--zx-text-2); line-height: 1.7; }
+  .aa-summary b { color: var(--zx-text); }
+  .aa-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+  .aa-grid h3 { margin: 0 0 12px; font-size: 14px; color: var(--zx-text-2); font-weight: 600; }
+  .aa-stores { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 13.5px; counter-reset: s; }
+  .aa-stores li { display: flex; gap: 8px; align-items: baseline; counter-increment: s; }
+  .aa-stores li::before { content: counter(s); width: 20px; height: 20px; border-radius: 6px; flex: none; display: grid; place-items: center;
+                          background: var(--zx-surface-2); border: 1px solid var(--zx-border); font-size: 11.5px; font-weight: 600; color: var(--zx-text-2); }
+  .aa-stores li.muted::before { display: none; }
+  .aa-stores .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .aa-stores .nm small { display: block; color: var(--zx-text-3); font-size: 12px; }
+  .aa-stores b { font-variant-numeric: tabular-nums; }
   footer { margin-top: 32px; color: var(--zx-text-3); font-size: 12.5px; text-align: center; }
 
   @media (max-width: 1180px) {
     .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .row2 { grid-template-columns: minmax(0, 1fr); }
     .latest { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .aa-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 600px) {
     main { padding: 16px 16px 48px; }
     .top h1 { font-size: 20px; }
     .top .actions { margin-left: 0; width: 100%; }
-    .kpis, .latest { grid-template-columns: minmax(0, 1fr); }
+    .kpis, .latest, .aa-grid { grid-template-columns: minmax(0, 1fr); }
     .kpi .val { font-size: 26px; }
     .meter { flex-direction: column; align-items: stretch; }
     .meter svg { align-self: center; }
@@ -136,6 +137,7 @@
 <script src="shared/zx-config.js"></script>
 <script src="shared/zx-sync.js"></script>
 <script src="shared/zx-auth.js"></script>
+<script src="shared/zx-charts.js"></script>
 
 <main id="dash">
   <header class="top">
@@ -181,7 +183,7 @@
         <h2 id="trend-title">叫貨趨勢</h2>
         <span class="sub">每個營業日的客戶家數</span>
         <div class="right">
-          <div class="seg" role="group" aria-label="期間">
+          <div class="seg" id="trend-seg" role="group" aria-label="期間">
             <button type="button" data-days="30" aria-pressed="true">30 天</button>
             <button type="button" data-days="14" aria-pressed="false">14 天</button>
             <button type="button" data-days="7" aria-pressed="false">7 天</button>
@@ -209,6 +211,27 @@
     </div>
   </section>
 
+  <section class="card" id="ab-analysis" style="margin-bottom:16px">
+    <div class="card-h">
+      <h2>異常狀態分析</h2><span class="sub" id="aa-range"></span>
+      <div class="right">
+        <div class="seg" id="aa-seg" role="group" aria-label="分析期間">
+          <button type="button" data-days="7" aria-pressed="false">7 天</button>
+          <button type="button" data-days="30" aria-pressed="true">30 天</button>
+          <button type="button" data-days="90" aria-pressed="false">90 天</button>
+        </div>
+        <a class="link" href="reports/monthly.html">經營月報 →</a>
+      </div>
+    </div>
+    <p class="aa-summary" id="aa-summary">讀取中…</p>
+    <div class="aa-grid">
+      <div><h3>異常類別</h3><div id="aa-cat"></div></div>
+      <div><h3>處理方式</h3><div id="aa-ex"></div></div>
+      <div><h3>責任歸屬</h3><div id="aa-resp"></div></div>
+      <div><h3>異常最多的店家</h3><ol class="aa-stores" id="aa-stores"></ol></div>
+    </div>
+  </section>
+
   <section class="card">
     <div class="card-h"><h2>最新異常紀錄</h2><span class="sub" id="ab-today-line"></span><a class="link right" href="report/">查看全部 →</a></div>
     <div class="latest" id="latest"><div class="empty">讀取中…</div></div>
@@ -227,7 +250,8 @@
   var REFRESH_MIN_MS = 60000;            // 有異動時最快 60 秒重抓一次彙總（約 3 KB），控制流量
   var WD = ['日', '一', '二', '三', '四', '五', '六'];
   var esc = function (s) { return ZX.esc(s); };
-  var data = null, range = 30, lastFetch = 0, refreshTimer = null;
+  var data = null, range = 30, lastFetch = 0, refreshTimer = null, aaDays = 30;
+  var C_AB = '#C9302C';                  // 異常比例長條：單一色（類別靠文字標示，不靠顏色區分）
 
   (function continueLink() {
     var LABEL = { tick: '打勾單', report: '異常表與交接表', quote: '報價單匯出' }, last = null;
@@ -278,79 +302,19 @@
       return { d: x.d, ord: x.ord, un: Math.max(0, total - x.ord - x.no), no: x.no, open: x.open };
     });
   }
-  function niceMax(v) {
-    if (v <= 4) return 4;
-    var p = Math.pow(10, Math.floor(Math.log10(v))), n = v / p;
-    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
-  }
   function renderChart() {
-    var box = document.getElementById('chart');
     var R = rows();
-    if (!R.length) { box.innerHTML = '<div class="empty">還沒有營業日資料</div>'; renderTable(R); return; }
-    var W = box.clientWidth, H = box.clientHeight;
-    var m = { l: 36, r: 64, t: 10, b: 26 };
-    var iw = Math.max(10, W - m.l - m.r), ih = H - m.t - m.b;
-    var max = niceMax(Math.max.apply(null, R.map(function (x) { return Math.max(x.ord, x.un); })) || 1);
-    var x = function (i) { return m.l + (R.length === 1 ? iw / 2 : i * iw / (R.length - 1)); };
-    var y = function (v) { return m.t + ih - v / max * ih; };
-    var path = function (k) { return R.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p[k]).toFixed(1); }).join(''); };
-    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">';
-    s += '<g class="grid">';
-    for (var g = 0; g <= 4; g++) {
-      var gy = y(max * g / 4);
-      s += '<line x1="' + m.l + '" x2="' + (m.l + iw) + '" y1="' + gy + '" y2="' + gy + '"' + (g ? ' stroke-dasharray="3 4"' : '') + '/>';
-    }
-    s += '</g><g class="axis">';
-    for (g = 0; g <= 4; g++) s += '<text x="' + (m.l - 8) + '" y="' + (y(max * g / 4) + 4) + '" text-anchor="end">' + Math.round(max * g / 4) + '</text>';
-    var step = Math.max(1, Math.ceil(R.length / Math.max(2, Math.floor(iw / 64))));
-    R.forEach(function (p, i) {
-      if (i % step === 0 || i === R.length - 1) s += '<text x="' + x(i) + '" y="' + (H - 6) + '" text-anchor="middle">' + fmtDate(p.d) + '</text>';
+    ZXCharts.curve(document.getElementById('chart'), R, {
+      series: [
+        { key: 'ord', label: '已叫貨', end: '已叫', color: C_ORD, area: true },
+        { key: 'un', label: '未叫貨', end: '未叫', color: C_UN, dash: true }
+      ],
+      unit: '家', empty: '還沒有營業日資料',
+      fmtX: function (p) { return fmtDate(p.d); },
+      title: function (p) { return fmtDate(p.d, true) + (p.open ? '・進行中' : ''); },
+      extra: function (p) { return p.no ? '<div class="r"><i style="border-color:transparent"></i>今日不叫貨<em>' + p.no + ' 家</em></div>' : ''; },
+      aria: function (R) { var l = R[R.length - 1]; return '叫貨趨勢曲線圖，近 ' + R.length + ' 個營業日；最新一天已叫貨 ' + l.ord + ' 家、未叫貨 ' + l.un + ' 家'; }
     });
-    s += '</g>';
-    s += '<path d="' + path('un') + '" fill="none" stroke="' + C_UN + '" stroke-width="2" stroke-dasharray="6 4" stroke-linejoin="round" stroke-linecap="round"/>';
-    s += '<path d="' + path('ord') + '" fill="none" stroke="' + C_ORD + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
-    // 端點直接標示（今天若仍進行中，以空心點表示尚未結束）
-    var L = R.length - 1, last = R[L];
-    var ly1 = y(last.ord), ly2 = y(last.un);
-    if (Math.abs(ly1 - ly2) < 16) { var mid = (ly1 + ly2) / 2; ly1 = mid + (last.ord >= last.un ? -9 : 9); ly2 = mid + (last.ord >= last.un ? 9 : -9); }
-    s += '<g class="end">';
-    [['ord', C_ORD, ly1, '已叫'], ['un', C_UN, ly2, '未叫']].forEach(function (e) {
-      s += '<circle cx="' + x(L) + '" cy="' + y(last[e[0]]) + '" r="4.5" fill="' + (last.open ? '#fff' : e[1]) + '" stroke="' + e[1] + '" stroke-width="2"/>';
-      s += '<text x="' + (x(L) + 10) + '" y="' + (e[2] + 4) + '">' + e[3] + ' ' + last[e[0]] + '</text>';
-    });
-    s += '</g>';
-    s += '<g id="hover" visibility="hidden"><line id="hx" y1="' + m.t + '" y2="' + (m.t + ih) + '" stroke="#9AA6A0" stroke-width="1"/>' +
-         '<circle id="h1" r="5" fill="' + C_ORD + '" stroke="#fff" stroke-width="2"/><circle id="h2" r="5" fill="' + C_UN + '" stroke="#fff" stroke-width="2"/></g>';
-    s += '<rect x="' + m.l + '" y="0" width="' + iw + '" height="' + H + '" fill="transparent" id="hit"/></svg>';
-    s += '<div class="tip" id="tip" hidden></div>';
-    box.innerHTML = s;
-    box.setAttribute('aria-label', '叫貨趨勢折線圖，近 ' + R.length + ' 個營業日；最新一天已叫貨 ' + last.ord + ' 家、未叫貨 ' + last.un + ' 家');
-
-    var hit = box.querySelector('#hit'), hov = box.querySelector('#hover'), tip = box.querySelector('#tip');
-    function show(evt) {
-      var rect = box.getBoundingClientRect();
-      var px = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
-      var i = R.length === 1 ? 0 : Math.round((px - m.l) / iw * (R.length - 1));
-      i = Math.max(0, Math.min(R.length - 1, i));
-      var p = R[i];
-      hov.setAttribute('visibility', 'visible');
-      box.querySelector('#hx').setAttribute('x1', x(i)); box.querySelector('#hx').setAttribute('x2', x(i));
-      box.querySelector('#h1').setAttribute('cx', x(i)); box.querySelector('#h1').setAttribute('cy', y(p.ord));
-      box.querySelector('#h2').setAttribute('cx', x(i)); box.querySelector('#h2').setAttribute('cy', y(p.un));
-      tip.innerHTML = '<b>' + fmtDate(p.d, true) + (p.open ? '・進行中' : '') + '</b>' +
-        '<div class="r"><i style="border-color:' + C_ORD + '"></i>已叫貨<em>' + p.ord + ' 家</em></div>' +
-        '<div class="r"><i class="dash" style="border-color:' + C_UN + '"></i>未叫貨<em>' + p.un + ' 家</em></div>' +
-        (p.no ? '<div class="r"><i style="border-color:transparent"></i>今日不叫貨<em>' + p.no + ' 家</em></div>' : '');
-      tip.hidden = false;
-      var tx = Math.max(80, Math.min(W - 80, x(i)));
-      tip.style.left = tx + 'px';
-      tip.style.top = Math.min(y(p.ord), y(p.un)) + 'px';
-    }
-    function hide() { hov.setAttribute('visibility', 'hidden'); tip.hidden = true; }
-    hit.addEventListener('mousemove', show);
-    hit.addEventListener('touchstart', show, { passive: true });
-    hit.addEventListener('touchmove', show, { passive: true });
-    hit.addEventListener('mouseleave', hide);
     renderTable(R);
   }
   function renderTable(R) {
@@ -397,6 +361,34 @@
     }).join('') : '<div class="empty">目前沒有異常紀錄</div>';
   }
 
+  /* ---------- 異常狀態分析：類別／處理方式／責任歸屬比例＋店家排行（report_analysis，約 1～2 KB） ---------- */
+  function addDays(iso, n) {
+    var d = new Date(iso + 'T00:00:00'); d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function top(list) { return list.slice().sort(function (a, b) { return b.n - a.n; })[0]; }
+  async function loadAnalysis() {
+    var to = data.report.today, from = addDays(to, -(aaDays - 1));
+    var r = await window.sb.rpc('report_analysis', { p_from: from, p_to: to });
+    if (r.error) throw r.error;
+    var a = r.data, T = a.total;
+    document.getElementById('aa-range').textContent = fmtDate(from) + '～' + fmtDate(to);
+    var pct = function (x) { return T ? Math.round(x.n / T * 100) + '%' : '0%'; };
+    var c = top(a.by_category), e = top(a.by_exchange), rs = top(a.by_responsibility.filter(function (x) { return x.k !== '其他' && x.k !== '未填'; }));
+    document.getElementById('aa-summary').innerHTML = T
+      ? '近 ' + aaDays + ' 天共 <b>' + T + '</b> 筆異常' + (a.prev_total ? '（前 ' + aaDays + ' 天 ' + a.prev_total + ' 筆）' : '') + ' ' + delta(T, a.prev_total, false) +
+        '・最常見 <b>「' + esc(c.k) + '」</b> 佔 ' + pct(c) +
+        '・處理方式以 <b>「' + esc(e.k) + '」</b> 為主（' + pct(e) + '）' +
+        (rs ? '・責任歸屬最多為 <b>「' + esc(rs.k) + '」</b>（' + pct(rs) + '）' : '') + '・同期交接 ' + a.handover + ' 筆'
+      : '近 ' + aaDays + ' 天沒有異常紀錄' + (a.handover ? '・同期交接 ' + a.handover + ' 筆' : '');
+    document.getElementById('aa-cat').innerHTML = ZXCharts.hbars(a.by_category, { color: C_AB });
+    document.getElementById('aa-ex').innerHTML = ZXCharts.hbars(a.by_exchange, { color: C_AB });
+    document.getElementById('aa-resp').innerHTML = ZXCharts.hbars(a.by_responsibility, { color: C_AB, sort: false });
+    document.getElementById('aa-stores').innerHTML = a.top_stores.length ? a.top_stores.slice(0, 6).map(function (s) {
+      return '<li><span class="nm">' + esc(s.store) + '<small>多為 ' + esc(s.top_category) + '</small></span><b>' + s.n + '</b> 筆</li>';
+    }).join('') : '<li class="muted" style="counter-increment:none">這段期間沒有資料</li>';
+  }
+
   function renderAll() { renderKpis(); renderChart(); renderProgress(); renderLatest(); }
 
   async function load() {
@@ -405,6 +397,7 @@
     if (r.error) throw r.error;
     data = r.data;
     renderAll();
+    await loadAnalysis();
   }
   // 收到任一站的異動：最快每 60 秒重抓一次彙總，避免打勾高峰時每勾一次就重抓
   function scheduleRefresh() {
@@ -416,13 +409,17 @@
     }, wait);
   }
 
-  document.querySelectorAll('.seg button').forEach(function (b) {
-    b.addEventListener('click', function () {
-      range = +b.dataset.days;
-      document.querySelectorAll('.seg button').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
-      if (data) renderChart();
+  function segment(id, fn) {
+    var bs = document.querySelectorAll('#' + id + ' button');
+    bs.forEach(function (b) {
+      b.addEventListener('click', function () {
+        bs.forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+        fn(+b.dataset.days);
+      });
     });
-  });
+  }
+  segment('trend-seg', function (d) { range = d; if (data) renderChart(); });
+  segment('aa-seg', function (d) { aaDays = d; if (data) loadAnalysis().catch(function (e) { console.error('[dashboard]', e); }); });
   document.getElementById('table-toggle').addEventListener('click', function () {
     var t = document.getElementById('trend-table'), open = t.hidden;
     t.hidden = !open; this.setAttribute('aria-expanded', String(open));
@@ -432,7 +429,7 @@
   window.addEventListener('resize', function () { clearTimeout(rz); rz = setTimeout(function () { if (data) renderChart(); }, 120); });
 
   ZX.boot({
-    site: 'home', title: '忠欣蔬果內部系統', logo: 'shared/logo-teruteru.svg',
+    site: 'home', title: '忠欣蔬果內部系統', logo: 'shared/logo.svg',
     onReady: async function (ctx) {
       var name = ctx.member.display_name || ctx.user.email.split('@')[0];
       document.getElementById('hello').textContent = '歡迎回來，' + name + ' 👋';
