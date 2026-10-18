@@ -4,31 +4,31 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>資料搬移工具</title>
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/clay-tokens.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/theme.css">
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; padding: 24px 16px 60px; }
   main { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
   header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  header img { width: 52px; height: 52px; }
-  header h1 { margin: 0; font-size: 26px; }
+  header img { width: 48px; height: 48px; padding: 5px; border-radius: 12px; background: var(--zx-primary-soft); }
+  header h1 { margin: 0; font-size: 24px; }
   header .sub { color: var(--clay-text-2); font-size: 14px; }
   .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-  .warn { background: #FEF3C7; color: #78350F; border-radius: 20px; padding: 12px 16px; font-weight: 600; line-height: 1.6; }
+  .warn { background: #FEF3C7; color: #78350F; border: 1px solid #F3D78A; border-radius: 12px; padding: 12px 16px; font-weight: 600; line-height: 1.6; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #E6E1F0; vertical-align: top; }
-  th { color: var(--clay-text-2); font-weight: 700; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--zx-border); vertical-align: top; }
+  th { color: var(--clay-text-2); font-weight: 600; }
   td input { width: 100%; font-family: var(--font-mono); font-size: 12px; padding: 8px 10px; }
   .num { text-align: right; }
   .ok { color: #047857; font-weight: 700; }
   .bad { color: #B91C1C; font-weight: 700; }
   .actions { display: flex; gap: 12px; flex-wrap: wrap; }
   #log { font-family: var(--font-mono); font-size: 12.5px; white-space: pre-wrap; background: var(--clay-surface-sunken);
-         border-radius: 20px; padding: 14px; min-height: 120px; max-height: 360px; overflow: auto; }
+         border: 1px solid var(--zx-border); border-radius: 12px; padding: 14px; min-height: 120px; max-height: 360px; overflow: auto; }
   ol { margin: 0; padding-left: 20px; line-height: 1.8; }
   code { font-family: var(--font-mono); background: var(--clay-surface-sunken); padding: 1px 6px; border-radius: 6px; }
-  progress { width: 100%; height: 12px; }
+  progress { width: 100%; height: 10px; accent-color: var(--zx-primary); }
 </style>
 </head>
 <body>

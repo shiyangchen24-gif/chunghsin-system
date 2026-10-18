@@ -14,7 +14,9 @@ status=0
 for t in ${@:-e2e_nav.js e2e_tick.js e2e_report.js e2e_quote.js e2e_migrate.js}; do
   echo "=== $t"
   # 搬移測試需要「空的新專案」：先重建為空庫
-  if [ "$t" = "e2e_migrate.js" ]; then ./setup_db.sh --empty >/dev/null 2>&1; fi
+  if [ "$t" = "e2e_migrate.js" ]; then ./setup_db.sh --empty >/dev/null 2>&1
+  elif [ -n "$ran" ]; then ./setup_db.sh >/dev/null 2>&1; fi   # 每組測試從同一份種子資料開始（儀表板測試會勾選客戶）
+  ran=1
   timeout 400 node "$t" || status=1
 done
 exit $status

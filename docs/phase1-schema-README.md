@@ -22,7 +22,7 @@
 | `sql/99_rollback.sql` | 還原 cutover、移除舊表上的新觸發器（不 DROP TABLE；有安全鎖） | 是 |
 | `shared/zx-sync.js` | 三站共用同步核心＋寫入去重重試＋流量計量器 | — |
 | `shared/logo-teruteru.svg` | 晴天娃娃 LOGO（自行生成） | — |
-| `shared/clay-tokens.css` | Claymorphism 設計 token（列印時自動關閉黏土效果） | — |
+| `shared/theme.css` | 共用設計 token（卡片式後台風格；列印時自動關閉卡片效果） | — |
 | `docs/field-mapping.md` | 舊 ↔ 新欄位對照 | — |
 | `docs/egress_model.py`、`docs/egress-estimate.md` | Egress 試算模型與結果 | — |
 | `test/` | 本機模擬測試（`run_all.sh` 一鍵重跑） | — |

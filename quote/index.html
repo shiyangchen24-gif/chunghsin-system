@@ -6,8 +6,8 @@
 <title>報價單匯出系統 · 忠欣蔬果</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3QgeD0iMTYiIHk9IjgiIHdpZHRoPSI0ODAiIGhlaWdodD0iNDk2IiByeD0iMTQwIiBmaWxsPSIjMUY3QTNEIi8+CjxyZWN0IHg9IjEyOCIgeT0iODAiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSIjZmZmZmZmIi8+CjxyZWN0IHg9IjEyOCIgeT0iMjA4IiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSIxMjgiIHk9IjMzNiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjYiIGZpbGw9IiNmZmZmZmYiLz4KPHJlY3QgeD0iMjYwIiB5PSIxMDQiIHdpZHRoPSIxMjgiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSIyNjAiIHk9IjIzMiIgd2lkdGg9IjEyOCIgaGVpZ2h0PSI0OCIgcng9IjI0IiBmaWxsPSIjZmZmZmZmIi8+CjxyZWN0IHg9IjI2MCIgeT0iMzYwIiB3aWR0aD0iMTI4IiBoZWlnaHQ9IjQ4IiByeD0iMjQiIGZpbGw9IiNmZmZmZmYiLz4KPC9zdmc+Cg==">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../shared/clay-tokens.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/theme.css">
 <!-- Supabase 用戶端函式庫：核心資料存取都要用到，直接載入（不像 xlsx/exceljs 只有特定操作才需要） -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <!-- xlsx / exceljs / FileSaver 改由 app.js 依需要時才動態載入，避免拖慢首次進站速度 -->
@@ -358,80 +358,68 @@ tr.unmatched-row td{background:#ffe6d1 !important;color:var(--orange-action) !im
   .detail-panel{width:100%;}
 }
 
-/* ===== 新版：High-Fidelity Claymorphism 外觀（只作用於螢幕）=====
-   原系統語意色保留：匯出綠 #1F7A3D、新品黃 #ffde5a + 紅字 #FF524D、未匹配橘 #ff8637；
-   主色由原「主綠」改為三站共用的黏土紫，Excel 匯出格式完全不受影響。 */
+/* ===== 新版外觀：清爽卡片式後台（只作用於螢幕）=====
+   主色回到翠綠，與原系統「主綠」同一色系；語意色保留：匯出綠、新品黃底紅字、未匹配橘。Excel 匯出格式完全不受影響。 */
 @media screen{
   :root{
-    --paper-50: var(--clay-canvas);
-    --paper-100: var(--clay-surface-sunken);
-    --paper-200: #E4DEF0;
-    --line: #E1DAEE;
-    --ink: var(--clay-text);
-    --ink-soft: var(--clay-text-2);
-    --leaf-500: #8B5CF6;
-    --leaf-600: var(--clay-purple);
-    --leaf-700: #6D28D9;
-    --radius: var(--radius-card);
-    --shadow: var(--clay-shadow);
+    --paper-50: var(--zx-canvas);
+    --paper-100: var(--zx-surface-2);
+    --paper-200: #E7ECE9;
+    --line: var(--zx-border);
+    --ink: var(--zx-text);
+    --ink-soft: var(--zx-text-2);
+    --leaf-500: #2E9C70;
+    --leaf-600: var(--zx-primary);
+    --leaf-700: var(--zx-primary-hover);
+    --radius: 14px;
+    --shadow: var(--zx-shadow);
     font-size: 15px;
   }
-  body{ font-family: var(--font-body); background: var(--clay-canvas); }
-  h1, h2, h3, .list-title, .tray-title, .stage-title{ font-family: var(--font-heading); }
+  body{ font-family: var(--font-body); background: var(--zx-canvas); }
   .mono{ font-family: var(--font-mono); }
 
-  .topbar{ border-bottom: 0; }
-  .brand-mark .glyph{ width: 52px; height: 52px; border-radius: 18px; background: var(--clay-surface); box-shadow: var(--clay-shadow); }
-  .brand-mark h1{ font-size: 24px; font-weight: 800; }
+  .topbar{ border-bottom: 1px solid var(--zx-border); }
+  .brand-mark .glyph{ width: 44px; height: 44px; border-radius: 12px; background: var(--zx-surface); border: 1px solid var(--zx-border); }
+  .brand-mark h1{ font-size: 20px; font-weight: 700; }
   .topbar-actions{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-  .btn{
-    border: 0; border-radius: var(--radius-btn); padding: 10px 16px; font-size: 14px; background: var(--clay-surface);
-    box-shadow: var(--clay-shadow); transition: transform var(--dur) var(--ease-clay), box-shadow var(--dur) ease, opacity .15s;
-  }
-  .btn:hover:not(:disabled){ transform: translateY(-2px); box-shadow: var(--clay-shadow-hover); border-color: transparent; }
-  .btn:active:not(:disabled){ transform: translateY(1px); box-shadow: var(--clay-shadow-pressed); }
+  .btn{ border-radius: var(--radius-btn); padding: 9px 15px; font-size: 13.5px; transition: background var(--dur), border-color var(--dur), box-shadow var(--dur), opacity .15s; }
   .btn:focus-visible{ outline: none; box-shadow: var(--focus-ring); }
   .btn:disabled{ opacity: .5; cursor: not-allowed; }
-  .btn-primary{ background: var(--clay-purple); color: #fff; }
-  .btn-primary:hover:not(:disabled){ background: #6D28D9; }
-  .btn-export, .tray-export-btn{ background: var(--biz-export) !important; color: #fff !important; }
-  .btn-ghost{ box-shadow: none; background: transparent; }
-  .btn-ghost:hover:not(:disabled){ background: var(--clay-surface); box-shadow: var(--clay-shadow); }
+  .btn-primary{ background: var(--zx-primary); border-color: var(--zx-primary); color: #fff; }
+  .btn-primary:hover:not(:disabled){ background: var(--zx-primary-hover); border-color: var(--zx-primary-hover); box-shadow: none; transform: none; }
+  .btn-export, .tray-export-btn{ background: var(--biz-export) !important; border-color: var(--biz-export) !important; color: #fff !important; }
+  .btn-secondary{ box-shadow: var(--zx-shadow); }
 
-  .tab-row{ border-bottom: 0; gap: 8px; background: var(--clay-surface-sunken); padding: 5px; border-radius: 999px; display: inline-flex;
-            box-shadow: inset 3px 3px 6px rgba(124,58,237,.10), inset -3px -3px 6px rgba(255,255,255,.9); }
-  .tab-btn{ border: 0; margin: 0; padding: 10px 20px; border-radius: 999px; font-size: 15px; }
-  .tab-btn.active{ background: var(--clay-surface); color: var(--clay-purple); box-shadow: var(--clay-shadow); border-bottom-color: transparent; }
+  /* 頁籤：白底分段控制 */
+  .tab-row{ border-bottom: 0; gap: 4px; background: var(--zx-surface); padding: 4px; border: 1px solid var(--zx-border); border-radius: 12px; display: inline-flex; box-shadow: var(--zx-shadow); }
+  .tab-btn{ border: 0; margin: 0; padding: 8px 18px; border-radius: 9px; font-size: 14px; }
+  .tab-btn.active{ background: var(--zx-primary-soft); color: var(--zx-primary-ink); border-bottom-color: transparent; }
 
-  .stage-card{ border: 0 !important; border-radius: 28px; background: var(--clay-surface); box-shadow: var(--clay-shadow);
-               transition: transform var(--dur) var(--ease-clay), box-shadow var(--dur) ease; }
-  .stage-card:hover:not(.active){ transform: translateY(-2px); box-shadow: var(--clay-shadow-hover); }
-  .stage-card.active{ box-shadow: var(--clay-shadow-pressed); background: var(--clay-surface-sunken); }
-  .stage-card .stage-num{ font-family: var(--font-heading); }
+  /* 階段卡：KPI 卡片風格 */
+  .stage-card{ border: 1px solid var(--zx-border) !important; border-radius: 14px; background: var(--zx-surface); box-shadow: var(--zx-shadow); transition: box-shadow var(--dur), border-color var(--dur); }
+  .stage-card:hover:not(.active){ box-shadow: var(--zx-shadow-hover); border-color: var(--zx-border-strong) !important; }
+  .stage-card.active{ border-color: var(--zx-primary) !important; box-shadow: 0 0 0 1px var(--zx-primary); background: var(--zx-surface); }
+  .stage-card.active .stage-chip{ background: var(--zx-primary); color: #fff; }
 
-  .cust-list-card, .detail-card{ border: 0; border-radius: var(--radius-card); box-shadow: var(--clay-shadow); }
-  .tray-card{ border: 0; border-radius: var(--radius-card); box-shadow: var(--clay-shadow), inset 0 0 0 2px rgba(31,122,61,.35); }
-  .cust-row.active{ border-left-color: var(--clay-purple); }
+  .cust-list-card, .detail-card{ border: 1px solid var(--zx-border); border-radius: var(--radius-card); box-shadow: var(--zx-shadow); }
+  .tray-card{ border: 1.5px solid var(--biz-export); border-radius: var(--radius-card); box-shadow: var(--zx-shadow); }
+  .cust-row.active{ border-left-color: var(--zx-primary); background: var(--zx-primary-soft); }
   .search-box input, .raw-select, .field input, .field select, .modal input, .modal select{
-    border: 0; border-radius: var(--radius-input); background: var(--clay-surface-sunken);
-    box-shadow: inset 3px 3px 6px rgba(124,58,237,.10), inset -3px -3px 6px rgba(255,255,255,.9);
+    border: 1px solid var(--zx-border); border-radius: var(--radius-input); background: var(--zx-surface); box-shadow: none;
   }
-  .search-box input:focus, .raw-select:focus, .field input:focus, .field select:focus{ outline: none; box-shadow: var(--focus-ring); }
-  .modal{ border-radius: var(--radius-card); box-shadow: var(--clay-shadow); }
-  .overlay{ backdrop-filter: blur(4px); }
-  .dropzone{ border-radius: 24px; }
-  .toast{ border-radius: 20px; }
+  .search-box input:focus, .raw-select:focus, .field input:focus, .field select:focus{ outline: none; border-color: var(--zx-primary); box-shadow: 0 0 0 3px var(--zx-primary-soft); }
+  .modal{ border-radius: var(--radius-card); box-shadow: var(--zx-shadow-pop); }
+  .dropzone{ border-radius: 14px; }
+  .toast{ border-radius: 12px; }
   .badge{ border-radius: 999px; }
 
-  /* 欄位對應網格：維持原版緊湊樣式（每欄一個下拉選單），只換顏色 */
+  /* 欄位對應網格：維持原版緊湊樣式（每欄一個下拉選單） */
   .map-grid select.mapSelect{
-    width: 100%; border: 1px solid var(--line); border-radius: 12px; background: #fff; padding: 7px 9px;
-    box-shadow: none; font-size: 13.5px; color: var(--clay-text);
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 7px 9px;
+    box-shadow: none; font-size: 13.5px; color: var(--zx-text);
   }
   .map-grid select.mapSelect:focus{ outline: none; box-shadow: var(--focus-ring); }
-
-  /* 業務資料表格：可讀優先，降低立體感 */
   .kv-table, .preview-scroll table{ box-shadow: none; }
 
   html.zx-readonly #btnAddCustomer, html.zx-readonly #btnBatchImport, html.zx-readonly #btnBatchQuotes,

@@ -1,0 +1,96 @@
+
+/* ===== 新版外觀：清爽卡片式後台（只作用於螢幕；列印預覽與 Excel 匯出格式不變）=====
+   業務語意色保留：未叫貨紅、已叫貨綠、今日不叫藍、三天未叫琥珀 */
+@media screen {
+  :root {
+    --ink: var(--zx-text);
+    --ink2: var(--zx-text-2);
+    --ink3: var(--zx-text-3);
+    --line: var(--zx-border);
+    --line2: var(--zx-surface-2);
+    --white: var(--zx-surface);
+    --page: var(--zx-canvas);
+    --accent: var(--zx-primary);
+    --accent-bg: var(--zx-primary-soft);
+    --accent-lt: #BFE3D0;
+    --radius: 14px;
+    --r-sm: 10px;
+    --shadow: var(--zx-shadow);
+    --shadow-md: var(--zx-shadow-hover);
+    --shadow-lg: var(--zx-shadow-pop);
+  }
+  body { font-family: var(--font-body); background: var(--zx-canvas); }
+  .brand-name { font-weight: 700; font-size: 17px; }
+
+  .topbar { background: rgba(243, 246, 244, .94); border-bottom: 1px solid var(--zx-border); box-shadow: none; }
+  .brand-mark { border-radius: 12px; background: var(--zx-surface); border: 1px solid var(--zx-border); }
+  .zx-top-right { display: flex; align-items: center; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+  #zx-user-chip span:first-of-type { cursor: pointer; }
+
+  /* 統計卡：白卡片＋細邊框＋左側狀態色條 */
+  .statstrip-wrap, .series-strip-wrap { background: transparent; border: 0; }
+  .statstrip { gap: 14px; }
+  .stat-item { background: var(--zx-surface) !important; border: 1px solid var(--zx-border) !important; border-radius: 14px;
+               box-shadow: var(--zx-shadow); padding: 14px 18px !important; margin-right: 0 !important; position: relative; overflow: hidden;
+               transition: box-shadow var(--dur), border-color var(--dur); }
+  .stat-item::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--bar, var(--zx-border-strong)); }
+  .stat-item.red-card { --bar: var(--red); } .stat-item.green-card { --bar: var(--grn); } .stat-item.blue-card { --bar: var(--blu); }
+  .stat-item.amber-card { --bar: var(--amber); } .stat-item.gray-card { --bar: var(--zx-border-strong); }
+  .stat-item .stat-label-row { color: var(--zx-text-2) !important; font-weight: 600; }
+  .stat-item:hover { box-shadow: var(--zx-shadow-hover); border-color: var(--zx-border-strong) !important; }
+  .stat-item.dash-active { border-color: var(--bar) !important; box-shadow: 0 0 0 1px var(--bar); }
+  .progress-stat { border-radius: 14px; background: var(--zx-surface); border: 1px solid var(--zx-border) !important; box-shadow: var(--zx-shadow); padding: 14px 18px; }
+  .series-item { border-radius: 14px; background: var(--zx-surface); border: 1px solid var(--zx-border); box-shadow: var(--zx-shadow); }
+  .series-item.active { border-color: var(--zx-primary); box-shadow: 0 0 0 1px var(--zx-primary); }
+
+  /* 分頁：底線式 */
+  .tabs { background: transparent; border-bottom: 1px solid var(--zx-border); gap: 4px; }
+  .tab { border: 0; border-radius: 0; background: transparent; color: var(--zx-text-2); border-bottom: 2px solid transparent; }
+  .tab:hover { color: var(--zx-text); }
+  .tab.active { background: transparent; color: var(--zx-primary-ink); border-bottom-color: var(--zx-primary); box-shadow: none; }
+
+  .toolbar { background: transparent; }
+  .btn { border-radius: var(--radius-btn); transition: background var(--dur), border-color var(--dur), box-shadow var(--dur); }
+  .btn:focus-visible, .tab:focus-visible, .ccard:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .btn-primary { background: var(--zx-primary); border-color: var(--zx-primary); color: #fff; }
+  .btn-primary:hover { background: var(--zx-primary-hover); }
+
+  .search-box input, .filter-select, .field input, .field select, .user-name-input, .print-ctrl-group input, .print-ctrl-group select {
+    border: 1px solid var(--zx-border) !important; border-radius: var(--radius-input) !important; background: var(--zx-surface) !important; box-shadow: none;
+  }
+  .search-box input:focus, .filter-select:focus, .field input:focus, .field select:focus {
+    border-color: var(--zx-primary) !important; box-shadow: 0 0 0 3px var(--zx-primary-soft) !important; outline: none;
+  }
+
+  /* 客戶卡片：保留狀態底色，細邊框圓角 */
+  .ccard { border-radius: 12px; box-shadow: var(--zx-shadow); }
+  .ccard:hover { box-shadow: var(--zx-shadow-hover); }
+  .ccard:active { box-shadow: var(--zx-shadow-pressed); }
+  body.drag-mode .ccard:hover, .ccard[draggable="true"]:hover { transform: none; }
+  .group-label { font-weight: 700; color: var(--zx-text); }
+
+  .table-wrap, .analytics-card, .summary-card { border: 1px solid var(--zx-border); border-radius: 14px; box-shadow: var(--zx-shadow); background: var(--zx-surface); }
+  .modal, .user-modal { border-radius: 16px; box-shadow: var(--zx-shadow-pop); }
+  .warn-strip { border-radius: 12px; }
+  #toast { border-radius: 12px; }
+
+  .series-admin-btn { margin-left: 8px; }
+  .series-admin-list { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 10px 0 14px; max-height: 40vh; overflow: auto; }
+  .series-admin-list li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--zx-surface-2); border: 1px solid var(--zx-border); border-radius: 12px; padding: 8px 12px; }
+  .series-admin-list .series-rule { color: var(--zx-text-2); font-size: 12px; flex: 1; min-width: 160px; }
+  .series-admin-list .series-count { font-family: var(--font-mono); font-size: 12px; }
+
+  html.zx-readonly [onclick="resetAll()"], html.zx-readonly [onclick="openAddModal()"],
+  html.zx-readonly [onclick="clearAllHistory()"], html.zx-readonly [onclick="updateAllDates()"] { display: none !important; }
+  [onclick="updateAllDates()"] { display: none !important; }   /* 新版由伺服器管理營業日，不需要手動更新日期 */
+
+  @media (max-width: 760px) {
+    .topbar { flex-wrap: wrap; height: auto !important; padding: 10px 14px !important; gap: 8px; position: relative !important; top: auto !important; }
+    .statstrip-wrap, .series-strip-wrap, .tabs { position: static !important; top: auto !important; }
+    .zx-top-right { width: 100%; justify-content: space-between; }
+    .statstrip { flex-wrap: wrap; }
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="prog-shine"], .prog-fill > div { animation: none !important; }
+}

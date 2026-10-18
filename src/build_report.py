@@ -13,9 +13,8 @@ SRC = ROOT / 'original' / 'report' / 'index.html'
 OUT = ROOT / 'report' / 'index.html'
 HERE = ROOT / 'src' / 'report'
 
-FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700'
-         '&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">\n'
-         '<link rel="stylesheet" href="../shared/clay-tokens.css">')
+FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">\n'
+         '<link rel="stylesheet" href="../shared/theme.css">')
 
 SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
 
@@ -44,7 +43,7 @@ def main():
 
     # ---- 頁面（head / CSS / body）----
     page = re.sub(r'<link href="https://fonts\.googleapis\.com/css2\?family=Inter[^"]*" rel="stylesheet">', lambda m: FONTS, page, count=1)
-    page = must_replace(page, '</style>', (HERE / 'clay-skin.css').read_text(encoding='utf-8') + '</style>')
+    page = must_replace(page, '</style>', (HERE / 'skin.css').read_text(encoding='utf-8') + '</style>')
 
     page = must_replace(page, '''      <span class="dot"></span>交接表
     </button>

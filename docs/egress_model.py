@@ -44,7 +44,11 @@ add('報價', '上傳儲存（回應+推播）', 30 * (resp(80) + 3 * BCAST * DE
 add('報價', '批次匯出（讀取必要欄位）', 2 * 100 * resp(200 * 120), '2 次/日 × 100 客戶 × 200 品項')
 
 # ---------------- 共用 ----------------
-sockets = DEVICES * 2                          # 平均每台同時開 2 站
+dash_devices = min(2, DEVICES)                 # 儀表板通常只開在 1～2 台（辦公室電腦）
+add('共用', '儀表板彙總 dashboard_summary', dash_devices * (6 + HOURS * 60) * resp(3500),
+    f'{dash_devices} 台；有異動時最快每 60 秒重抓一次（上限 {HOURS * 60} 次/日）× 約 3.5 KB')
+add('共用', '儀表板收到的推播（三站全部事件）', dash_devices * (550 + 120 + 90) * BCAST, f'{dash_devices} 台 × 約 760 則/日')
+sockets = DEVICES * 2 + dash_devices           # 平均每台同時開 2 站，另加儀表板
 hb = sockets * (HOURS * 3600 / 25) * 89        # supabase-js 心跳約 25 秒一次，回覆實測約 89 B
 add('共用', 'Realtime 心跳', hb, f'{sockets} 條連線 × 每 25 秒')
 add('共用', '補差：連線中每 5 分、斷線時每 30 秒', sockets * (HOURS * 12) * resp(60) + sockets * (HOURS * 120 * 0.10) * resp(60), '假設 10% 時間 Realtime 失聯')

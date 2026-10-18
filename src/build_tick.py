@@ -109,11 +109,10 @@ def main():
     # ---- head ----
     html = must_replace(html, '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>',
                         f'<script src="{SUPABASE_JS}"></script>\n'
-                        '<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700'
-                        '&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">\n'
-                        '<link rel="stylesheet" href="../shared/clay-tokens.css">')
+                        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">\n'
+                        '<link rel="stylesheet" href="../shared/theme.css">')
     first_style_end = html.index('</style>')
-    html = html[:first_style_end] + (HERE / 'clay-skin.css').read_text(encoding='utf-8') + html[first_style_end:]
+    html = html[:first_style_end] + (HERE / 'skin.css').read_text(encoding='utf-8') + html[first_style_end:]
 
     # ---- body ----
     # 頁首原本的「打勾單／異常表交接表」分頁標籤 → 改由三站共用側邊欄切換

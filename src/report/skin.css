@@ -1,0 +1,92 @@
+  /* ===== 新版外觀：清爽卡片式後台（只作用於螢幕；列印與匯出格式完全沿用原版） ===== */
+  @media screen{
+    :root{
+      --bg: var(--zx-canvas);
+      --surface: var(--zx-surface);
+      --surface-2: var(--zx-surface-2);
+      --border: var(--zx-border);
+      --border-strong: var(--zx-border-strong);
+      --text: var(--zx-text);
+      --text-soft: var(--zx-text-2);
+      --text-faint: var(--zx-text-3);
+      --radius: var(--radius-card);
+      --shadow-sm: var(--zx-shadow);
+      --shadow-md: var(--zx-shadow-hover);
+    }
+    body{ font-family: var(--font-body); letter-spacing: 0; font-size: 15px; }
+    .mono, td.mono-cell{ font-family: var(--font-mono); }
+
+    /* 頁首：與畫布同色、細下邊框（標題左、狀態與帳號右，對照參考版型） */
+    header{ background: rgba(243, 246, 244, .92); border-bottom: 1px solid var(--zx-border); box-shadow: none; }
+    .brand .mark{ width: 44px; height: 44px; border: 1px solid var(--zx-border); border-radius: 12px; background: var(--zx-surface); }
+    .brand h1{ font-size: 20px; font-weight: 700; }
+    .brand .sub{ color: var(--zx-text-2); font-weight: 500; }
+    .header-right{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+    /* 分頁：白底分段控制 */
+    .tabs{ background: var(--zx-surface); border: 1px solid var(--zx-border); border-radius: 12px; padding: 4px; box-shadow: var(--zx-shadow); }
+    .tab{ border-radius: 9px; padding: 8px 18px; color: var(--zx-text-2); }
+    .tab.active{ background: var(--zx-primary-soft); box-shadow: none; }
+
+    .card{ border: 1px solid var(--zx-border); border-radius: var(--radius-card); box-shadow: var(--zx-shadow); padding: 22px; }
+    .card h2{ font-size: 16px; font-weight: 700; }
+
+    input[type="text"], input[type="date"], select, textarea{
+      border: 1px solid var(--zx-border); border-radius: var(--radius-input); background: var(--zx-surface); box-shadow: none;
+    }
+    input:focus, select:focus, textarea:focus{ border-color: var(--zx-primary); box-shadow: 0 0 0 3px var(--zx-primary-soft); }
+    .btn:focus-visible, .tab:focus-visible{ outline: none; box-shadow: var(--focus-ring); }
+
+    .btn{ border-radius: var(--radius-btn); transition: background var(--dur), border-color var(--dur), box-shadow var(--dur), opacity .15s; }
+    .btn:disabled{ opacity: .5; cursor: not-allowed; }
+    .btn-secondary{ border: 1px solid var(--zx-border); background: var(--zx-surface); box-shadow: var(--zx-shadow); }
+    .btn-secondary:hover:not(:disabled){ border-color: var(--zx-border-strong); background: var(--zx-surface-2); color: var(--zx-text); }
+    .btn-danger{ background: var(--zx-surface); border: 1px solid var(--zx-border); }
+    .btn-ghost{ box-shadow: none; color: var(--zx-text-2); }
+
+    /* 資料表格：可讀優先 */
+    .table-wrap{ border: 1px solid var(--zx-border); border-radius: 14px; box-shadow: var(--zx-shadow); }
+    th{ background: var(--zx-surface-2); color: var(--zx-text-2); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 600; }
+    td{ color: var(--zx-text); }
+    tbody tr.is-pending{ opacity: .6; }
+    .pending-label{ font-size: 12px; color: var(--zx-text-2); }
+
+    .inline-edit-form{ border-radius: 0 0 14px 14px; }
+    .inline-edit-form input, .inline-edit-form select, .inline-edit-form textarea{ border: 1px solid var(--zx-border); border-radius: 10px; background: var(--zx-surface); box-shadow: none; }
+    .conflict-banner{ background: #FEF3C7; color: #78350F; border-radius: 12px; padding: 10px 14px; font-weight: 600;
+                      display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .toast{ border-radius: 12px; background: var(--zx-text); box-shadow: var(--zx-shadow-pop); }
+    .preview-modal{ border-radius: var(--radius-card); }
+
+    /* 日期範圍：分段控制（對照參考圖的 1Y／6M／1M） */
+    .range-bar{ display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 14px; }
+    .range-bar .range-label{ font-weight: 600; color: var(--zx-text-2); margin-right: 4px; }
+    .range-chip{ border: 1px solid var(--zx-border); border-radius: 999px; padding: 6px 14px; font: 600 13.5px var(--font-body); cursor: pointer;
+                 background: var(--zx-surface); color: var(--zx-text); }
+    .range-chip:hover{ border-color: var(--zx-border-strong); }
+    .panel[data-type="abnormal"]{ --accent-strong: #C2261F; }
+    .panel[data-type="handover"]{ --accent-strong: #1F5FBF; }
+    .range-chip.active{ background: var(--accent-strong); border-color: var(--accent-strong); color: #fff; }
+    .btn-primary{ background: var(--accent-strong, var(--accent)); }
+    .range-custom{ display: inline-flex; gap: 6px; align-items: center; }
+    .range-custom[hidden]{ display: none; }
+    .range-custom input{ padding: 6px 10px; font-size: 14px; }
+    .load-more{ margin: 14px auto 0; display: flex; }
+    .load-more[hidden]{ display: none; }
+    .car-source{ font-size: 12px; color: var(--zx-primary-ink); font-weight: 600; min-height: 16px; }
+    .role-note{ background: var(--zx-surface-2); border: 1px solid var(--zx-border); border-radius: 12px; padding: 10px 14px; color: var(--zx-text-2); font-weight: 600; }
+    .panel-summary .range-now{ color: var(--zx-text-2); font-weight: 500; margin-left: 6px; }
+    #zx-sync-badge{ white-space: nowrap; }
+
+    .chip{ white-space: nowrap; }
+    .panel-layout > *, .form-grid > *{ min-width: 0; }
+    input, select, textarea{ max-width: 100%; }
+
+    @media (max-width: 640px){
+      .header-right{ width: 100%; justify-content: space-between; }
+      .range-bar{ gap: 6px; }
+      .card{ padding: 16px; }
+      .form-grid{ grid-template-columns: 1fr; }
+      .table-toolbar > div{ display: flex; flex-wrap: wrap; gap: 6px; }
+    }
+  }

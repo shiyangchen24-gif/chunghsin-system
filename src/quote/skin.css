@@ -1,0 +1,80 @@
+
+/* ===== 新版外觀：清爽卡片式後台（只作用於螢幕）=====
+   主色回到翠綠，與原系統「主綠」同一色系；語意色保留：匯出綠、新品黃底紅字、未匹配橘。Excel 匯出格式完全不受影響。 */
+@media screen{
+  :root{
+    --paper-50: var(--zx-canvas);
+    --paper-100: var(--zx-surface-2);
+    --paper-200: #E7ECE9;
+    --line: var(--zx-border);
+    --ink: var(--zx-text);
+    --ink-soft: var(--zx-text-2);
+    --leaf-500: #2E9C70;
+    --leaf-600: var(--zx-primary);
+    --leaf-700: var(--zx-primary-hover);
+    --radius: 14px;
+    --shadow: var(--zx-shadow);
+    font-size: 15px;
+  }
+  body{ font-family: var(--font-body); background: var(--zx-canvas); }
+  .mono{ font-family: var(--font-mono); }
+
+  .topbar{ border-bottom: 1px solid var(--zx-border); }
+  .brand-mark .glyph{ width: 44px; height: 44px; border-radius: 12px; background: var(--zx-surface); border: 1px solid var(--zx-border); }
+  .brand-mark h1{ font-size: 20px; font-weight: 700; }
+  .topbar-actions{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+  .btn{ border-radius: var(--radius-btn); padding: 9px 15px; font-size: 13.5px; transition: background var(--dur), border-color var(--dur), box-shadow var(--dur), opacity .15s; }
+  .btn:focus-visible{ outline: none; box-shadow: var(--focus-ring); }
+  .btn:disabled{ opacity: .5; cursor: not-allowed; }
+  .btn-primary{ background: var(--zx-primary); border-color: var(--zx-primary); color: #fff; }
+  .btn-primary:hover:not(:disabled){ background: var(--zx-primary-hover); border-color: var(--zx-primary-hover); box-shadow: none; transform: none; }
+  .btn-export, .tray-export-btn{ background: var(--biz-export) !important; border-color: var(--biz-export) !important; color: #fff !important; }
+  .btn-secondary{ box-shadow: var(--zx-shadow); }
+
+  /* 頁籤：白底分段控制 */
+  .tab-row{ border-bottom: 0; gap: 4px; background: var(--zx-surface); padding: 4px; border: 1px solid var(--zx-border); border-radius: 12px; display: inline-flex; box-shadow: var(--zx-shadow); }
+  .tab-btn{ border: 0; margin: 0; padding: 8px 18px; border-radius: 9px; font-size: 14px; }
+  .tab-btn.active{ background: var(--zx-primary-soft); color: var(--zx-primary-ink); border-bottom-color: transparent; }
+
+  /* 階段卡：KPI 卡片風格 */
+  .stage-card{ border: 1px solid var(--zx-border) !important; border-radius: 14px; background: var(--zx-surface); box-shadow: var(--zx-shadow); transition: box-shadow var(--dur), border-color var(--dur); }
+  .stage-card:hover:not(.active){ box-shadow: var(--zx-shadow-hover); border-color: var(--zx-border-strong) !important; }
+  .stage-card.active{ border-color: var(--zx-primary) !important; box-shadow: 0 0 0 1px var(--zx-primary); background: var(--zx-surface); }
+  .stage-card.active .stage-chip{ background: var(--zx-primary); color: #fff; }
+
+  .cust-list-card, .detail-card{ border: 1px solid var(--zx-border); border-radius: var(--radius-card); box-shadow: var(--zx-shadow); }
+  .tray-card{ border: 1.5px solid var(--biz-export); border-radius: var(--radius-card); box-shadow: var(--zx-shadow); }
+  .cust-row.active{ border-left-color: var(--zx-primary); background: var(--zx-primary-soft); }
+  .search-box input, .raw-select, .field input, .field select, .modal input, .modal select{
+    border: 1px solid var(--zx-border); border-radius: var(--radius-input); background: var(--zx-surface); box-shadow: none;
+  }
+  .search-box input:focus, .raw-select:focus, .field input:focus, .field select:focus{ outline: none; border-color: var(--zx-primary); box-shadow: 0 0 0 3px var(--zx-primary-soft); }
+  .modal{ border-radius: var(--radius-card); box-shadow: var(--zx-shadow-pop); }
+  .dropzone{ border-radius: 14px; }
+  .toast{ border-radius: 12px; }
+  .badge{ border-radius: 999px; }
+
+  /* 欄位對應網格：維持原版緊湊樣式（每欄一個下拉選單） */
+  .map-grid select.mapSelect{
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; background: #fff; padding: 7px 9px;
+    box-shadow: none; font-size: 13.5px; color: var(--zx-text);
+  }
+  .map-grid select.mapSelect:focus{ outline: none; box-shadow: var(--focus-ring); }
+  .kv-table, .preview-scroll table{ box-shadow: none; }
+
+  html.zx-readonly #btnAddCustomer, html.zx-readonly #btnBatchImport, html.zx-readonly #btnBatchQuotes,
+  html.zx-readonly #btnResetAll, html.zx-readonly #btnMasterItems{ display: none !important; }
+
+  @media (max-width: 640px){
+    .stage-row{ grid-template-columns: 1fr !important; display: grid; gap: 10px; }
+    .stage-card .stage-num{ font-size: 28px; }
+    .tab-row{ display: flex; }
+  }
+  @media (max-width: 900px){
+    .workspace{ flex-direction: column; }
+    .detail-panel{ width: 100% !important; position: static !important; }
+    .shell{ width: 100%; padding: 16px; }
+    .topbar{ align-items: flex-start; }
+  }
+}

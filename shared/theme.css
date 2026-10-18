@@ -1,0 +1,151 @@
+/* =====================================================================
+ * theme.css — 三站共用設計 token（清爽卡片式後台風格）
+ * 淺灰綠畫布、白色卡片、細邊框＋輕陰影、翠綠主色、16px 卡片圓角、Inter＋Noto Sans TC。
+ * 業務語意色保留：已叫貨綠、未叫貨／異常紅、交接／今日不叫藍、三天未叫琥珀、新品黃、未匹配橘、匯出綠。
+ * 舊的 --clay-* 名稱保留為別名，各站外觀層（src/<site>/clay-skin.css）不必逐一改寫。
+ * 列印時完全不套用卡片陰影與背景，維持原規格的白底細黑格線。
+ * 字型：<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+ * ===================================================================== */
+:root {
+  /* 畫布與文字 */
+  --zx-canvas: #F3F6F4;
+  --zx-surface: #FFFFFF;
+  --zx-surface-2: #F6F8F7;        /* 輸入框、表頭、次要區塊 */
+  --zx-border: #E3E8E5;
+  --zx-border-strong: #CFD8D3;
+  --zx-text: #1C2520;
+  --zx-text-2: #5A6660;
+  --zx-text-3: #66716B;           /* 最淡的說明文字，仍維持 ≥ 4.5:1 */
+
+  /* 主色（翠綠） */
+  --zx-primary: #15805A;
+  --zx-primary-hover: #106A4A;
+  --zx-primary-soft: #E3F2EA;     /* 側邊欄選中、徽章底 */
+  --zx-primary-ink: #0E5E42;      /* 淺底上的綠字 */
+
+  /* 漲跌提示 */
+  --zx-up: #15805A;
+  --zx-down: #C9302C;
+
+  /* 業務語意色 */
+  --biz-abnormal: #E93E38;        --biz-abnormal-bg: #FFE9E8;   /* 異常紅 */
+  --biz-handover: #2D79E4;        --biz-handover-bg: #E7F0FE;   /* 交接藍 */
+  --biz-new-item: #FFDE5A;        --biz-new-item-text: #FF524D; /* 新品黃底紅字 */
+  --biz-unmatched: #FF8637;                                      /* 未匹配橘 */
+  --biz-export: #1F7A3D;                                         /* 匯出綠 */
+  --biz-ordered: #01AB56;         --biz-ordered-bg: #E2F6EA;
+  --biz-warn: #FFA836;            --biz-warn-bg: #FDF2D8;
+
+  /* 字型 */
+  --font-body: 'Inter', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', system-ui, sans-serif;
+  --font-heading: var(--font-body);
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+
+  /* 圓角 */
+  --radius-card: 16px;
+  --radius-btn: 10px;
+  --radius-input: 10px;
+  --radius-chip: 999px;
+
+  /* 陰影：只用很輕的一層，靠邊框分區 */
+  --zx-shadow: 0 1px 2px rgba(16, 24, 20, .04), 0 1px 3px rgba(16, 24, 20, .05);
+  --zx-shadow-hover: 0 4px 14px rgba(16, 24, 20, .08), 0 1px 3px rgba(16, 24, 20, .05);
+  --zx-shadow-pressed: inset 0 1px 2px rgba(16, 24, 20, .08);
+  --zx-shadow-pop: 0 12px 32px rgba(16, 24, 20, .14);           /* 彈出視窗 */
+
+  --focus-ring: 0 0 0 2px #FFFFFF, 0 0 0 4px var(--zx-primary);
+  --ease-clay: cubic-bezier(.2, .8, .2, 1);
+  --dur: 160ms;
+
+  /* ---- 舊名稱別名（各站外觀層仍在使用） ---- */
+  --clay-canvas: var(--zx-canvas);
+  --clay-surface: var(--zx-surface);
+  --clay-surface-sunken: var(--zx-surface-2);
+  --clay-text: var(--zx-text);
+  --clay-text-2: var(--zx-text-2);
+  --clay-purple: var(--zx-primary);
+  --clay-pink: #DB2777;
+  --clay-blue: #0EA5E9;
+  --clay-green: #10B981;
+  --clay-yellow: #F59E0B;
+  --clay-shadow: var(--zx-shadow), 0 0 0 1px var(--zx-border);
+  --clay-shadow-hover: var(--zx-shadow-hover), 0 0 0 1px var(--zx-border);
+  --clay-shadow-pressed: var(--zx-shadow-pressed), 0 0 0 1px var(--zx-border-strong);
+  --clay-shadow-flat: 0 0 0 1px var(--zx-border);
+}
+
+html { -webkit-font-smoothing: antialiased; }
+body {
+  background: var(--zx-canvas);
+  color: var(--zx-text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.55;
+}
+h1, h2, h3, .clay-heading { font-family: var(--font-heading); font-weight: 700; letter-spacing: -.01em; }
+.num, td.num, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.clay-card, .zx-card {
+  background: var(--zx-surface);
+  border: 1px solid var(--zx-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--zx-shadow);
+  padding: 20px;
+}
+.clay-btn, .zx-btn {
+  border: 1px solid var(--zx-border);
+  border-radius: var(--radius-btn);
+  padding: 9px 16px;
+  font: 600 14px/1.2 var(--font-body);
+  color: var(--zx-text);
+  background: var(--zx-surface);
+  box-shadow: var(--zx-shadow);
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background var(--dur), border-color var(--dur), box-shadow var(--dur);
+}
+.clay-btn:hover, .zx-btn:hover { border-color: var(--zx-border-strong); background: var(--zx-surface-2); }
+.clay-btn:active, .zx-btn:active { box-shadow: var(--zx-shadow-pressed); }
+.clay-btn:focus-visible, .zx-btn:focus-visible, .clay-input:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.clay-btn--primary, .zx-btn--primary { background: var(--zx-primary); border-color: var(--zx-primary); color: #fff; }
+.clay-btn--primary:hover, .zx-btn--primary:hover { background: var(--zx-primary-hover); border-color: var(--zx-primary-hover); }
+.clay-btn--export { background: var(--biz-export); border-color: var(--biz-export); color: #fff; }
+.clay-btn--danger { background: #C2261F; border-color: #C2261F; color: #fff; }
+.clay-btn:disabled, .zx-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.clay-input, .zx-input {
+  border: 1px solid var(--zx-border);
+  border-radius: var(--radius-input);
+  padding: 9px 12px;
+  background: var(--zx-surface);
+  color: var(--zx-text);
+  font: inherit;
+}
+.clay-input:focus, .zx-input:focus { outline: none; border-color: var(--zx-primary); box-shadow: 0 0 0 3px var(--zx-primary-soft); }
+
+/* 資料表格 */
+.clay-table { width: 100%; border-collapse: separate; border-spacing: 0; background: var(--zx-surface);
+              border: 1px solid var(--zx-border); border-radius: 12px; overflow: hidden; }
+.clay-table th { position: sticky; top: 0; background: var(--zx-surface-2); color: var(--zx-text-2); font-weight: 600; text-align: left; padding: 10px 12px; }
+.clay-table td { padding: 10px 12px; border-top: 1px solid var(--zx-border); }
+.clay-table tr.is-new td { background: var(--biz-new-item); color: var(--biz-new-item-text); }
+.clay-table tr.is-unmatched td { background: var(--biz-unmatched); color: #2B1A0E; }
+
+/* 同步狀態徽章 */
+.sync-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: var(--radius-chip);
+              font: 600 12.5px var(--font-body); background: var(--zx-surface); border: 1px solid var(--zx-border); }
+.sync-badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.sync-badge[data-state="live"] { color: var(--zx-primary-ink); }
+.sync-badge[data-state="catching-up"], .sync-badge[data-state="fallback"] { color: #9A5B00; }
+.sync-badge[data-state="offline"], .sync-badge[data-state="error"] { color: #B91C1C; }
+.sync-badge[data-state="pending"], .sync-badge[data-state="paused"] { color: var(--zx-text-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* 列印：完全不套卡片效果，回到原規格（白底、細黑格線） */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .clay-card, .zx-card, .clay-btn, .zx-btn, .clay-table, .sync-badge { box-shadow: none !important; border-radius: 0 !important; background: #fff !important; }
+}

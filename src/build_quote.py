@@ -190,12 +190,11 @@ def build_app():
 def build_index():
     html = (SRC / 'index.html').read_text(encoding='utf-8')
     html = re.sub(r'<link href="https://fonts\.googleapis\.com/css2\?family=Inter[^"]*" rel="stylesheet">',
-                  lambda m: ('<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700'
-                             '&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">\n'
-                             '<link rel="stylesheet" href="../shared/clay-tokens.css">'), html, count=1)
+                  lambda m: ('<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">\n'
+                             '<link rel="stylesheet" href="../shared/theme.css">'), html, count=1)
     html = must_replace(html, '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>',
                         f'<script src="{SUPABASE_JS}"></script>')
-    html = must_replace(html, '</style>', (HERE / 'clay-skin.css').read_text(encoding='utf-8') + '</style>')
+    html = must_replace(html, '</style>', (HERE / 'skin.css').read_text(encoding='utf-8') + '</style>')
     html = must_replace(html, '''    <div class="topbar-actions">
       <button class="btn btn-ghost" id="btnResetAll">重置本期匯出狀態</button>''', '''    <div class="topbar-actions">
       <span id="zx-sync-badge" class="sync-badge" data-state="pending" role="status" aria-live="polite">連線中…</span>

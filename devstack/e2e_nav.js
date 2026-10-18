@@ -29,11 +29,43 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   await A.goto(BASE + '/');
   check(await A.isVisible('.zx-sidebar'), 'home page shows the sidebar');
   check((await current(A)) === 'home', 'home item highlighted on home page');
-  check((await A.$$('.sys')).length === 3, 'home page has 3 system cards');
-  await A.screenshot({ path: path.join(SHOTS, 'nav-home.png') });
+  check(await A.isVisible('#zx-login-email'), 'dashboard asks for login');
+  await A.fill('#zx-login-email', 'admin@zx.test'); await A.fill('#zx-login-pw', 'admin123'); await A.click('.zx-login-btn');
+  await A.waitForFunction(() => !document.querySelector('#kpis').classList.contains('skeleton'), null, { timeout: 15000 });
+  check((await A.textContent('#hello')).includes('歡迎回來'), 'dashboard greets the member');
+  check(await contentClear(A), 'dashboard content starts right of the sidebar');
+  const kTick = await A.textContent('#k-tick .val');
+  check(/^\d+\/ \d+$/.test(kTick.replace(/\s+/g, ' ').replace(/(\d) \//, '$1/')), `KPI 今日已叫貨 shows x / total (${kTick})`);
+  const pts = () => A.$$eval('#trend-table tbody tr', r => r.length);
+  const n30 = await pts();
+  check(n30 >= 5 && await A.$('#chart svg path[stroke-dasharray]'), `trend chart drawn with ${n30} service days (solid + dashed line)`);
+  const box = await A.$eval('#hit', e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; });
+  await A.mouse.move(box.x + box.w - 2, box.y + box.h / 2);
+  check(await A.isVisible('#tip') && (await A.textContent('#tip')).includes('已叫貨'), 'hover shows crosshair tooltip');
+  await A.screenshot({ path: path.join(SHOTS, 'dashboard.png') });
+  await A.click('.seg button[data-days="7"]');
+  check((await pts()) === Math.min(7, n30) && (await A.getAttribute('.seg button[data-days="7"]', 'aria-pressed')) === 'true', '7-day range re-draws chart');
+  await A.click('#table-toggle');
+  check(await A.isVisible('#trend-table table'), 'table view toggle shows data table');
+  check((await A.$$('#latest .ab')).length > 0, 'latest abnormal cards listed');
+
+  // 另一台在打勾單勾選 → 儀表板（最快 60 秒重抓一次）更新已叫貨數
+  const B = await mk(1280, 860);
+  await B.goto(BASE + '/tick/');
+  await B.fill('#zx-login-email', 'staff1@zx.test'); await B.fill('#zx-login-pw', 'staff123'); await B.click('.zx-login-btn');
+  await B.waitForFunction(() => document.querySelectorAll('.ccard').length > 0, null, { timeout: 15000 });
+  const before = parseInt(kTick, 10);
+  const card = await B.$('.ccard.unordered, .ccard.warn3');
+  if (card) {
+    await card.click();
+    const t0 = Date.now();
+    const ok = await A.waitForFunction(b => parseInt(document.querySelector('#k-tick .val').textContent, 10) === b + 1, before, { timeout: 75000 })
+      .then(() => true, () => false);
+    check(ok, `dashboard picked up a tick from another device (${((Date.now() - t0) / 1000).toFixed(1)} s, throttle 60 s)`);
+  } else check(false, 'found an un-ticked card to click');
+  await B.context().close();
 
   await A.click('.zx-nav-link[data-key="tick"]');
-  await A.fill('#zx-login-email', 'admin@zx.test'); await A.fill('#zx-login-pw', 'admin123'); await A.click('.zx-login-btn');
   await A.waitForFunction(() => document.querySelectorAll('.ccard').length > 0, null, { timeout: 15000 });
   check((await current(A)) === 'tick', 'sidebar → 打勾單, highlighted');
   check(await contentClear(A), 'tick content starts right of the sidebar (no overlap)');
@@ -67,7 +99,9 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   check(await A.evaluate(() => document.documentElement.classList.contains('zx-nav-mini')), 'collapsed state remembered on next page');
   await A.click('.zx-nav-collapse');
   await A.click('.zx-nav-link[data-key="home"]');
-  check(await A.isVisible('#continue') && (await A.textContent('#continue')).includes('打勾單'), 'home offers「繼續使用」last system');
+  await A.waitForSelector('#zx-user-chip .zx-role', { timeout: 15000 });
+  check(!(await A.$('#zx-login:not([hidden])')) && await A.isVisible('#continue') && (await A.textContent('#continue')).includes('打勾單'),
+        'dashboard: no second login, offers「繼續使用」last system');
 
   // staff 看不到搬移工具
   const S = await mk(1440, 900);
@@ -79,6 +113,10 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   // 手機：抽屜
   const M = await mk(390, 844);
   await M.goto(BASE + '/');
+  await M.fill('#zx-login-email', 'staff2@zx.test'); await M.fill('#zx-login-pw', 'staff123'); await M.click('.zx-login-btn');
+  await M.waitForFunction(() => !document.querySelector('#kpis').classList.contains('skeleton'), null, { timeout: 15000 });
+  check(await M.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), 'mobile dashboard: no horizontal scroll');
+  await M.screenshot({ path: path.join(SHOTS, 'dashboard-mobile.png'), fullPage: true });
   check(await M.isHidden('.zx-sidebar') || (await M.$eval('.zx-sidebar', e => e.getBoundingClientRect().right)) <= 0, 'mobile: sidebar hidden by default');
   await M.click('.zx-nav-fab');
   await M.waitForTimeout(300);
@@ -89,8 +127,8 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   check((await M.$eval('.zx-sidebar', e => e.getBoundingClientRect().right)) <= 0, 'mobile: Esc closes drawer');
   await M.click('.zx-nav-fab'); await M.waitForTimeout(250);
   await M.click('.zx-nav-link[data-key="report"]');
-  await M.waitForSelector('#zx-login-email');
-  check(true, 'mobile: drawer link navigates to 異常表');
+  await M.waitForSelector('#zx-user-chip .zx-role', { timeout: 15000 });
+  check(M.url().includes('/report/'), 'mobile: drawer link navigates to 異常表');
 
   check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));
   await browser.close();

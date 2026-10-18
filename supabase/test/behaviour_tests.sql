@@ -152,3 +152,18 @@ select pg_temp.assert((select streak from public.v_tick_streak where customer_co
 do $$ begin perform public.tick_delete_day('2026-10-14'); raise exception 'should fail'; exception when insufficient_privilege then raise notice 'PASS: staff cannot delete a history day'; end $$;
 select pg_temp.assert((public.set_my_profile('小美','kitty.png'))->>'icon' = 'kitty.png', 'set_my_profile works');
 reset role;
+
+-- 16. 儀表板彙總：一次回傳打勾單／異常表／報價的小計，系列規則與打勾單一致；viewer 可讀、anon 不可呼叫
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000b',false);
+select set_config('zx.dash', public.dashboard_summary(30)::text, false);
+select pg_temp.assert((current_setting('zx.dash')::jsonb->'tick'->>'total')::int = (select count(*) from public.tick_customers where is_listed), 'dashboard tick total = listed customers');
+select pg_temp.assert((current_setting('zx.dash')::jsonb->>'service_date') = (select service_date::text from public.tick_service_days where status='open'), 'dashboard uses open service day');
+select pg_temp.assert(jsonb_array_length(current_setting('zx.dash')::jsonb->'series') = 5, 'dashboard returns 5 series');
+select pg_temp.assert((select (e->>'total')::int from jsonb_array_elements(current_setting('zx.dash')::jsonb->'series') e where e->>'name'='壽司郎') = 0, 'series exclude_prefix honoured (壽司郎中山 excluded, same as tick page)');
+select pg_temp.assert((current_setting('zx.dash')::jsonb->'quote'->>'total')::int = (select count(*) from public.customer_quote_profiles), 'dashboard quote stage counts cover all profiles');
+select pg_temp.assert(length(current_setting('zx.dash')) < 8000, 'dashboard payload < 8 KB');
+reset role;
+do $$ begin
+  set local role anon;
+  perform public.dashboard_summary(30); raise exception 'should fail';
+exception when insufficient_privilege then raise notice 'PASS: anon cannot call dashboard_summary'; end $$;
