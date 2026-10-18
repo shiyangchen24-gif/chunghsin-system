@@ -1062,36 +1062,6 @@ tbody tr.row-warn:hover td { background: #fef3c7; }
       <div class="brand-name">忠欣打勾單系統</div>
     </div>
   </div>
-  <!-- 分頁標籤列 -->
-  <div style="display:flex;align-items:flex-end;gap:0;margin-left:16px;flex-shrink:0;align-self:stretch;">
-    <!-- 當前頁（打勾單，不可點擊） -->
-    <div style="
-      display:inline-flex;align-items:center;gap:5px;
-      padding:0 16px;height:100%;
-      font-size:12px;font-weight:700;color:var(--accent);
-      background:var(--page);
-      border-left:1px solid var(--line);
-      border-right:1px solid var(--line);
-      border-top:2px solid var(--accent);
-      cursor:default;white-space:nowrap;">
-      <img src="memo-circle-check.png" style="width:16px;height:16px;vertical-align:middle;margin-right:5px;"> 打勾單
-    </div>
-    <!-- 交接報告（連結到外部） -->
-    <a href="../report/"
-       style="
-         display:inline-flex;align-items:center;gap:5px;
-         padding:0 16px;height:100%;
-         font-size:12px;font-weight:600;color:var(--ink3);
-         background:var(--line2);
-         border-left:0;border-right:1px solid var(--line);
-         border-top:2px solid transparent;
-         text-decoration:none;white-space:nowrap;
-         transition:color .15s,background .15s,border-top-color .15s;"
-       onmouseover="this.style.color='var(--ink)';this.style.background='var(--white)';this.style.borderTopColor='var(--line)'"
-       onmouseout="this.style.color='var(--ink3)';this.style.background='var(--line2)';this.style.borderTopColor='transparent'">
-      <img src="fail.png" style="width:16px;height:16px;vertical-align:middle;margin-right:5px;"> 異常表/交接表
-    </a>
-  </div>
   <!-- ★ 同步狀態 + 最後同步時間放在品牌名稱右側 -->
   <div style="display:flex;align-items:center;gap:10px;margin-left:12px;padding-left:12px;border-left:1px solid var(--line);flex-shrink:0;">
     <div class="sync-wrap">
@@ -1433,6 +1403,7 @@ tbody tr.row-warn:hover td { background: #fef3c7; }
     </div>
   </div>
 </div>
+<script src="../shared/zx-nav.js?v=2026-10-18-zx-v1" data-site="tick" data-root="../"></script>
 <script src="../shared/zx-config.js?v=2026-10-18-zx-v1"></script>
 <script src="../shared/zx-sync.js?v=2026-10-18-zx-v1"></script>
 <script src="../shared/zx-auth.js?v=2026-10-18-zx-v1"></script>
@@ -1872,7 +1843,7 @@ function updateCardDOM(n) {
       <span>${lbl}</span>
       ${lastUser
         ? `<span style="font-size:11px;display:inline-flex;align-items:center;gap:3px;" title="${esc(lastUser)}">${renderIcon(lastIcon,'16px')} ${esc(lastUser)}</span>`
-        : (d.date ? `<span>${d.date.slice(5)}</span>` : '')}
+        : ''}
     `;
   }
 
@@ -2033,7 +2004,7 @@ function mkCard(n, warn3) {
     <div class="ccard-foot">
       <span class="ccard-dot"></span>
       <span>${lbl}</span>
-      ${lastUser ? `<span style="font-size:11px;display:inline-flex;align-items:center;gap:3px;" title="${esc(lastUser)}">${renderIcon(lastIcon,'16px')} ${esc(lastUser)}</span>` : (d.date ? `<span>${d.date.slice(5)}</span>` : '')}
+      ${lastUser ? `<span style="font-size:11px;display:inline-flex;align-items:center;gap:3px;" title="${esc(lastUser)}">${renderIcon(lastIcon,'16px')} ${esc(lastUser)}</span>` : ''}
     </div>
   </div>`;
 }

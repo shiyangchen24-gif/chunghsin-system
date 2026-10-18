@@ -31,7 +31,7 @@
     '.zx-user-chip .zx-role{font-size:11px;color:var(--clay-text-2,#635F69)}' +
     '.zx-user-chip button{border:0;background:transparent;color:var(--clay-text-2,#635F69);font:600 12px inherit;cursor:pointer;' +
     'padding:4px 8px;border-radius:999px}.zx-user-chip button:hover{background:var(--clay-surface-sunken,#ECE8F4)}' +
-    '.zx-env-dev{position:fixed;left:8px;bottom:8px;z-index:9999;font:700 11px var(--font-mono,monospace);background:#FEF3C7;' +
+    '.zx-env-dev{position:fixed;right:8px;bottom:8px;z-index:9999;font:700 11px var(--font-mono,monospace);background:#FEF3C7;' +
     'color:#92400E;padding:3px 8px;border-radius:8px}' +
     '@media print{.zx-login,.zx-user-chip,.zx-env-dev,.sync-badge{display:none!important}}';
 
@@ -138,6 +138,7 @@
       can: { write: member.role === 'admin' || member.role === 'staff', delete: member.role === 'admin' }
     };
     document.documentElement.dataset.zxRole = member.role;
+    document.dispatchEvent(new CustomEvent('zx:ready', { detail: { role: member.role } }));   // 側邊欄依角色顯示項目
     await opts.onReady(ctx);
     return ctx;
   }

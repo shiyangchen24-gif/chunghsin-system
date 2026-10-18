@@ -99,6 +99,7 @@ def main():
 
     scripts = (
         f'<script src="{SUPABASE_JS}"></script>\n'
+        '<script src="../shared/zx-nav.js" data-site="report" data-root="../"></script>\n'
         '<script src="../shared/zx-config.js"></script>\n'
         '<script src="../shared/zx-sync.js"></script>\n'
         '<script src="../shared/zx-auth.js"></script>\n\n'

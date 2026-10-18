@@ -116,8 +116,10 @@ def main():
     html = html[:first_style_end] + (HERE / 'clay-skin.css').read_text(encoding='utf-8') + html[first_style_end:]
 
     # ---- body ----
-    html = must_replace(html, '<a href="https://shiyangchen24-gif.github.io/shift.report2026/" target="_blank"',
-                        '<a href="../report/"')
+    # 頁首原本的「打勾單／異常表交接表」分頁標籤 → 改由三站共用側邊欄切換
+    html, n = re.subn(r'  <!-- 分頁標籤列 -->.*?(?=  <!-- ★ 同步狀態)', '', html, count=1, flags=re.S)
+    if n != 1:
+        sys.exit('build_tick: header tab block not found')
     html = must_replace(html, '''  <div class="user-tag" id="user-tag" onclick="openUserModal()" title="點擊設定暱稱">
     <div class="user-tag-avatar" id="user-avatar">?</div>
     <span class="user-tag-name" id="user-tag-name">設定暱稱</span>
@@ -172,6 +174,9 @@ def main():
       if (!s || s === '未叫貨') streak++; else break;
     }''', '''    let streak = tickStreak.get(n) || 0;''')
 
+    # 修正原版小 bug：date 早已改存 'ordered'（不是日期），卡片底部會顯示「ed」；沒有操作者時改為不顯示
+    js = must_replace(js, "(d.date ? `<span>${d.date.slice(5)}</span>` : '')", "''", count=2)
+
     js = must_replace(js, '  groupOrder[group] = ordered;\n  saveOrder();', '  groupOrder[group] = ordered;\n  saveOrder(group);', count=2)
 
     # 趨勢分析：歷史日改讀每日筆數（tick_daily_counts），不再需要整份歷史快照
@@ -195,7 +200,8 @@ def main():
     js = 'let sb = null;\n' + js + '\n' + (HERE / 'controller.js').read_text(encoding='utf-8') + WRAPPERS
     tail = tail.replace('</script>', '</script>', 1)
 
-    shared = (f'<script src="../shared/zx-config.js?v={VERSION}"></script>\n'
+    shared = (f'<script src="../shared/zx-nav.js?v={VERSION}" data-site="tick" data-root="../"></script>\n'
+              f'<script src="../shared/zx-config.js?v={VERSION}"></script>\n'
               f'<script src="../shared/zx-sync.js?v={VERSION}"></script>\n'
               f'<script src="../shared/zx-auth.js?v={VERSION}"></script>\n')
     page = page[:-len('<script>\n')] + shared + '<script>\n'

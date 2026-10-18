@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>忠欣蔬果內部系統</title>
+<link rel="icon" href="shared/logo-teruteru.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/clay-tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; }
+  main { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+  .hero { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-bottom: 32px; }
+  .hero img { width: 96px; height: 96px; border-radius: 32px; background: var(--clay-surface); box-shadow: var(--clay-shadow); padding: 8px; }
+  .hero h1 { margin: 0; font-size: clamp(26px, 4vw, 36px); }
+  .hero p { margin: 6px 0 0; color: var(--clay-text-2); font-size: 16px; }
+  .continue { display: inline-flex; align-items: center; gap: 8px; margin-top: 14px; text-decoration: none; }
+  .continue[hidden] { display: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .sys { display: flex; flex-direction: column; gap: 12px; text-decoration: none; color: var(--clay-text);
+         background: var(--clay-surface); border-radius: var(--radius-card); box-shadow: var(--clay-shadow); padding: 28px;
+         transition: transform var(--dur) var(--ease-clay), box-shadow var(--dur) ease; }
+  .sys:hover { transform: translateY(-4px); box-shadow: var(--clay-shadow-hover); }
+  .sys:active { transform: translateY(1px); box-shadow: var(--clay-shadow-pressed); }
+  .sys:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+  .sys .ico { width: 60px; height: 60px; border-radius: 22px; display: flex; align-items: center; justify-content: center;
+              box-shadow: inset 4px 4px 8px rgba(255,255,255,.7), inset -4px -4px 10px rgba(51,47,58,.08); }
+  .sys h2 { margin: 0; font-size: 22px; }
+  .sys p { margin: 0; color: var(--clay-text-2); line-height: 1.6; }
+  .sys ul { margin: 0; padding-left: 18px; color: var(--clay-text-2); font-size: 14px; line-height: 1.8; }
+  .sys .go { margin-top: auto; font-weight: 700; }
+  .tick .ico { background: var(--biz-ordered-bg); color: #047857; }   .tick .go { color: #047857; }
+  .report .ico { background: var(--biz-abnormal-bg); color: #C2261F; } .report .go { color: #C2261F; }
+  .quote .ico { background: #DCF2E3; color: var(--biz-export); }       .quote .go { color: var(--biz-export); }
+  footer { margin-top: 40px; color: var(--clay-text-2); font-size: 13px; text-align: center; }
+</style>
+</head>
+<body>
+<script src="shared/zx-nav.js" data-site="home" data-root="./"></script>
+<main>
+  <section class="hero">
+    <img src="shared/logo-teruteru.svg" alt="忠欣蔬果 晴天娃娃 LOGO">
+    <div>
+      <h1>忠欣蔬果內部系統</h1>
+      <p>三個系統共用同一個帳號登入，資料在所有裝置即時同步。可由左側選單隨時切換。</p>
+      <a class="clay-btn clay-btn--primary continue" id="continue" href="#" hidden>繼續使用上次的系統 →</a>
+    </div>
+  </section>
+
+  <section class="grid" aria-label="系統">
+    <a class="sys tick" href="tick/">
+      <div class="ico"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8.5 12.5 2.5 2.5 5-5.5"/></svg></div>
+      <h2>打勾單</h2>
+      <p>每日客戶叫貨狀態追蹤</p>
+      <ul><li>點卡片標記已叫貨、右鍵今日不叫</li><li>連續 3 個工作天未叫自動提醒</li><li>系列統計、趨勢分析、列印預覽</li></ul>
+      <span class="go">開啟打勾單 →</span>
+    </a>
+    <a class="sys report" href="report/">
+      <div class="ico"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4 3.5 19h17z"/><path d="M12 10v4.5M12 17.2v.3"/></svg></div>
+      <h2>異常表與交接表</h2>
+      <p>異常事件與交接事項紀錄</p>
+      <ul><li>店家自動帶入車號</li><li>依日期範圍查詢歷史</li><li>列印預覽與匯出 Excel</li></ul>
+      <span class="go">開啟異常表與交接表 →</span>
+    </a>
+    <a class="sys quote" href="quote/">
+      <div class="ico"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3.5h7l4.5 4.5V19a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M14 3.5V8h4.5M8.5 12.5h7M8.5 16h7"/></svg></div>
+      <h2>報價單匯出</h2>
+      <p>客戶報價單轉成公司標準匯入格式</p>
+      <ul><li>上傳精靈自動辨識欄位</li><li>有貨號／無貨號客戶分頁</li><li>勾選多位客戶批次匯出</li></ul>
+      <span class="go">開啟報價單匯出 →</span>
+    </a>
+  </section>
+  <footer>忠欣蔬果有限公司・內部使用</footer>
+</main>
+<script>
+  (function () {
+    var LABEL = { tick: '打勾單', report: '異常表與交接表', quote: '報價單匯出' };
+    var last = null;
+    try { last = localStorage.getItem('zx-last-site'); } catch (e) {}
+    if (last && LABEL[last]) {
+      var a = document.getElementById('continue');
+      a.href = last + '/';
+      a.textContent = '繼續使用「' + LABEL[last] + '」 →';
+      a.hidden = false;
+    }
+  })();
+</script>
+</body>
+</html>

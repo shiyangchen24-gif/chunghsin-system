@@ -205,6 +205,7 @@ def build_index():
                   '<div class="glyph"><img src="../shared/logo-teruteru.svg" width="40" height="40" alt="忠欣蔬果 晴天娃娃 LOGO" style="display:block;"></div>',
                   html, count=1)
     html = must_replace(html, '<script src="app.js?v=2026-09-25-supabase-v22"></script>',
+                        '<script src="../shared/zx-nav.js?v=' + FRONTEND_VERSION + '" data-site="quote" data-root="../"></script>\n'
                         '<script src="../shared/zx-config.js?v=' + FRONTEND_VERSION + '"></script>\n'
                         '<script src="../shared/zx-sync.js?v=' + FRONTEND_VERSION + '"></script>\n'
                         '<script src="../shared/zx-auth.js?v=' + FRONTEND_VERSION + '"></script>\n'
