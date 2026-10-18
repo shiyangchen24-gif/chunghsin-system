@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="t">
+  <title id="t">忠欣蔬果 晴天娃娃</title>
+  <defs>
+    <radialGradient id="head" cx="38%" cy="32%" r="70%">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset=".65" stop-color="#F4F1FA"/>
+      <stop offset="1" stop-color="#DCD4EC"/>
+    </radialGradient>
+    <linearGradient id="cloth" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E4DDF1"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="40%" cy="35%" r="70%">
+      <stop offset="0" stop-color="#FFE38A"/>
+      <stop offset="1" stop-color="#F59E0B"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="3" dy="5" stdDeviation="4" flood-color="#7C3AED" flood-opacity=".22"/>
+    </filter>
+  </defs>
+  <!-- 小太陽 -->
+  <g filter="url(#soft)">
+    <circle cx="100" cy="24" r="13" fill="url(#sun)"/>
+    <g stroke="#F59E0B" stroke-width="3" stroke-linecap="round">
+      <path d="M100 4v5M100 39v5M80 24h5M115 24h5M86 10l3.5 3.5M110.5 34.5L114 38M86 38l3.5-3.5M110.5 13.5L114 10"/>
+    </g>
+  </g>
+  <!-- 吊繩 -->
+  <path d="M58 6v14" stroke="#635F69" stroke-width="3" stroke-linecap="round"/>
+  <!-- 布裙 -->
+  <path filter="url(#soft)" fill="url(#cloth)" stroke="#CFC6E3" stroke-width="2" stroke-linejoin="round" d="M36 62c-8 18-14 36-18 52 8 4 15-2 21 3 6 4 12-2 19 2 7-4 13 2 19-2 6-5 13 1 21-3-4-16-10-34-18-52z"/>
+  <path d="M30 98c10 3 18 1 28 3 10-2 18 0 28-3" fill="none" stroke="#DCD4EC" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- 綠色領結（蔬果） -->
+  <path d="M40 62h36" stroke="#10B981" stroke-width="7" stroke-linecap="round"/>
+  <path d="M58 62c-6-7-15-6-15 0s9 7 15 0c6 7 15 6 15 0s-9-7-15 0z" fill="#10B981"/>
+  <circle cx="58" cy="62" r="3.5" fill="#047857"/>
+  <!-- 頭 -->
+  <circle filter="url(#soft)" cx="58" cy="40" r="22" fill="url(#head)"/>
+  <ellipse cx="50" cy="30" rx="7" ry="4" fill="#FFFFFF" opacity=".9"/>
+  <!-- 臉 -->
+  <path d="M47 39q3-3 6 0M63 39q3-3 6 0" fill="none" stroke="#332F3A" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M52 47q6 5 12 0" fill="none" stroke="#332F3A" stroke-width="2.6" stroke-linecap="round"/>
+  <ellipse cx="45" cy="45" rx="4" ry="2.6" fill="#DB2777" opacity=".35"/>
+  <ellipse cx="71" cy="45" rx="4" ry="2.6" fill="#DB2777" opacity=".35"/>
+</svg>

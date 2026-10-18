@@ -1,0 +1,4287 @@
+{
+    "views": [
+        "v_tick_warn3",
+        "v_quote_customer_list"
+    ],
+    "schemas": [
+        "auth",
+        "private",
+        "public",
+        "realtime",
+        "zx_backup"
+    ],
+    "policies": [
+        {
+            "cmd": "ALL",
+            "name": "anon all",
+            "check": "true",
+            "roles": [
+                "anon"
+            ],
+            "table": "abnormal_reports",
+            "using": "true",
+            "schema": "public"
+        },
+        {
+            "cmd": "ALL",
+            "name": "anon all",
+            "check": "true",
+            "roles": [
+                "anon"
+            ],
+            "table": "handover_reports",
+            "using": "true",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "app_members_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "app_members",
+            "using": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT private.is_admin() AS is_admin))",
+            "schema": "public"
+        },
+        {
+            "cmd": "ALL",
+            "name": "app_members_admin_write",
+            "check": "( SELECT private.is_admin() AS is_admin)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "app_members",
+            "using": "( SELECT private.is_admin() AS is_admin)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "change_log_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "change_log",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "dataset_versions_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "dataset_versions",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_members_receive",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "messages",
+            "using": "(( SELECT private.is_member() AS is_member) AND (realtime.topic() ~~ 'zx:%'::text) AND (extension = 'broadcast'::text))",
+            "schema": "realtime"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customers",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customers",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customers",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customers",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_aliases",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_aliases",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_aliases",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_aliases",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "vehicles",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "vehicles",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "vehicles",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "vehicles",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_vehicle_assignments",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_vehicle_assignments",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_vehicle_assignments",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_vehicle_assignments",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_name_review",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_name_review",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_customers",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_name_review",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_name_review",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_customers",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_customers",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_customers",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_service_days",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_service_days",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_service_days",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_service_days",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "daily_order_status",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "daily_order_status",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "daily_order_status",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "daily_order_status",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_status_events",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_status_events",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_groups",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_groups",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_groups",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_groups",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_group_members",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_group_members",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_group_members",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_group_members",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_notices",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_notices",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_notices",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_notices",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_manual_trend",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_manual_trend",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_manual_trend",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_manual_trend",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_history_days",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_history_days",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_warn3_overrides",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_warn3_overrides",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_warn3_overrides",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_kv_archive",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "legacy_kv_archive",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "(( SELECT private.can_write() AS can_write) AND (actor = ( SELECT auth.uid() AS uid)))",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "order_status_events",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "tick_warn3_overrides",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "abnormal_reports",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "abnormal_reports",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "abnormal_reports",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "abnormal_reports",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "handover_reports",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "handover_reports",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "handover_reports",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "handover_reports",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "master_items",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "master_items",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_profiles",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "master_items",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "master_items",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_profiles",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_profiles",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_profiles",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_mappings",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_mappings",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_mappings",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_mappings",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_items",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_items",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_items",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_items",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_baselines",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_baselines",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_baselines",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_baselines",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_item_code_mappings",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_item_code_mappings",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_item_code_mappings",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_item_code_mappings",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        },
+        {
+            "cmd": "SELECT",
+            "name": "zx_select",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_exports",
+            "using": "( SELECT private.is_member() AS is_member)",
+            "schema": "public"
+        },
+        {
+            "cmd": "INSERT",
+            "name": "zx_insert",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_exports",
+            "using": null,
+            "schema": "public"
+        },
+        {
+            "cmd": "UPDATE",
+            "name": "zx_update",
+            "check": "( SELECT private.can_write() AS can_write)",
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_exports",
+            "using": "( SELECT private.can_write() AS can_write)",
+            "schema": "public"
+        },
+        {
+            "cmd": "DELETE",
+            "name": "zx_delete",
+            "check": null,
+            "roles": [
+                "authenticated"
+            ],
+            "table": "customer_quote_exports",
+            "using": "( SELECT private.can_delete() AS can_delete)",
+            "schema": "public"
+        }
+    ],
+    "functions": [
+        "sync_changes(p_cursor text, p_sites text[], p_limit integer) SECURITY DEFINER",
+        "find_customers(p_name text)",
+        "prune_change_log(p_keep interval) SECURITY DEFINER",
+        "current_vehicle(p_customer_code text, p_on date)",
+        "tick_set_status(p_service_date date, p_customer_code text, p_new_status text, p_expected_revision bigint, p_request_id uuid, p_via text, p_actor_name text, p_actor_icon text)",
+        "tick_reset_day(p_expected_open date, p_new_date date, p_request_id uuid)",
+        "quote_reset_export_status(p_codes text[])",
+        "report_delete_all(p_table text, p_confirm text, p_date date) SECURITY DEFINER",
+        "quote_save_items(p_customer_code text, p_items jsonb, p_new_lookups jsonb, p_baseline jsonb, p_expected_revision bigint, p_request_id uuid)",
+        "quote_mark_exported(p_filename text, p_items jsonb, p_request_id uuid)",
+        "master_items_upsert(p_items jsonb, p_has_spec boolean)"
+    ],
+    "legacy_kv": [
+        {
+            "keys": [
+                {
+                    "key": "zhongxin_hist_v4",
+                    "value_type": "array",
+                    "text_length": 449,
+                    "value_bytes": 499,
+                    "sample_shape": [
+                        "date",
+                        "editLog",
+                        "records"
+                    ],
+                    "top_level_count": 4,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_manual_v1",
+                    "value_type": "object",
+                    "text_length": 51,
+                    "value_bytes": 50,
+                    "sample_shape": {
+                        "first_key_len": 10,
+                        "first_value_keys": [
+                            "no",
+                            "un",
+                            "ord"
+                        ]
+                    },
+                    "top_level_count": 1,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_notices_v1",
+                    "value_type": "array",
+                    "text_length": 87,
+                    "value_bytes": 92,
+                    "sample_shape": [
+                        "id",
+                        "text",
+                        "time",
+                        "author"
+                    ],
+                    "top_level_count": 1,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_order_v1",
+                    "value_type": "object",
+                    "text_length": 58,
+                    "value_bytes": 93,
+                    "sample_shape": {
+                        "first_key_len": 2,
+                        "first_value_keys": "array"
+                    },
+                    "top_level_count": 2,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_ts_v1",
+                    "value_type": "number",
+                    "text_length": 15,
+                    "value_bytes": 22,
+                    "sample_shape": null,
+                    "top_level_count": null,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_v4",
+                    "value_type": "object",
+                    "text_length": 271,
+                    "value_bytes": 301,
+                    "sample_shape": {
+                        "first_key_len": 3,
+                        "first_value_keys": [
+                            "date",
+                            "fixed",
+                            "status"
+                        ]
+                    },
+                    "top_level_count": 4,
+                    "stored_as_string": true
+                },
+                {
+                    "key": "zhongxin_warn3_v1",
+                    "value_type": "array",
+                    "text_length": 12,
+                    "value_bytes": 23,
+                    "sample_shape": "string",
+                    "top_level_count": 1,
+                    "stored_as_string": true
+                }
+            ],
+            "table": "Chunghsin_store"
+        }
+    ],
+    "extensions": [
+        "plpgsql 1.0"
+    ],
+    "pg_version": "16.15 (Ubuntu 16.15-0ubuntu0.24.04.1)",
+    "generated_at": "2026-10-18T06:58:44.186985+00:00",
+    "publications": [
+        {
+            "pub": "supabase_realtime",
+            "table": "customers",
+            "schema": "public"
+        }
+    ],
+    "public_tables": [
+        {
+            "rls": false,
+            "rows": 7,
+            "table": "Chunghsin_store",
+            "columns": [
+                {
+                    "name": "key",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "value",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": false,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX \"Chunghsin_store_pkey\" ON public.\"Chunghsin_store\" USING btree (key)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "Chunghsin_store_pkey: PRIMARY KEY (key)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 0,
+            "table": "abnormal_reports",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "date",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "car_no",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "store",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "reason",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "exchange_type",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "category",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "responsibility",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "note",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "vehicle_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "issue_description",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "report_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "car_no_source",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "updated_by",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX abnormal_reports_pkey ON public.abnormal_reports USING btree (id)",
+                "CREATE UNIQUE INDEX abnormal_reports_request_id_key ON public.abnormal_reports USING btree (request_id)",
+                "CREATE INDEX abnormal_reports_date_idx ON public.abnormal_reports USING btree (report_date DESC, id DESC)",
+                "CREATE INDEX abnormal_reports_customer_idx ON public.abnormal_reports USING btree (customer_code, report_date DESC)",
+                "CREATE INDEX abnormal_reports_store_idx ON public.abnormal_reports USING btree (store)"
+            ],
+            "triggers": [
+                "zx_report_compat: CREATE TRIGGER zx_report_compat BEFORE INSERT OR UPDATE ON public.abnormal_reports FOR EACH ROW EXECUTE FUNCTION private.report_compat()",
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.abnormal_reports FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.abnormal_reports FOR EACH ROW EXECUTE FUNCTION private.log_change('report', 'id', 'report_date', 'customer_code')"
+            ],
+            "force_rls": false,
+            "total_size": "96 kB",
+            "constraints": [
+                "abnormal_reports_pkey: PRIMARY KEY (id)",
+                "abnormal_reports_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE",
+                "abnormal_reports_vehicle_id_fkey: FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)"
+            ],
+            "total_bytes": 98304
+        },
+        {
+            "rls": true,
+            "rows": 3,
+            "table": "app_members",
+            "columns": [
+                {
+                    "name": "user_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "role",
+                    "type": "text",
+                    "default": "'staff'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "display_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "is_active",
+                    "type": "boolean",
+                    "default": "true",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX app_members_pkey ON public.app_members USING btree (user_id)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "app_members_role_check: CHECK ((role = ANY (ARRAY['admin'::text, 'staff'::text, 'viewer'::text])))",
+                "app_members_pkey: PRIMARY KEY (user_id)",
+                "app_members_user_id_fkey: FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 27,
+            "table": "change_log",
+            "columns": [
+                {
+                    "name": "seq",
+                    "type": "bigint",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "txid",
+                    "type": "xid8",
+                    "default": "pg_current_xact_id()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "site",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "tbl",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "row_key",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "op",
+                    "type": "character(1)",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "summary",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "actor",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "changed_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX change_log_pkey ON public.change_log USING btree (seq)",
+                "CREATE INDEX change_log_txid_idx ON public.change_log USING btree (txid, seq)",
+                "CREATE INDEX change_log_changed_at_idx ON public.change_log USING btree (changed_at)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "64 kB",
+            "constraints": [
+                "change_log_site_check: CHECK ((site = ANY (ARRAY['tick'::text, 'report'::text, 'quote'::text, 'shared'::text])))",
+                "change_log_op_check: CHECK ((op = ANY (ARRAY['I'::bpchar, 'U'::bpchar, 'D'::bpchar])))",
+                "change_log_pkey: PRIMARY KEY (seq)"
+            ],
+            "total_bytes": 65536
+        },
+        {
+            "rls": true,
+            "rows": 0,
+            "table": "customer_aliases",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "alias_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "source",
+                    "type": "text",
+                    "default": "'manual'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_aliases_pkey ON public.customer_aliases USING btree (id)",
+                "CREATE UNIQUE INDEX customer_aliases_customer_code_alias_name_key ON public.customer_aliases USING btree (customer_code, alias_name)",
+                "CREATE INDEX customer_aliases_alias_idx ON public.customer_aliases USING btree (alias_name)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.customer_aliases FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.customer_aliases FOR EACH ROW EXECUTE FUNCTION private.log_change('shared', 'id', 'customer_code', 'alias_name')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "customer_aliases_pkey: PRIMARY KEY (id)",
+                "customer_aliases_customer_code_alias_name_key: UNIQUE (customer_code, alias_name)",
+                "customer_aliases_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "customer_item_code_mappings",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_item_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "item_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_item_code_mappings_pkey ON public.customer_item_code_mappings USING btree (id)",
+                "CREATE UNIQUE INDEX customer_item_code_mappings_customer_code_customer_item_nam_key ON public.customer_item_code_mappings USING btree (customer_code, customer_item_name)"
+            ],
+            "triggers": [
+                "zx_recount_insert: CREATE TRIGGER zx_recount_insert AFTER INSERT ON public.customer_item_code_mappings REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_update: CREATE TRIGGER zx_recount_update AFTER UPDATE ON public.customer_item_code_mappings REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_delete: CREATE TRIGGER zx_recount_delete AFTER DELETE ON public.customer_item_code_mappings REFERENCING OLD TABLE AS old_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()"
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "customer_item_code_mappings_pkey: PRIMARY KEY (id)",
+                "customer_item_code_mappings_customer_code_customer_item_nam_key: UNIQUE (customer_code, customer_item_name)",
+                "customer_item_code_mappings_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "customer_quote_baselines",
+            "columns": [
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "item_codes",
+                    "type": "jsonb",
+                    "default": "'[]'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_quote_baselines_pkey ON public.customer_quote_baselines USING btree (customer_code)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "customer_quote_baselines_pkey: PRIMARY KEY (customer_code)",
+                "customer_quote_baselines_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "customer_quote_exports",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "customer_codes",
+                    "type": "text[]",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "filename",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "item_count",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "per_customer",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "actor",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "exported_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_quote_exports_pkey ON public.customer_quote_exports USING btree (id)",
+                "CREATE UNIQUE INDEX customer_quote_exports_request_id_key ON public.customer_quote_exports USING btree (request_id)",
+                "CREATE INDEX customer_quote_exports_at_idx ON public.customer_quote_exports USING btree (exported_at DESC, id)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "64 kB",
+            "constraints": [
+                "customer_quote_exports_pkey: PRIMARY KEY (id)",
+                "customer_quote_exports_request_id_key: UNIQUE (request_id)"
+            ],
+            "total_bytes": 65536
+        },
+        {
+            "rls": true,
+            "rows": 202,
+            "table": "customer_quote_items",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "bigint",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "list_kind",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "line_no",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "item_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "customer_item_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "customer_item_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "spec_unit",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "price",
+                    "type": "numeric(14,4)",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "note",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "origin_variety",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "packing",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "packaging_material",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "origin",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "no_quote_reason",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "price_change_reason",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "unit",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "is_new",
+                    "type": "boolean",
+                    "default": "false",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_quote_items_pkey ON public.customer_quote_items USING btree (id)",
+                "CREATE UNIQUE INDEX customer_quote_items_customer_code_list_kind_line_no_key ON public.customer_quote_items USING btree (customer_code, list_kind, line_no)"
+            ],
+            "triggers": [
+                "zx_recount_insert: CREATE TRIGGER zx_recount_insert AFTER INSERT ON public.customer_quote_items REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_update: CREATE TRIGGER zx_recount_update AFTER UPDATE ON public.customer_quote_items REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_delete: CREATE TRIGGER zx_recount_delete AFTER DELETE ON public.customer_quote_items REFERENCING OLD TABLE AS old_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()"
+            ],
+            "force_rls": false,
+            "total_size": "80 kB",
+            "constraints": [
+                "customer_quote_items_list_kind_check: CHECK ((list_kind = ANY (ARRAY['saved'::text, 'matched'::text, 'unmatched'::text])))",
+                "customer_quote_items_pkey: PRIMARY KEY (id)",
+                "customer_quote_items_customer_code_list_kind_line_no_key: UNIQUE (customer_code, list_kind, line_no)",
+                "customer_quote_items_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 81920
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "customer_quote_mappings",
+            "columns": [
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "data_start_row_idx",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "column_map",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_quote_mappings_pkey ON public.customer_quote_mappings USING btree (customer_code)"
+            ],
+            "triggers": [
+                "zx_recount_insert: CREATE TRIGGER zx_recount_insert AFTER INSERT ON public.customer_quote_mappings REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_update: CREATE TRIGGER zx_recount_update AFTER UPDATE ON public.customer_quote_mappings REFERENCING NEW TABLE AS new_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()",
+                "zx_recount_delete: CREATE TRIGGER zx_recount_delete AFTER DELETE ON public.customer_quote_mappings REFERENCING OLD TABLE AS old_rows FOR EACH STATEMENT EXECUTE FUNCTION private.quote_recount()"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "customer_quote_mappings_pkey: PRIMARY KEY (customer_code)",
+                "customer_quote_mappings_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 4,
+            "table": "customer_quote_profiles",
+            "columns": [
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "quote_cycle",
+                    "type": "integer",
+                    "default": "7",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "product_code_mode",
+                    "type": "text",
+                    "default": "'有貨號'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "export_status",
+                    "type": "text",
+                    "default": "'未匯出'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_time",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_filename",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_item_count",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "unit_category",
+                    "type": "text",
+                    "default": "''::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "quote_file_location",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_quote_upload_time",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "has_mapping",
+                    "type": "boolean",
+                    "default": "false",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "pending_item_count",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "item_code_lookup_count",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "detail_version",
+                    "type": "bigint",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_quote_profiles_pkey ON public.customer_quote_profiles USING btree (customer_code)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.customer_quote_profiles FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.customer_quote_profiles FOR EACH ROW EXECUTE FUNCTION private.log_change('quote', 'customer_code', 'customer_code', 'export_status', 'has_mapping', 'pending_item_count', 'item_code_lookup_count', 'quote_cycle', 'product_code_mode', 'unit_category', 'last_export_time', 'last_quote_upload_time', 'detail_version')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "customer_quote_profiles_quote_cycle_check: CHECK ((quote_cycle = ANY (ARRAY[7, 10, 15, 30])))",
+                "customer_quote_profiles_product_code_mode_check: CHECK ((product_code_mode = ANY (ARRAY['有貨號'::text, '無貨號'::text])))",
+                "customer_quote_profiles_unit_category_check: CHECK ((unit_category = ANY (ARRAY[''::text, 'kg'::text, '台斤'::text])))",
+                "customer_quote_profiles_pkey: PRIMARY KEY (customer_code)",
+                "customer_quote_profiles_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 0,
+            "table": "customer_vehicle_assignments",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "vehicle_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "is_primary",
+                    "type": "boolean",
+                    "default": "true",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "effective_from",
+                    "type": "date",
+                    "default": "CURRENT_DATE",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "effective_to",
+                    "type": "date",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customer_vehicle_assignments_pkey ON public.customer_vehicle_assignments USING btree (id)",
+                "CREATE INDEX cva_customer_idx ON public.customer_vehicle_assignments USING btree (customer_code, effective_from DESC)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.customer_vehicle_assignments FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.customer_vehicle_assignments FOR EACH ROW EXECUTE FUNCTION private.log_change('shared', 'id', 'customer_code', 'vehicle_id', 'is_primary', 'effective_from', 'effective_to')"
+            ],
+            "force_rls": false,
+            "total_size": "24 kB",
+            "constraints": [
+                "customer_vehicle_assignments_check: CHECK (((effective_to IS NULL) OR (effective_to >= effective_from)))",
+                "customer_vehicle_assignments_pkey: PRIMARY KEY (id)",
+                "customer_vehicle_assignments_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE",
+                "customer_vehicle_assignments_vehicle_id_fkey: FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)"
+            ],
+            "total_bytes": 24576
+        },
+        {
+            "rls": true,
+            "rows": 4,
+            "table": "customers",
+            "columns": [
+                {
+                    "name": "code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "quote_cycle",
+                    "type": "integer",
+                    "default": "7",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "product_code_mode",
+                    "type": "text",
+                    "default": "'有貨號'::text",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "export_status",
+                    "type": "text",
+                    "default": "'未匯出'::text",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_time",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_filename",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_export_item_count",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "mapping",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_item_codes",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "saved_records",
+                    "type": "jsonb",
+                    "default": "'[]'::jsonb",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "saved_records_count",
+                    "type": "integer",
+                    "default": "jsonb_array_length(COALESCE(saved_records, '[]'::jsonb))",
+                    "not_null": false,
+                    "generated": "s"
+                },
+                {
+                    "name": "quoted_prices",
+                    "type": "jsonb",
+                    "default": "'{\"matched\": [], \"unmatched\": []}'::jsonb",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "quoted_prices_count",
+                    "type": "integer",
+                    "default": "(jsonb_array_length(COALESCE((quoted_prices -> 'matched'::text), '[]'::jsonb)) + jsonb_array_length(COALESCE((quoted_prices -> 'unmatched'::text), '[]'::jsonb)))",
+                    "not_null": false,
+                    "generated": "s"
+                },
+                {
+                    "name": "item_code_lookup",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "item_code_lookup_count",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "unit_category",
+                    "type": "text",
+                    "default": "''::text",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "quote_file_location",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "last_quote_upload_time",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "is_active",
+                    "type": "boolean",
+                    "default": "true",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "quotation_settings",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX customers_pkey ON public.customers USING btree (code)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION private.log_change('shared', 'code', 'code', 'name', 'is_active')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "customers_pkey: PRIMARY KEY (code)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 5,
+            "table": "daily_order_status",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "service_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "status",
+                    "type": "text",
+                    "default": "'未叫貨'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_by",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX daily_order_status_pkey ON public.daily_order_status USING btree (id)",
+                "CREATE UNIQUE INDEX daily_order_status_service_date_customer_code_key ON public.daily_order_status USING btree (service_date, customer_code)",
+                "CREATE INDEX daily_order_status_date_idx ON public.daily_order_status USING btree (service_date)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.daily_order_status FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.daily_order_status FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'id', 'service_date', 'customer_code', 'status')"
+            ],
+            "force_rls": false,
+            "total_size": "64 kB",
+            "constraints": [
+                "daily_order_status_status_check: CHECK ((status = ANY (ARRAY['未叫貨'::text, '有叫貨'::text, '今日不叫貨'::text])))",
+                "daily_order_status_pkey: PRIMARY KEY (id)",
+                "daily_order_status_service_date_customer_code_key: UNIQUE (service_date, customer_code)",
+                "daily_order_status_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE"
+            ],
+            "total_bytes": 65536
+        },
+        {
+            "rls": true,
+            "rows": 6,
+            "table": "dataset_versions",
+            "columns": [
+                {
+                    "name": "name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "version",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX dataset_versions_pkey ON public.dataset_versions USING btree (name)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "dataset_versions_pkey: PRIMARY KEY (name)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "handover_reports",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "date",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "store",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "content",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "vehicle_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "handover_description",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "report_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "updated_by",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX handover_reports_pkey ON public.handover_reports USING btree (id)",
+                "CREATE UNIQUE INDEX handover_reports_request_id_key ON public.handover_reports USING btree (request_id)",
+                "CREATE INDEX handover_reports_date_idx ON public.handover_reports USING btree (report_date DESC, id DESC)",
+                "CREATE INDEX handover_reports_customer_idx ON public.handover_reports USING btree (customer_code, report_date DESC)"
+            ],
+            "triggers": [
+                "zx_report_compat: CREATE TRIGGER zx_report_compat BEFORE INSERT OR UPDATE ON public.handover_reports FOR EACH ROW EXECUTE FUNCTION private.report_compat()",
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.handover_reports FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.handover_reports FOR EACH ROW EXECUTE FUNCTION private.log_change('report', 'id', 'report_date', 'customer_code')"
+            ],
+            "force_rls": false,
+            "total_size": "80 kB",
+            "constraints": [
+                "handover_reports_pkey: PRIMARY KEY (id)",
+                "handover_reports_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE",
+                "handover_reports_vehicle_id_fkey: FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)"
+            ],
+            "total_bytes": 81920
+        },
+        {
+            "rls": true,
+            "rows": 7,
+            "table": "legacy_kv_archive",
+            "columns": [
+                {
+                    "name": "source_table",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "key",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "value",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "value_bytes",
+                    "type": "integer",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "archived_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX legacy_kv_archive_pkey ON public.legacy_kv_archive USING btree (source_table, key, archived_at)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "legacy_kv_archive_pkey: PRIMARY KEY (source_table, key, archived_at)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 3,
+            "table": "legacy_name_review",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "source",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "candidates",
+                    "type": "text[]",
+                    "default": "'{}'::text[]",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "resolved_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "note",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX legacy_name_review_pkey ON public.legacy_name_review USING btree (id)",
+                "CREATE UNIQUE INDEX legacy_name_review_source_legacy_name_key ON public.legacy_name_review USING btree (source, legacy_name)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "legacy_name_review_pkey: PRIMARY KEY (id)",
+                "legacy_name_review_source_legacy_name_key: UNIQUE (source, legacy_name)",
+                "legacy_name_review_resolved_code_fkey: FOREIGN KEY (resolved_code) REFERENCES customers(code)"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 2,
+            "table": "master_items",
+            "columns": [
+                {
+                    "name": "item_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "item_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "unit",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "spec_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "grade",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX master_items_pkey ON public.master_items USING btree (item_code)"
+            ],
+            "triggers": [
+                "zx_log_bulk: CREATE TRIGGER zx_log_bulk AFTER INSERT OR DELETE OR UPDATE ON public.master_items FOR EACH STATEMENT EXECUTE FUNCTION private.log_bulk_change('quote')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "master_items_pkey: PRIMARY KEY (item_code)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 2,
+            "table": "order_group_members",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "group_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "sort_order",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_group_members_pkey ON public.order_group_members USING btree (id)",
+                "CREATE UNIQUE INDEX order_group_members_group_id_customer_code_key ON public.order_group_members USING btree (group_id, customer_code)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.order_group_members FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.order_group_members FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'id', 'group_id', 'customer_code', 'sort_order')"
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "order_group_members_pkey: PRIMARY KEY (id)",
+                "order_group_members_group_id_customer_code_key: UNIQUE (group_id, customer_code)",
+                "order_group_members_group_id_fkey: FOREIGN KEY (group_id) REFERENCES order_groups(id) ON DELETE CASCADE",
+                "order_group_members_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 7,
+            "table": "order_groups",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "kind",
+                    "type": "text",
+                    "default": "'group'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "sort_order",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "rule",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "legacy",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_groups_pkey ON public.order_groups USING btree (id)",
+                "CREATE UNIQUE INDEX order_groups_kind_name_key ON public.order_groups USING btree (kind, name)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.order_groups FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.order_groups FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'id', 'kind', 'name', 'sort_order')"
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "order_groups_kind_check: CHECK ((kind = ANY (ARRAY['group'::text, 'series'::text])))",
+                "order_groups_pkey: PRIMARY KEY (id)",
+                "order_groups_kind_name_key: UNIQUE (kind, name)"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 4,
+            "table": "order_history_days",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "service_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy_index",
+                    "type": "integer",
+                    "default": "0",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "records",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "edit_log",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "cleared_at",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "extra",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "archived_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_history_days_pkey ON public.order_history_days USING btree (id)",
+                "CREATE UNIQUE INDEX order_history_days_service_date_legacy_index_key ON public.order_history_days USING btree (service_date, legacy_index)",
+                "CREATE INDEX order_history_days_date_idx ON public.order_history_days USING btree (service_date DESC, legacy_index DESC)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "64 kB",
+            "constraints": [
+                "order_history_days_pkey: PRIMARY KEY (id)",
+                "order_history_days_service_date_legacy_index_key: UNIQUE (service_date, legacy_index)"
+            ],
+            "total_bytes": 65536
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "order_manual_trend",
+            "columns": [
+                {
+                    "name": "period",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "payload",
+                    "type": "jsonb",
+                    "default": "'{}'::jsonb",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_manual_trend_pkey ON public.order_manual_trend USING btree (period)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.order_manual_trend FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.order_manual_trend FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'period')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "order_manual_trend_pkey: PRIMARY KEY (period)"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "order_notices",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "body",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "author",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "author_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy_ref",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "legacy",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_notices_pkey ON public.order_notices USING btree (id)",
+                "CREATE UNIQUE INDEX order_notices_legacy_ref_key ON public.order_notices USING btree (legacy_ref)",
+                "CREATE INDEX order_notices_created_idx ON public.order_notices USING btree (created_at DESC, id)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.order_notices FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.order_notices FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'id')"
+            ],
+            "force_rls": false,
+            "total_size": "64 kB",
+            "constraints": [
+                "order_notices_pkey: PRIMARY KEY (id)",
+                "order_notices_legacy_ref_key: UNIQUE (legacy_ref)"
+            ],
+            "total_bytes": 65536
+        },
+        {
+            "rls": true,
+            "rows": 5,
+            "table": "order_status_events",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "service_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "old_status",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "new_status",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "via",
+                    "type": "text",
+                    "default": "'click'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "actor",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "actor_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "actor_icon",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "commit_seq",
+                    "type": "bigint",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX order_status_events_pkey ON public.order_status_events USING btree (id)",
+                "CREATE UNIQUE INDEX order_status_events_request_id_key ON public.order_status_events USING btree (request_id)",
+                "CREATE INDEX order_status_events_date_idx ON public.order_status_events USING btree (service_date DESC, commit_seq DESC)",
+                "CREATE INDEX order_status_events_customer_idx ON public.order_status_events USING btree (customer_code, service_date DESC)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "80 kB",
+            "constraints": [
+                "order_status_events_pkey: PRIMARY KEY (id)",
+                "order_status_events_request_id_key: UNIQUE (request_id)",
+                "order_status_events_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE"
+            ],
+            "total_bytes": 81920
+        },
+        {
+            "rls": true,
+            "rows": 1,
+            "table": "sync_state",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "integer",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "pruned_through",
+                    "type": "xid8",
+                    "default": "'0'::xid8",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX sync_state_pkey ON public.sync_state USING btree (id)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "24 kB",
+            "constraints": [
+                "sync_state_id_check: CHECK ((id = 1))",
+                "sync_state_pkey: PRIMARY KEY (id)"
+            ],
+            "total_bytes": 24576
+        },
+        {
+            "rls": true,
+            "rows": 2,
+            "table": "tick_customers",
+            "columns": [
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "fixed",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "is_listed",
+                    "type": "boolean",
+                    "default": "true",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "legacy_name",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX tick_customers_pkey ON public.tick_customers USING btree (customer_code)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.tick_customers FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.tick_customers FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'customer_code', 'customer_code', 'fixed', 'is_listed')"
+            ],
+            "force_rls": false,
+            "total_size": "32 kB",
+            "constraints": [
+                "tick_customers_pkey: PRIMARY KEY (customer_code)",
+                "tick_customers_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 32768
+        },
+        {
+            "rls": true,
+            "rows": 6,
+            "table": "tick_service_days",
+            "columns": [
+                {
+                    "name": "service_date",
+                    "type": "date",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "status",
+                    "type": "text",
+                    "default": "'open'::text",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "opened_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "closed_at",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "closed_by",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "cleared_at",
+                    "type": "timestamp with time zone",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX tick_service_days_pkey ON public.tick_service_days USING btree (service_date)",
+                "CREATE UNIQUE INDEX tick_service_days_one_open ON public.tick_service_days USING btree ((true)) WHERE (status = 'open'::text)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.tick_service_days FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.tick_service_days FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'service_date', 'service_date', 'status')"
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "tick_service_days_status_check: CHECK ((status = ANY (ARRAY['open'::text, 'closed'::text])))",
+                "tick_service_days_pkey: PRIMARY KEY (service_date)"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 0,
+            "table": "tick_warn3_overrides",
+            "columns": [
+                {
+                    "name": "customer_code",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "mode",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "set_on",
+                    "type": "date",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "created_by",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX tick_warn3_overrides_pkey ON public.tick_warn3_overrides USING btree (customer_code)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.tick_warn3_overrides FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.tick_warn3_overrides FOR EACH ROW EXECUTE FUNCTION private.log_change('tick', 'customer_code', 'customer_code', 'mode')"
+            ],
+            "force_rls": false,
+            "total_size": "16 kB",
+            "constraints": [
+                "tick_warn3_overrides_mode_check: CHECK ((mode = ANY (ARRAY['add'::text, 'remove'::text])))",
+                "tick_warn3_overrides_pkey: PRIMARY KEY (customer_code)",
+                "tick_warn3_overrides_customer_code_fkey: FOREIGN KEY (customer_code) REFERENCES customers(code) ON UPDATE CASCADE ON DELETE CASCADE"
+            ],
+            "total_bytes": 16384
+        },
+        {
+            "rls": true,
+            "rows": 4,
+            "table": "vehicles",
+            "columns": [
+                {
+                    "name": "id",
+                    "type": "uuid",
+                    "default": "gen_random_uuid()",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "car_no",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "is_active",
+                    "type": "boolean",
+                    "default": "true",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "notes",
+                    "type": "text",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "revision",
+                    "type": "bigint",
+                    "default": "1",
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "updated_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX vehicles_pkey ON public.vehicles USING btree (id)",
+                "CREATE UNIQUE INDEX vehicles_car_no_key ON public.vehicles USING btree (car_no)"
+            ],
+            "triggers": [
+                "zx_bump_revision: CREATE TRIGGER zx_bump_revision BEFORE UPDATE ON public.vehicles FOR EACH ROW EXECUTE FUNCTION private.bump_revision()",
+                "zx_log_change: CREATE TRIGGER zx_log_change AFTER INSERT OR DELETE OR UPDATE ON public.vehicles FOR EACH ROW EXECUTE FUNCTION private.log_change('shared', 'id', 'car_no', 'is_active')"
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "vehicles_pkey: PRIMARY KEY (id)",
+                "vehicles_car_no_key: UNIQUE (car_no)"
+            ],
+            "total_bytes": 49152
+        },
+        {
+            "rls": true,
+            "rows": 7,
+            "table": "write_requests",
+            "columns": [
+                {
+                    "name": "request_id",
+                    "type": "uuid",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "fn",
+                    "type": "text",
+                    "default": null,
+                    "not_null": true,
+                    "generated": null
+                },
+                {
+                    "name": "actor",
+                    "type": "uuid",
+                    "default": "auth.uid()",
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "result",
+                    "type": "jsonb",
+                    "default": null,
+                    "not_null": false,
+                    "generated": null
+                },
+                {
+                    "name": "created_at",
+                    "type": "timestamp with time zone",
+                    "default": "now()",
+                    "not_null": true,
+                    "generated": null
+                }
+            ],
+            "indexes": [
+                "CREATE UNIQUE INDEX write_requests_pkey ON public.write_requests USING btree (request_id)",
+                "CREATE INDEX write_requests_created_idx ON public.write_requests USING btree (created_at)"
+            ],
+            "triggers": [
+            ],
+            "force_rls": false,
+            "total_size": "48 kB",
+            "constraints": [
+                "write_requests_pkey: PRIMARY KEY (request_id)"
+            ],
+            "total_bytes": 49152
+        }
+    ],
+    "pg_cron_exists": false,
+    "auth_user_count": 4,
+    "realtime_send_exists": true,
+    "abnormal_date_patterns": null,
+    "handover_date_patterns": {
+        "9999-99-99": 1
+    },
+    "customers_jsonb_profile": {
+        "mapping": {
+            "types": {
+                "(null)": 3,
+                "object": 1
+            },
+            "top_keys": [
+                "columnMap",
+                "dataStartRowIdx"
+            ],
+            "max_bytes": 93,
+            "sum_bytes": 93,
+            "element_keys": null
+        },
+        "quoted_prices": {
+            "types": {
+                "object": 4
+            },
+            "top_keys": [
+                "matched",
+                "unmatched"
+            ],
+            "max_bytes": 172,
+            "sum_bytes": 307,
+            "element_keys": null
+        },
+        "saved_records": {
+            "types": {
+                "array": 4
+            },
+            "top_keys": null,
+            "max_bytes": 226,
+            "sum_bytes": 241,
+            "element_keys": [
+                "不報價原因",
+                "單價",
+                "客戶商品名稱",
+                "客戶貨號",
+                "怪欄位"
+            ]
+        },
+        "last_item_codes": {
+            "types": {
+                "array": 1,
+                "(null)": 3
+            },
+            "top_keys": null,
+            "max_bytes": 17,
+            "sum_bytes": 17,
+            "element_keys": null
+        },
+        "item_code_lookup": {
+            "types": {
+                "object": 4
+            },
+            "top_keys": [
+                "高麗菜"
+            ],
+            "max_bytes": 26,
+            "sum_bytes": 41,
+            "element_keys": null
+        },
+        "quotation_settings": {
+            "types": {
+                "object": 4
+            },
+            "top_keys": null,
+            "max_bytes": 8,
+            "sum_bytes": 29,
+            "element_keys": null
+        }
+    },
+    "abnormal_category_prefix": null,
+    "realtime_messages_exists": true,
+    "customers_duplicate_names": [
+        {
+            "name": "美廉社A",
+            "codes": [
+                "C002",
+                "C003"
+            ]
+        }
+    ],
+    "grants_anon_authenticated": [
+        "anon DELETE Chunghsin_store",
+        "anon DELETE abnormal_reports",
+        "anon DELETE app_members",
+        "anon DELETE change_log",
+        "anon DELETE customer_aliases",
+        "anon DELETE customer_item_code_mappings",
+        "anon DELETE customer_quote_baselines",
+        "anon DELETE customer_quote_exports",
+        "anon DELETE customer_quote_items",
+        "anon DELETE customer_quote_mappings",
+        "anon DELETE customer_quote_profiles",
+        "anon DELETE customer_vehicle_assignments",
+        "anon DELETE customers",
+        "anon DELETE daily_order_status",
+        "anon DELETE dataset_versions",
+        "anon DELETE handover_reports",
+        "anon DELETE legacy_kv_archive",
+        "anon DELETE legacy_name_review",
+        "anon DELETE master_items",
+        "anon DELETE order_group_members",
+        "anon DELETE order_groups",
+        "anon DELETE order_history_days",
+        "anon DELETE order_manual_trend",
+        "anon DELETE order_notices",
+        "anon DELETE order_status_events",
+        "anon DELETE sync_state",
+        "anon DELETE tick_customers",
+        "anon DELETE tick_service_days",
+        "anon DELETE tick_warn3_overrides",
+        "anon DELETE v_quote_customer_list",
+        "anon DELETE v_tick_warn3",
+        "anon DELETE vehicles",
+        "anon DELETE write_requests",
+        "anon INSERT Chunghsin_store",
+        "anon INSERT abnormal_reports",
+        "anon INSERT app_members",
+        "anon INSERT change_log",
+        "anon INSERT customer_aliases",
+        "anon INSERT customer_item_code_mappings",
+        "anon INSERT customer_quote_baselines",
+        "anon INSERT customer_quote_exports",
+        "anon INSERT customer_quote_items",
+        "anon INSERT customer_quote_mappings",
+        "anon INSERT customer_quote_profiles",
+        "anon INSERT customer_vehicle_assignments",
+        "anon INSERT customers",
+        "anon INSERT daily_order_status",
+        "anon INSERT dataset_versions",
+        "anon INSERT handover_reports",
+        "anon INSERT legacy_kv_archive",
+        "anon INSERT legacy_name_review",
+        "anon INSERT master_items",
+        "anon INSERT order_group_members",
+        "anon INSERT order_groups",
+        "anon INSERT order_history_days",
+        "anon INSERT order_manual_trend",
+        "anon INSERT order_notices",
+        "anon INSERT order_status_events",
+        "anon INSERT sync_state",
+        "anon INSERT tick_customers",
+        "anon INSERT tick_service_days",
+        "anon INSERT tick_warn3_overrides",
+        "anon INSERT v_quote_customer_list",
+        "anon INSERT v_tick_warn3",
+        "anon INSERT vehicles",
+        "anon INSERT write_requests",
+        "anon REFERENCES Chunghsin_store",
+        "anon REFERENCES abnormal_reports",
+        "anon REFERENCES app_members",
+        "anon REFERENCES change_log",
+        "anon REFERENCES customer_aliases",
+        "anon REFERENCES customer_item_code_mappings",
+        "anon REFERENCES customer_quote_baselines",
+        "anon REFERENCES customer_quote_exports",
+        "anon REFERENCES customer_quote_items",
+        "anon REFERENCES customer_quote_mappings",
+        "anon REFERENCES customer_quote_profiles",
+        "anon REFERENCES customer_vehicle_assignments",
+        "anon REFERENCES customers",
+        "anon REFERENCES daily_order_status",
+        "anon REFERENCES dataset_versions",
+        "anon REFERENCES handover_reports",
+        "anon REFERENCES legacy_kv_archive",
+        "anon REFERENCES legacy_name_review",
+        "anon REFERENCES master_items",
+        "anon REFERENCES order_group_members",
+        "anon REFERENCES order_groups",
+        "anon REFERENCES order_history_days",
+        "anon REFERENCES order_manual_trend",
+        "anon REFERENCES order_notices",
+        "anon REFERENCES order_status_events",
+        "anon REFERENCES sync_state",
+        "anon REFERENCES tick_customers",
+        "anon REFERENCES tick_service_days",
+        "anon REFERENCES tick_warn3_overrides",
+        "anon REFERENCES v_quote_customer_list",
+        "anon REFERENCES v_tick_warn3",
+        "anon REFERENCES vehicles",
+        "anon REFERENCES write_requests",
+        "anon SELECT Chunghsin_store",
+        "anon SELECT abnormal_reports",
+        "anon SELECT app_members",
+        "anon SELECT change_log",
+        "anon SELECT customer_aliases",
+        "anon SELECT customer_item_code_mappings",
+        "anon SELECT customer_quote_baselines",
+        "anon SELECT customer_quote_exports",
+        "anon SELECT customer_quote_items",
+        "anon SELECT customer_quote_mappings",
+        "anon SELECT customer_quote_profiles",
+        "anon SELECT customer_vehicle_assignments",
+        "anon SELECT customers",
+        "anon SELECT daily_order_status",
+        "anon SELECT dataset_versions",
+        "anon SELECT handover_reports",
+        "anon SELECT legacy_kv_archive",
+        "anon SELECT legacy_name_review",
+        "anon SELECT master_items",
+        "anon SELECT order_group_members",
+        "anon SELECT order_groups",
+        "anon SELECT order_history_days",
+        "anon SELECT order_manual_trend",
+        "anon SELECT order_notices",
+        "anon SELECT order_status_events",
+        "anon SELECT sync_state",
+        "anon SELECT tick_customers",
+        "anon SELECT tick_service_days",
+        "anon SELECT tick_warn3_overrides",
+        "anon SELECT v_quote_customer_list",
+        "anon SELECT v_tick_warn3",
+        "anon SELECT vehicles",
+        "anon SELECT write_requests",
+        "anon TRIGGER Chunghsin_store",
+        "anon TRIGGER abnormal_reports",
+        "anon TRIGGER app_members",
+        "anon TRIGGER change_log",
+        "anon TRIGGER customer_aliases",
+        "anon TRIGGER customer_item_code_mappings",
+        "anon TRIGGER customer_quote_baselines",
+        "anon TRIGGER customer_quote_exports",
+        "anon TRIGGER customer_quote_items",
+        "anon TRIGGER customer_quote_mappings",
+        "anon TRIGGER customer_quote_profiles",
+        "anon TRIGGER customer_vehicle_assignments",
+        "anon TRIGGER customers",
+        "anon TRIGGER daily_order_status",
+        "anon TRIGGER dataset_versions",
+        "anon TRIGGER handover_reports",
+        "anon TRIGGER legacy_kv_archive",
+        "anon TRIGGER legacy_name_review",
+        "anon TRIGGER master_items",
+        "anon TRIGGER order_group_members",
+        "anon TRIGGER order_groups",
+        "anon TRIGGER order_history_days",
+        "anon TRIGGER order_manual_trend",
+        "anon TRIGGER order_notices",
+        "anon TRIGGER order_status_events",
+        "anon TRIGGER sync_state",
+        "anon TRIGGER tick_customers",
+        "anon TRIGGER tick_service_days",
+        "anon TRIGGER tick_warn3_overrides",
+        "anon TRIGGER v_quote_customer_list",
+        "anon TRIGGER v_tick_warn3",
+        "anon TRIGGER vehicles",
+        "anon TRIGGER write_requests",
+        "anon TRUNCATE Chunghsin_store",
+        "anon TRUNCATE abnormal_reports",
+        "anon TRUNCATE app_members",
+        "anon TRUNCATE change_log",
+        "anon TRUNCATE customer_aliases",
+        "anon TRUNCATE customer_item_code_mappings",
+        "anon TRUNCATE customer_quote_baselines",
+        "anon TRUNCATE customer_quote_exports",
+        "anon TRUNCATE customer_quote_items",
+        "anon TRUNCATE customer_quote_mappings",
+        "anon TRUNCATE customer_quote_profiles",
+        "anon TRUNCATE customer_vehicle_assignments",
+        "anon TRUNCATE customers",
+        "anon TRUNCATE daily_order_status",
+        "anon TRUNCATE dataset_versions",
+        "anon TRUNCATE handover_reports",
+        "anon TRUNCATE legacy_kv_archive",
+        "anon TRUNCATE legacy_name_review",
+        "anon TRUNCATE master_items",
+        "anon TRUNCATE order_group_members",
+        "anon TRUNCATE order_groups",
+        "anon TRUNCATE order_history_days",
+        "anon TRUNCATE order_manual_trend",
+        "anon TRUNCATE order_notices",
+        "anon TRUNCATE order_status_events",
+        "anon TRUNCATE sync_state",
+        "anon TRUNCATE tick_customers",
+        "anon TRUNCATE tick_service_days",
+        "anon TRUNCATE tick_warn3_overrides",
+        "anon TRUNCATE v_quote_customer_list",
+        "anon TRUNCATE v_tick_warn3",
+        "anon TRUNCATE vehicles",
+        "anon TRUNCATE write_requests",
+        "anon UPDATE Chunghsin_store",
+        "anon UPDATE abnormal_reports",
+        "anon UPDATE app_members",
+        "anon UPDATE change_log",
+        "anon UPDATE customer_aliases",
+        "anon UPDATE customer_item_code_mappings",
+        "anon UPDATE customer_quote_baselines",
+        "anon UPDATE customer_quote_exports",
+        "anon UPDATE customer_quote_items",
+        "anon UPDATE customer_quote_mappings",
+        "anon UPDATE customer_quote_profiles",
+        "anon UPDATE customer_vehicle_assignments",
+        "anon UPDATE customers",
+        "anon UPDATE daily_order_status",
+        "anon UPDATE dataset_versions",
+        "anon UPDATE handover_reports",
+        "anon UPDATE legacy_kv_archive",
+        "anon UPDATE legacy_name_review",
+        "anon UPDATE master_items",
+        "anon UPDATE order_group_members",
+        "anon UPDATE order_groups",
+        "anon UPDATE order_history_days",
+        "anon UPDATE order_manual_trend",
+        "anon UPDATE order_notices",
+        "anon UPDATE order_status_events",
+        "anon UPDATE sync_state",
+        "anon UPDATE tick_customers",
+        "anon UPDATE tick_service_days",
+        "anon UPDATE tick_warn3_overrides",
+        "anon UPDATE v_quote_customer_list",
+        "anon UPDATE v_tick_warn3",
+        "anon UPDATE vehicles",
+        "anon UPDATE write_requests",
+        "authenticated DELETE Chunghsin_store",
+        "authenticated DELETE abnormal_reports",
+        "authenticated DELETE app_members",
+        "authenticated DELETE change_log",
+        "authenticated DELETE customer_aliases",
+        "authenticated DELETE customer_item_code_mappings",
+        "authenticated DELETE customer_quote_baselines",
+        "authenticated DELETE customer_quote_exports",
+        "authenticated DELETE customer_quote_items",
+        "authenticated DELETE customer_quote_mappings",
+        "authenticated DELETE customer_quote_profiles",
+        "authenticated DELETE customer_vehicle_assignments",
+        "authenticated DELETE customers",
+        "authenticated DELETE daily_order_status",
+        "authenticated DELETE dataset_versions",
+        "authenticated DELETE handover_reports",
+        "authenticated DELETE legacy_kv_archive",
+        "authenticated DELETE legacy_name_review",
+        "authenticated DELETE master_items",
+        "authenticated DELETE order_group_members",
+        "authenticated DELETE order_groups",
+        "authenticated DELETE order_history_days",
+        "authenticated DELETE order_manual_trend",
+        "authenticated DELETE order_notices",
+        "authenticated DELETE order_status_events",
+        "authenticated DELETE sync_state",
+        "authenticated DELETE tick_customers",
+        "authenticated DELETE tick_service_days",
+        "authenticated DELETE tick_warn3_overrides",
+        "authenticated DELETE v_quote_customer_list",
+        "authenticated DELETE v_tick_warn3",
+        "authenticated DELETE vehicles",
+        "authenticated DELETE write_requests",
+        "authenticated INSERT Chunghsin_store",
+        "authenticated INSERT abnormal_reports",
+        "authenticated INSERT app_members",
+        "authenticated INSERT change_log",
+        "authenticated INSERT customer_aliases",
+        "authenticated INSERT customer_item_code_mappings",
+        "authenticated INSERT customer_quote_baselines",
+        "authenticated INSERT customer_quote_exports",
+        "authenticated INSERT customer_quote_items",
+        "authenticated INSERT customer_quote_mappings",
+        "authenticated INSERT customer_quote_profiles",
+        "authenticated INSERT customer_vehicle_assignments",
+        "authenticated INSERT customers",
+        "authenticated INSERT daily_order_status",
+        "authenticated INSERT dataset_versions",
+        "authenticated INSERT handover_reports",
+        "authenticated INSERT legacy_kv_archive",
+        "authenticated INSERT legacy_name_review",
+        "authenticated INSERT master_items",
+        "authenticated INSERT order_group_members",
+        "authenticated INSERT order_groups",
+        "authenticated INSERT order_history_days",
+        "authenticated INSERT order_manual_trend",
+        "authenticated INSERT order_notices",
+        "authenticated INSERT order_status_events",
+        "authenticated INSERT sync_state",
+        "authenticated INSERT tick_customers",
+        "authenticated INSERT tick_service_days",
+        "authenticated INSERT tick_warn3_overrides",
+        "authenticated INSERT v_quote_customer_list",
+        "authenticated INSERT v_tick_warn3",
+        "authenticated INSERT vehicles",
+        "authenticated INSERT write_requests",
+        "authenticated REFERENCES Chunghsin_store",
+        "authenticated REFERENCES abnormal_reports",
+        "authenticated REFERENCES app_members",
+        "authenticated REFERENCES change_log",
+        "authenticated REFERENCES customer_aliases",
+        "authenticated REFERENCES customer_item_code_mappings",
+        "authenticated REFERENCES customer_quote_baselines",
+        "authenticated REFERENCES customer_quote_exports",
+        "authenticated REFERENCES customer_quote_items",
+        "authenticated REFERENCES customer_quote_mappings",
+        "authenticated REFERENCES customer_quote_profiles",
+        "authenticated REFERENCES customer_vehicle_assignments",
+        "authenticated REFERENCES customers",
+        "authenticated REFERENCES daily_order_status",
+        "authenticated REFERENCES dataset_versions",
+        "authenticated REFERENCES handover_reports",
+        "authenticated REFERENCES legacy_kv_archive",
+        "authenticated REFERENCES legacy_name_review",
+        "authenticated REFERENCES master_items",
+        "authenticated REFERENCES order_group_members",
+        "authenticated REFERENCES order_groups",
+        "authenticated REFERENCES order_history_days",
+        "authenticated REFERENCES order_manual_trend",
+        "authenticated REFERENCES order_notices",
+        "authenticated REFERENCES order_status_events",
+        "authenticated REFERENCES sync_state",
+        "authenticated REFERENCES tick_customers",
+        "authenticated REFERENCES tick_service_days",
+        "authenticated REFERENCES tick_warn3_overrides",
+        "authenticated REFERENCES v_quote_customer_list",
+        "authenticated REFERENCES v_tick_warn3",
+        "authenticated REFERENCES vehicles",
+        "authenticated REFERENCES write_requests",
+        "authenticated SELECT Chunghsin_store",
+        "authenticated SELECT abnormal_reports",
+        "authenticated SELECT app_members",
+        "authenticated SELECT change_log",
+        "authenticated SELECT customer_aliases",
+        "authenticated SELECT customer_item_code_mappings",
+        "authenticated SELECT customer_quote_baselines",
+        "authenticated SELECT customer_quote_exports",
+        "authenticated SELECT customer_quote_items",
+        "authenticated SELECT customer_quote_mappings",
+        "authenticated SELECT customer_quote_profiles",
+        "authenticated SELECT customer_vehicle_assignments",
+        "authenticated SELECT customers",
+        "authenticated SELECT daily_order_status",
+        "authenticated SELECT dataset_versions",
+        "authenticated SELECT handover_reports",
+        "authenticated SELECT legacy_kv_archive",
+        "authenticated SELECT legacy_name_review",
+        "authenticated SELECT master_items",
+        "authenticated SELECT order_group_members",
+        "authenticated SELECT order_groups",
+        "authenticated SELECT order_history_days",
+        "authenticated SELECT order_manual_trend",
+        "authenticated SELECT order_notices",
+        "authenticated SELECT order_status_events",
+        "authenticated SELECT sync_state",
+        "authenticated SELECT tick_customers",
+        "authenticated SELECT tick_service_days",
+        "authenticated SELECT tick_warn3_overrides",
+        "authenticated SELECT v_quote_customer_list",
+        "authenticated SELECT v_tick_warn3",
+        "authenticated SELECT vehicles",
+        "authenticated SELECT write_requests",
+        "authenticated TRIGGER Chunghsin_store",
+        "authenticated TRIGGER abnormal_reports",
+        "authenticated TRIGGER app_members",
+        "authenticated TRIGGER change_log",
+        "authenticated TRIGGER customer_aliases",
+        "authenticated TRIGGER customer_item_code_mappings",
+        "authenticated TRIGGER customer_quote_baselines",
+        "authenticated TRIGGER customer_quote_exports",
+        "authenticated TRIGGER customer_quote_items",
+        "authenticated TRIGGER customer_quote_mappings",
+        "authenticated TRIGGER customer_quote_profiles",
+        "authenticated TRIGGER customer_vehicle_assignments",
+        "authenticated TRIGGER customers",
+        "authenticated TRIGGER daily_order_status",
+        "authenticated TRIGGER dataset_versions",
+        "authenticated TRIGGER handover_reports",
+        "authenticated TRIGGER legacy_kv_archive",
+        "authenticated TRIGGER legacy_name_review",
+        "authenticated TRIGGER master_items",
+        "authenticated TRIGGER order_group_members",
+        "authenticated TRIGGER order_groups",
+        "authenticated TRIGGER order_history_days",
+        "authenticated TRIGGER order_manual_trend",
+        "authenticated TRIGGER order_notices",
+        "authenticated TRIGGER order_status_events",
+        "authenticated TRIGGER sync_state",
+        "authenticated TRIGGER tick_customers",
+        "authenticated TRIGGER tick_service_days",
+        "authenticated TRIGGER tick_warn3_overrides",
+        "authenticated TRIGGER v_quote_customer_list",
+        "authenticated TRIGGER v_tick_warn3",
+        "authenticated TRIGGER vehicles",
+        "authenticated TRIGGER write_requests",
+        "authenticated TRUNCATE Chunghsin_store",
+        "authenticated TRUNCATE abnormal_reports",
+        "authenticated TRUNCATE app_members",
+        "authenticated TRUNCATE change_log",
+        "authenticated TRUNCATE customer_aliases",
+        "authenticated TRUNCATE customer_item_code_mappings",
+        "authenticated TRUNCATE customer_quote_baselines",
+        "authenticated TRUNCATE customer_quote_exports",
+        "authenticated TRUNCATE customer_quote_items",
+        "authenticated TRUNCATE customer_quote_mappings",
+        "authenticated TRUNCATE customer_quote_profiles",
+        "authenticated TRUNCATE customer_vehicle_assignments",
+        "authenticated TRUNCATE customers",
+        "authenticated TRUNCATE daily_order_status",
+        "authenticated TRUNCATE dataset_versions",
+        "authenticated TRUNCATE handover_reports",
+        "authenticated TRUNCATE legacy_kv_archive",
+        "authenticated TRUNCATE legacy_name_review",
+        "authenticated TRUNCATE master_items",
+        "authenticated TRUNCATE order_group_members",
+        "authenticated TRUNCATE order_groups",
+        "authenticated TRUNCATE order_history_days",
+        "authenticated TRUNCATE order_manual_trend",
+        "authenticated TRUNCATE order_notices",
+        "authenticated TRUNCATE order_status_events",
+        "authenticated TRUNCATE sync_state",
+        "authenticated TRUNCATE tick_customers",
+        "authenticated TRUNCATE tick_service_days",
+        "authenticated TRUNCATE tick_warn3_overrides",
+        "authenticated TRUNCATE v_quote_customer_list",
+        "authenticated TRUNCATE v_tick_warn3",
+        "authenticated TRUNCATE vehicles",
+        "authenticated TRUNCATE write_requests",
+        "authenticated UPDATE Chunghsin_store",
+        "authenticated UPDATE abnormal_reports",
+        "authenticated UPDATE app_members",
+        "authenticated UPDATE change_log",
+        "authenticated UPDATE customer_aliases",
+        "authenticated UPDATE customer_item_code_mappings",
+        "authenticated UPDATE customer_quote_baselines",
+        "authenticated UPDATE customer_quote_exports",
+        "authenticated UPDATE customer_quote_items",
+        "authenticated UPDATE customer_quote_mappings",
+        "authenticated UPDATE customer_quote_profiles",
+        "authenticated UPDATE customer_vehicle_assignments",
+        "authenticated UPDATE customers",
+        "authenticated UPDATE daily_order_status",
+        "authenticated UPDATE dataset_versions",
+        "authenticated UPDATE handover_reports",
+        "authenticated UPDATE legacy_kv_archive",
+        "authenticated UPDATE legacy_name_review",
+        "authenticated UPDATE master_items",
+        "authenticated UPDATE order_group_members",
+        "authenticated UPDATE order_groups",
+        "authenticated UPDATE order_history_days",
+        "authenticated UPDATE order_manual_trend",
+        "authenticated UPDATE order_notices",
+        "authenticated UPDATE order_status_events",
+        "authenticated UPDATE sync_state",
+        "authenticated UPDATE tick_customers",
+        "authenticated UPDATE tick_service_days",
+        "authenticated UPDATE tick_warn3_overrides",
+        "authenticated UPDATE v_quote_customer_list",
+        "authenticated UPDATE v_tick_warn3",
+        "authenticated UPDATE vehicles",
+        "authenticated UPDATE write_requests"
+    ],
+    "quoted_prices_element_keys": {
+        "matched": [
+            "itemCode",
+            "name",
+            "price"
+        ],
+        "unmatched": [
+            "name",
+            "price"
+        ]
+    },
+    "tick_v4_profile_Chunghsin_store": {
+        "fixed_values": {
+            "阿明": 2,
+            "阿華": 2
+        },
+        "date_patterns": {
+            "": 1,
+            "ordered": 3
+        },
+        "status_values": {
+            "有叫貨": 2,
+            "未叫貨": 1,
+            "今日不叫貨": 1
+        }
+    }
+}

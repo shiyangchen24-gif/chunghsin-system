@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>資料搬移工具</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=DM+Sans:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/clay-tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 60px; }
+  main { max-width: 980px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+  header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header img { width: 52px; height: 52px; }
+  header h1 { margin: 0; font-size: 26px; }
+  header .sub { color: var(--clay-text-2); font-size: 14px; }
+  .right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .warn { background: #FEF3C7; color: #78350F; border-radius: 20px; padding: 12px 16px; font-weight: 600; line-height: 1.6; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid #E6E1F0; vertical-align: top; }
+  th { color: var(--clay-text-2); font-weight: 700; }
+  td input { width: 100%; font-family: var(--font-mono); font-size: 12px; padding: 8px 10px; }
+  .num { text-align: right; }
+  .ok { color: #047857; font-weight: 700; }
+  .bad { color: #B91C1C; font-weight: 700; }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  #log { font-family: var(--font-mono); font-size: 12.5px; white-space: pre-wrap; background: var(--clay-surface-sunken);
+         border-radius: 20px; padding: 14px; min-height: 120px; max-height: 360px; overflow: auto; }
+  ol { margin: 0; padding-left: 20px; line-height: 1.8; }
+  code { font-family: var(--font-mono); background: var(--clay-surface-sunken); padding: 1px 6px; border-radius: 6px; }
+  progress { width: 100%; height: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="../shared/logo-teruteru.svg" alt="">
+    <div><h1>資料搬移工具</h1><div class="sub">三個舊 Supabase 專案 → 新專案暫存區（只限管理員）</div></div>
+    <div class="right">
+      <span id="zx-sync-badge" class="sync-badge" data-state="pending" role="status" aria-live="polite">連線中…</span>
+      <span id="zx-user-chip"></span>
+    </div>
+  </header>
+
+  <div class="warn" role="note">
+    這個工具只「讀取」舊專案（用舊網站本來就公開在網頁上的 anon key），並寫入新專案的暫存表，不會修改或刪除舊專案任何資料。
+    可以重複執行：已搬過的資料不會重複新增。搬完後請到新專案的 SQL Editor 依序執行 <code>07_backfill.sql</code> 與 <code>08_verify.sql</code>。
+  </div>
+
+  <section class="clay-card" aria-labelledby="src-title">
+    <h2 id="src-title" style="margin-top:0">1. 來源（舊專案）</h2>
+    <table>
+      <thead><tr><th style="width:120px">系統</th><th>舊專案網址</th><th>anon key</th><th class="num" style="width:110px">筆數</th></tr></thead>
+      <tbody>
+        <tr><td>打勾單</td>
+          <td><input id="src-tick-url" value="https://ozlsmfmpqzdcskqrlccw.supabase.co" aria-label="打勾單舊專案網址"></td>
+          <td><input id="src-tick-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHNtZm1wcXpkY3NrcXJsY2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyODYxMDYsImV4cCI6MjEwNjg2MjEwNn0.GjZ1b5udgssqM4L7Y8UNkd6FV-oyXU-8GHGLyVVDTSI" aria-label="打勾單 anon key"></td>
+          <td class="num" id="cnt-tick">—</td></tr>
+        <tr><td>異常／交接</td>
+          <td><input id="src-report-url" value="https://xojtuhbnvryfoslqekjr.supabase.co" aria-label="異常交接舊專案網址"></td>
+          <td><input id="src-report-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhvanR1aGJudnJ5Zm9zbHFla2pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNTE5NTksImV4cCI6MjEwNDYyNzk1OX0.qIPaq_a2DjHTI7LB4LTh4Yn0Yl_jPLLx-6OE4w-gLV8" aria-label="異常交接 anon key"></td>
+          <td class="num" id="cnt-report">—</td></tr>
+        <tr><td>報價</td>
+          <td><input id="src-quote-url" value="https://ovjdtzzvpafomivbuecb.supabase.co" aria-label="報價舊專案網址"></td>
+          <td><input id="src-quote-key" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im92amR0enp2cGFmb21pdmJ1ZWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg4NTMyODUsImV4cCI6MjEwNDQyOTI4NX0.gJleE2ca_bPoKgAJsJqb6sn5RVBczIxHUxImxStjWDE" aria-label="報價 anon key"></td>
+          <td class="num" id="cnt-quote">—</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="clay-card" aria-labelledby="run-title">
+    <h2 id="run-title" style="margin-top:0">2. 檢查與搬移</h2>
+    <div class="actions">
+      <button class="clay-btn" id="btn-check" type="button">檢查來源筆數</button>
+      <button class="clay-btn clay-btn--primary" id="btn-run" type="button" disabled>開始搬移</button>
+    </div>
+    <p><progress id="prog" value="0" max="1" aria-label="搬移進度"></progress></p>
+    <div id="log" role="log" aria-live="polite"></div>
+  </section>
+
+  <section class="clay-card" aria-labelledby="next-title">
+    <h2 id="next-title" style="margin-top:0">3. 之後在新專案 SQL Editor 執行</h2>
+    <ol>
+      <li><code>07_backfill.sql</code>：暫存資料轉成新結構（打勾單客戶找不到正式代號的會配發 TK0001…）</li>
+      <li><code>08_verify.sql</code>：每一列 <code>ok</code> 都要是 true；最後列出需要人工確認的同名客戶</li>
+      <li>確認三個新網站都正常後，才執行 <code>09_cutover.sql</code>（之後舊網站停止運作）</li>
+    </ol>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="../shared/zx-config.js"></script>
+<script src="../shared/zx-sync.js"></script>
+<script src="../shared/zx-auth.js"></script>
+<script>
+'use strict';
+let sb = null;
+const PAGE = 1000, CHUNK = 500;
+const logEl = document.getElementById('log');
+function log(msg, cls) {
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = new Date().toLocaleTimeString('zh-TW') + '  ' + msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function source(name) {
+  const url = document.getElementById(`src-${name}-url`).value.trim();
+  const key = document.getElementById(`src-${name}-key`).value.trim();
+  return { url, client: supabase.createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false, storageKey: 'zx-migrate-' + name } }) };
+}
+
+// 讀取舊表全部資料（每頁 1000 筆，超過也能完整取回）
+async function readAll(client, table, cols, order) {
+  const rows = [];
+  let bytes = 0;
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await client.from(table).select(cols).order(order).range(from, from + PAGE - 1);
+    if (error) throw new Error(`${table}：${error.message}`);
+    rows.push(...data);
+    bytes += JSON.stringify(data).length;
+    if (data.length < PAGE) break;
+  }
+  return { rows, bytes };
+}
+
+async function count(client, table) {
+  const { count, error } = await client.from(table).select('*', { count: 'exact', head: true });
+  if (error) throw new Error(`${table}：${error.message}`);
+  return count;
+}
+
+async function writeChunks(table, rows, onConflict, label) {
+  for (let i = 0; i < rows.length; i += CHUNK) {
+    const { error } = await sb.from(table).upsert(rows.slice(i, i + CHUNK), { onConflict, ignoreDuplicates: true });
+    if (error) throw new Error(`寫入 ${table} 失敗：${error.message}`);
+    log(`  ${label}：${Math.min(i + CHUNK, rows.length)} / ${rows.length}`);
+  }
+}
+
+async function logImport(src, sourceTable, targetTable, rows, bytes) {
+  await sb.from('legacy_import_log').insert({ source: src, source_table: sourceTable, target_table: targetTable, rows, bytes });
+}
+
+const JOBS = [
+  { sys: 'tick', label: '打勾單 zhongxin_store', count: c => count(c, 'zhongxin_store'),
+    run: async (s) => {
+      const { rows, bytes } = await readAll(s.client, 'zhongxin_store', 'key,value', 'key');
+      // 舊程式以 JSON.stringify 寫入，值可能是字串；原樣保存，07_backfill 會統一解開
+      await writeChunks('Chunghsin_store', rows.map(r => ({ key: r.key, value: r.value })), 'key', 'Chunghsin_store');
+      await logImport(s.url, 'zhongxin_store', 'Chunghsin_store', rows.length, bytes);
+      return rows.length;
+    } },
+  { sys: 'report', label: '異常表 abnormal_reports', count: c => count(c, 'abnormal_reports'),
+    run: async (s) => {
+      const { rows, bytes } = await readAll(s.client, 'abnormal_reports',
+        'id,date,car_no,store,reason,exchange_type,category,responsibility,note,created_at', 'created_at');
+      await writeChunks('abnormal_reports', rows, 'id', 'abnormal_reports');
+      await logImport(s.url, 'abnormal_reports', 'abnormal_reports', rows.length, bytes);
+      return rows.length;
+    } },
+  { sys: 'report', label: '交接表 handover_reports', count: c => count(c, 'handover_reports'),
+    run: async (s) => {
+      const { rows, bytes } = await readAll(s.client, 'handover_reports', 'id,date,store,content,created_at', 'created_at');
+      await writeChunks('handover_reports', rows, 'id', 'handover_reports');
+      await logImport(s.url, 'handover_reports', 'handover_reports', rows.length, bytes);
+      return rows.length;
+    } },
+  { sys: 'quote', label: '報價 customers', count: c => count(c, 'customers'),
+    run: async (s) => {
+      const { rows, bytes } = await readAll(s.client, 'customers', '*', 'code');
+      await writeChunks('legacy_quote_customers', rows.map(r => ({ code: r.code, row: r })), 'code', 'legacy_quote_customers');
+      await logImport(s.url, 'customers', 'legacy_quote_customers', rows.length, bytes);
+      return rows.length;
+    } },
+  { sys: 'quote', label: '品項主檔 master_items', count: c => count(c, 'master_items'),
+    run: async (s) => {
+      const { rows, bytes } = await readAll(s.client, 'master_items', 'item_code,item_name,unit,spec_code,grade', 'item_code');
+      await writeChunks('master_items', rows, 'item_code', 'master_items');
+      await logImport(s.url, 'master_items', 'master_items', rows.length, bytes);
+      return rows.length;
+    } }
+];
+
+async function checkSources() {
+  const btn = document.getElementById('btn-check');
+  btn.disabled = true;
+  let ok = true;
+  for (const sys of ['tick', 'report', 'quote']) {
+    const s = source(sys);
+    const parts = [];
+    for (const job of JOBS.filter(j => j.sys === sys)) {
+      try { const n = await job.count(s.client); parts.push(n); log(`${job.label}：${n} 筆`); }
+      catch (e) { ok = false; parts.push('✕'); log(`${job.label}：讀取失敗 ${e.message}`, 'bad'); }
+    }
+    document.getElementById('cnt-' + sys).textContent = parts.join(' / ');
+  }
+  btn.disabled = false;
+  document.getElementById('btn-run').disabled = !ok;
+  log(ok ? '來源檢查完成，可以開始搬移' : '有來源讀取失敗，請確認網址與 key（或舊專案的存取權限）', ok ? 'ok' : 'bad');
+}
+
+async function runAll() {
+  if (!confirm('開始搬移？只會讀取舊專案、寫入新專案暫存區，可以重複執行。')) return;
+  const run = document.getElementById('btn-run');
+  run.disabled = true;
+  const prog = document.getElementById('prog');
+  prog.max = JOBS.length; prog.value = 0;
+  let failed = 0;
+  for (const job of JOBS) {
+    log(`▶ ${job.label}`);
+    try { const n = await job.run(source(job.sys)); log(`✔ ${job.label}：${n} 筆完成`, 'ok'); }
+    catch (e) { failed++; log(`✕ ${job.label}：${e.message}`, 'bad'); }
+    prog.value++;
+  }
+  run.disabled = false;
+  log(failed ? `完成，但有 ${failed} 項失敗，修正後可再執行一次` : '全部完成！請到新專案 SQL Editor 執行 07_backfill.sql 與 08_verify.sql', failed ? 'bad' : 'ok');
+}
+
+document.getElementById('btn-check').addEventListener('click', checkSources);
+document.getElementById('btn-run').addEventListener('click', runAll);
+
+ZX.boot({
+  site: 'tools', title: '資料搬移工具', logo: '../shared/logo-teruteru.svg',
+  onReady: async ctx => {
+    sb = ctx.sb;
+    ZX.syncBadge('live', '已登入新專案');
+    if (ctx.member.role !== 'admin') {
+      log('這個工具只限管理員使用', 'bad');
+      document.querySelectorAll('button.clay-btn').forEach(b => b.disabled = true);
+    } else {
+      log(`已登入新專案（${ZX_CONFIG.env === 'production' ? ZX_CONFIG.url : '本機測試環境'}）`);
+    }
+  }
+});
+</script>
+</body>
+</html>

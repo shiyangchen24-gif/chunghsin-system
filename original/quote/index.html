@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>報價單匯出系統 · 忠欣蔬果</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KPHJlY3QgeD0iMTYiIHk9IjgiIHdpZHRoPSI0ODAiIGhlaWdodD0iNDk2IiByeD0iMTQwIiBmaWxsPSIjMUY3QTNEIi8+CjxyZWN0IHg9IjEyOCIgeT0iODAiIHdpZHRoPSI5NiIgaGVpZ2h0PSI5NiIgcng9IjI2IiBmaWxsPSIjZmZmZmZmIi8+CjxyZWN0IHg9IjEyOCIgeT0iMjA4IiB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHJ4PSIyNiIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSIxMjgiIHk9IjMzNiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjYiIGZpbGw9IiNmZmZmZmYiLz4KPHJlY3QgeD0iMjYwIiB5PSIxMDQiIHdpZHRoPSIxMjgiIGhlaWdodD0iNDgiIHJ4PSIyNCIgZmlsbD0iI2ZmZmZmZiIvPgo8cmVjdCB4PSIyNjAiIHk9IjIzMiIgd2lkdGg9IjEyOCIgaGVpZ2h0PSI0OCIgcng9IjI0IiBmaWxsPSIjZmZmZmZmIi8+CjxyZWN0IHg9IjI2MCIgeT0iMzYwIiB3aWR0aD0iMTI4IiBoZWlnaHQ9IjQ4IiByeD0iMjQiIGZpbGw9IiNmZmZmZmYiLz4KPC9zdmc+Cg==">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- Supabase 用戶端函式庫：核心資料存取都要用到，直接載入（不像 xlsx/exceljs 只有特定操作才需要） -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<!-- xlsx / exceljs / FileSaver 改由 app.js 依需要時才動態載入，避免拖慢首次進站速度 -->
+<style>
+:root{
+  --soil-950:#161a14;
+  --soil-900:#1f2419;
+  --leaf-700:#2f4a34;
+  --leaf-600:#3c5e42;
+  --leaf-500:#4f7856;
+  --paper-50:#f8f7f2;
+  --paper-100:#efece1;
+  --paper-200:#e2ddcb;
+  --line:#d8d2bd;
+  --ink:#26291f;
+  --ink-soft:#5a5c4f;
+  --amber-500:#c9862f;
+  --amber-100:#f7e6c8;
+  --rust-600:#a5432c;
+  --rust-100:#f6dfd8;
+  --ok-600:#3c6e4c;
+  --ok-100:#dcead9;
+  /* 指定色系 */
+  --green-ok:#31B54C;
+  --green-ok-bg:#e4f6e8;
+  --red-bad:#FF524D;
+  --red-bad-bg:#ffe7e6;
+  --orange-action:#ff8637;
+  --green-export:#1F7A3D;
+  --new-item-yellow:#ffde5a;
+  --radius:10px;
+  --shadow:0 1px 2px rgba(22,26,20,.06), 0 6px 20px rgba(22,26,20,.05);
+  font-size:15px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--paper-50);
+  color:var(--ink);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'JetBrains Mono',monospace;}
+button{font-family:inherit;cursor:pointer;}
+input,select{font-family:inherit;}
+
+/* ---------- shell ---------- */
+.shell{max-width:1880px;width:96%;margin:0 auto;padding:28px 24px 80px;}
+.topbar{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);
+  padding-bottom:20px;margin-bottom:18px;
+}
+.brand-mark{display:flex;align-items:center;gap:12px;}
+.brand-mark .glyph{
+  width:38px;height:38px;border-radius:9px;
+  background:linear-gradient(155deg,var(--leaf-600),var(--soil-900));
+  display:flex;align-items:center;justify-content:center;
+  color:var(--paper-50);font-family:'JetBrains Mono',monospace;font-weight:700;font-size:14px;
+  flex-shrink:0;
+}
+.brand-mark h1{font-size:19px;font-weight:700;margin:0;letter-spacing:-.01em;}
+.brand-mark p{margin:2px 0 0;font-size:12.5px;color:var(--ink-soft);}
+
+/* 頁籤 */
+.tab-row{display:flex;gap:6px;margin-bottom:16px;border-bottom:1px solid var(--line);}
+.tab-btn{
+  border:none;background:transparent;padding:10px 4px;margin-right:18px;font-size:14px;font-weight:600;
+  color:var(--ink-soft);border-bottom:2.5px solid transparent;margin-bottom:-1px;
+}
+.tab-btn:hover{color:var(--ink);}
+.tab-btn.active{color:var(--leaf-700);border-bottom-color:var(--leaf-600);}
+
+.search-box{flex:1;min-width:180px;position:relative;}
+.search-box input{
+  width:100%;padding:9px 12px 9px 34px;border:1px solid var(--line);border-radius:8px;
+  background:#fff;font-size:13.5px;color:var(--ink);
+}
+.search-box input:focus{outline:none;border-color:var(--leaf-500);}
+.search-box::before{
+  content:"";position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:13px;height:13px;border:1.6px solid var(--ink-soft);border-radius:50%;
+}
+.search-box::after{
+  content:"";position:absolute;left:20.5px;top:calc(50% + 5px);
+  width:6px;height:1.6px;background:var(--ink-soft);transform:rotate(45deg);
+}
+
+.btn{
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  transition:border-color .14s, background .14s, opacity .14s, transform .1s, box-shadow .14s;
+}
+.btn:hover{border-color:var(--ink-soft);}
+.btn:active:not(:disabled){transform:scale(.96);}
+.btn:focus-visible{outline:2px solid var(--leaf-500);outline-offset:2px;}
+.btn-primary{background:var(--leaf-600);border-color:var(--leaf-600);color:#fff;}
+.btn-primary:hover{background:var(--leaf-700);border-color:var(--leaf-700);box-shadow:0 3px 10px rgba(60,94,66,.28);transform:translateY(-1px);}
+.btn-primary:active:not(:disabled){transform:translateY(0) scale(.96);box-shadow:none;}
+.btn-dark{background:var(--soil-900);border-color:var(--soil-900);color:#fff;}
+.btn-dark:hover{background:#0f1209;}
+.btn-ghost{background:transparent;border-color:transparent;}
+.btn-ghost:hover{background:var(--paper-200);}
+.btn-secondary{background:#fff;border-color:var(--line);color:var(--ink);}
+.btn-secondary:hover{border-color:var(--ink-soft);background:var(--paper-50);}
+.btn-export{background:var(--green-export);border-color:var(--green-export);color:#fff;}
+.btn-export:hover{background:#186633;border-color:#186633;box-shadow:0 3px 10px rgba(31,122,61,.3);transform:translateY(-1px);}
+.btn-export:active:not(:disabled){transform:translateY(0) scale(.96);box-shadow:none;}
+.btn-upload{background:var(--orange-action);border-color:var(--orange-action);color:#fff;}
+.btn-upload:hover{background:#e6752c;border-color:#e6752c;box-shadow:0 3px 10px rgba(255,134,55,.3);transform:translateY(-1px);}
+.btn-upload:active:not(:disabled){transform:translateY(0) scale(.96);box-shadow:none;}
+.btn-danger{color:var(--rust-600);}
+.btn-danger-outline{background:#fff;border-color:var(--rust-600);color:var(--rust-600);}
+.btn-danger-outline:hover{background:var(--rust-100);}
+.btn:disabled{opacity:.45;cursor:not-allowed;box-shadow:none;transform:none;}
+.btn.small{padding:5px 10px;font-size:12px;border-radius:6px;}
+.btn-icon{
+  width:30px;height:30px;padding:0;justify-content:center;border-radius:7px;
+  border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-size:16px;font-weight:700;
+  transition:background .14s,color .14s,transform .1s;
+}
+.btn-icon:hover{background:var(--paper-200);color:var(--ink);}
+.btn-icon:active:not(:disabled){transform:scale(.9);}
+
+/* 通用表格樣式（各 Modal 裡的預覽表格仍在用：批次匯入預覽、精靈欄位對應預覽、料號對照表預覽等） */
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  text-align:left;padding:11px 14px;background:var(--paper-100);
+  color:var(--ink-soft);font-weight:600;font-size:11.5px;letter-spacing:.02em;
+  border-bottom:1px solid var(--line);white-space:nowrap;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--paper-200);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr{cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:var(--paper-50);}
+.customer-note{
+  display:inline-flex;align-items:center;
+  color:#FF524D;font-size:11.5px;font-weight:600;font-family:inherit;
+  border:1.5px dashed #FF524D;border-radius:14px;background:transparent;cursor:pointer;
+  padding:3px 10px;margin-left:8px;
+  max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle;
+}
+.customer-note:hover{background:var(--red-bad-bg);}
+.text-link{
+  display:inline-flex;align-items:center;background:none;border:none;
+  padding:6px 9px;margin-right:2px;border-radius:7px;
+  font-size:12.5px;font-weight:600;color:var(--leaf-600);cursor:pointer;
+  text-decoration:none;transition:background .12s, color .12s;vertical-align:middle;
+}
+.text-link:hover{background:var(--ok-100);color:var(--leaf-700);}
+.text-link:active{transform:scale(.97);}
+.text-link.danger{color:var(--rust-600);}
+.text-link.danger:hover{background:var(--rust-100);color:var(--rust-600);}
+
+.badge{
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+  padding:3px 9px;border-radius:20px;font-size:11.5px;font-weight:600;
+}
+.badge::before{content:"";width:6px;height:6px;border-radius:50%;}
+.badge.badge-green{background:var(--green-ok-bg);color:var(--green-ok);}
+.badge.badge-green::before{background:var(--green-ok);}
+.badge.badge-red{background:var(--red-bad-bg);color:var(--red-bad);}
+.badge.badge-red::before{background:var(--red-bad);}
+
+.empty-state{padding:56px 20px;text-align:center;color:var(--ink-soft);}
+.empty-state .glyph{font-size:26px;margin-bottom:8px;}
+.empty-state h3{margin:0 0 4px;color:var(--ink);font-size:15px;}
+.empty-state p{margin:0;font-size:13px;}
+
+/* ---- 版面重新設計：清單+側邊詳情面板，取代原本的寬表格 ---- */
+.topbar-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+
+.stage-row{display:flex;gap:12px;margin-bottom:18px;}
+.stage-card{
+  flex:1;text-align:left;font-family:inherit;cursor:pointer;background:var(--paper-50);
+  border:1.5px solid var(--line);border-radius:16px;padding:16px 20px;
+  transition:border-color .16s,box-shadow .16s;
+}
+.stage-card.active{background:#fff;border-color:var(--ink);box-shadow:var(--shadow);}
+.stage-card:hover:not(.active){border-color:var(--ink-soft);background:#fff;}
+.stage-card .stage-top{display:flex;align-items:center;gap:10px;}
+.stage-card .stage-chip{
+  width:22px;height:22px;border-radius:999px;background:var(--paper-200);color:var(--ink-soft);
+  font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.stage-card.active .stage-chip{background:var(--ink);color:var(--paper-50);}
+.stage-card .stage-title{font-size:14px;font-weight:700;color:var(--ink);}
+.stage-card .stage-num{font-size:34px;font-weight:700;line-height:1;}
+.stage-card .stage-sub{font-size:12.5px;color:var(--ink-soft);}
+
+.workspace{display:flex;gap:18px;align-items:flex-start;}
+.list-panel{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;}
+.list-panel-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.list-title{font-size:15px;}
+.raw-select{padding:9px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:13px;font-family:inherit;color:var(--ink);}
+
+.cust-list-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;}
+.cust-list-head{
+  display:flex;align-items:center;gap:14px;padding:11px 18px;background:var(--paper-100);
+  border-bottom:1px solid var(--line);font-size:11.5px;font-weight:700;color:var(--ink-soft);letter-spacing:.02em;
+}
+.cust-list-foot{padding:12px 18px;font-size:12px;color:var(--ink-soft);display:flex;justify-content:space-between;}
+.cust-row{
+  display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--paper-100);
+  cursor:pointer;border-left:3px solid transparent;transition:background .12s,border-color .12s;
+}
+.cust-row:hover{background:var(--paper-50);}
+.cust-row.active{background:var(--paper-100);border-left-color:var(--ink);}
+
+.detail-panel{width:400px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;}
+.detail-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 20px rgba(43,33,23,.08);overflow:hidden;}
+.detail-empty{background:#fff;border:1.5px dashed var(--line);border-radius:16px;padding:22px;text-align:center;color:var(--ink-soft);font-size:13px;}
+.detail-head{padding:16px 18px;border-bottom:1px solid var(--paper-100);}
+.detail-body{padding:16px 18px;display:flex;flex-direction:column;gap:14px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.detail-grid-cell{border:1px solid var(--line);border-radius:12px;padding:11px 13px;}
+.detail-items-box{border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+.detail-item-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--paper-100);}
+.detail-actions{display:flex;gap:7px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--paper-100);}
+
+.tray-card{background:#fff;border:1.5px solid var(--green-export);border-radius:16px;overflow:hidden;box-shadow:0 6px 20px rgba(43,33,23,.08);}
+.tray-head{padding:14px 18px;background:var(--green-ok-bg);border-bottom:1px solid #cbe7d3;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.tray-title{font-size:15px;font-weight:700;color:var(--green-export);}
+.tray-count{font-size:26px;font-weight:700;line-height:1;color:var(--green-export);}
+.tray-list{padding:8px 10px;display:flex;flex-direction:column;gap:2px;max-height:220px;overflow:auto;}
+.tray-row{display:flex;align-items:center;gap:10px;padding:8px 8px;border-radius:10px;}
+.tray-row:hover{background:var(--paper-50);}
+.tray-foot{padding:13px 18px;border-top:1px solid var(--paper-100);background:var(--paper-50);display:flex;flex-direction:column;gap:9px;}
+.tray-total{display:flex;justify-content:space-between;}
+.tray-export-btn{border:1px solid var(--green-export);background:var(--green-export);color:#fff;padding:11px 14px;border-radius:12px;font-size:14px;font-weight:700;width:100%;transition:background .14s,box-shadow .14s,transform .1s;}
+.tray-export-btn:hover:not(:disabled){background:#186633;box-shadow:0 3px 10px rgba(31,122,61,.3);transform:translateY(-1px);}
+.tray-export-btn:active:not(:disabled){transform:translateY(0) scale(.97);box-shadow:none;}
+.tray-export-btn:disabled{background:#fff;color:var(--green-export);opacity:.5;cursor:not-allowed;}
+
+/* 定位式彈出視窗（目前只剩備註全文彈窗在用，欄位篩選 popover 已改用原生 select 移除了） */
+.row-menu{
+  position:fixed;display:none;flex-direction:column;min-width:172px;
+  background:#fff;border:1px solid var(--line);border-radius:10px;
+  box-shadow:0 10px 30px rgba(22,26,20,.18);z-index:150;overflow:hidden;padding:4px;
+}
+
+/* ---------- modal ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(22,26,20,.45);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:24px;
+  backdrop-filter:blur(1px);
+}
+.overlay.open{display:flex;}
+.modal{
+  background:#fff;border-radius:14px;max-width:560px;width:100%;
+  max-height:88vh;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 20px 60px rgba(22,26,20,.25);
+}
+.modal.wide{max-width:900px;}
+.modal-head{
+  padding:18px 22px;border-bottom:1px solid var(--paper-200);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.modal-head h2{font-size:16px;margin:0;font-weight:700;}
+.modal-head .sub{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+.modal-close{
+  width:28px;height:28px;border-radius:7px;border:none;background:var(--paper-100);
+  color:var(--ink-soft);font-size:15px;display:flex;align-items:center;justify-content:center;
+}
+.modal-close:hover{background:var(--paper-200);color:var(--ink);}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.modal-foot{
+  padding:14px 22px;border-top:1px solid var(--paper-200);
+  display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:var(--paper-50);
+}
+
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12.5px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+.field input[type=text],.field select,.field textarea{
+  width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:13.5px;background:#fff;
+}
+.field input:focus,.field select:focus{outline:none;border-color:var(--leaf-500);}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+
+.dropzone{
+  border:1.5px dashed var(--line);border-radius:10px;padding:28px 16px;text-align:center;
+  color:var(--ink-soft);font-size:13px;background:var(--paper-50);cursor:pointer;
+}
+.dropzone:hover{border-color:var(--leaf-500);color:var(--leaf-600);}
+.dropzone.drag{border-color:var(--leaf-500);background:var(--ok-100);}
+.dropzone strong{color:var(--ink);}
+
+.wizard-steps{display:flex;gap:6px;margin-bottom:18px;}
+.wizard-steps .step{flex:1;height:4px;border-radius:3px;background:var(--paper-200);}
+.wizard-steps .step.active,.wizard-steps .step.done{background:var(--leaf-600);}
+
+.preview-scroll{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px;}
+.preview-scroll table{font-size:12px;}
+.preview-scroll thead th{position:sticky;top:0;z-index:2;}
+.preview-scroll td, .preview-scroll th{padding:6px 9px;white-space:nowrap;}
+.preview-scroll tr.header-row-pick{cursor:pointer;}
+.preview-scroll tr.marked-start{background:var(--ok-100) !important;}
+.preview-scroll tr.marked-start td:first-child{font-weight:700;color:var(--ok-600);}
+
+.map-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:6px;}
+.map-grid .col-label{font-size:12px;color:var(--ink-soft);margin-bottom:3px;}
+.map-grid .col-sample{font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink);background:var(--paper-100);padding:5px 8px;border-radius:6px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.result-summary{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.pill{padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:var(--paper-100);color:var(--ink-soft);}
+.pill.ok{background:var(--ok-100);color:var(--ok-600);}
+.pill.warn{background:#fff4cf;color:#8a6d17;}
+
+tr.new-item-row td{background:var(--new-item-yellow) !important;color:var(--red-bad) !important;font-weight:500;}
+tr.unmatched-row td{background:#ffe6d1 !important;color:var(--orange-action) !important;font-weight:500;}
+
+.kv-table{width:100%;border-collapse:collapse;font-size:13.5px;}
+.kv-table td{padding:8px 4px;border-bottom:1px solid var(--paper-200);}
+.kv-table td:first-child{color:var(--ink-soft);width:38%;}
+
+.toast-wrap{position:fixed;bottom:22px;right:22px;z-index:200;display:flex;flex-direction:column;gap:8px;}
+.toast{
+  background:var(--soil-900);color:#fff;padding:11px 16px;border-radius:9px;font-size:13px;
+  box-shadow:0 8px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;
+  animation:toast-in .18s ease-out;
+}
+.toast.err{background:var(--rust-600);}
+.toast.ok{background:var(--leaf-700);}
+@keyframes toast-in{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-overlay{
+  position:fixed;inset:0;background:rgba(248,247,242,.7);z-index:300;
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:10px;
+}
+.loading-overlay.open{display:flex;}
+.loading-overlay .ring{width:26px;height:26px;border-radius:50%;border:3px solid var(--paper-200);border-top-color:var(--leaf-600);animation:spin .8s linear infinite;}
+.loading-overlay span{font-size:13px;color:var(--ink-soft);}
+.loading-progress-wrap{width:220px;height:6px;border-radius:999px;background:var(--paper-200);overflow:hidden;}
+.loading-progress-bar{height:100%;width:0%;background:var(--leaf-600);border-radius:999px;transition:width .2s ease-out;}
+
+@media (max-width:640px){
+  .map-grid{grid-template-columns:1fr;}
+  .shell{padding:18px 14px 60px;}
+  td.actions{white-space:normal;}
+  .workspace{flex-direction:column;}
+  .detail-panel{width:100%;}
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="brand-mark">
+      <div class="glyph">
+        <img src="data:image/png;base64,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" width="24" height="24" alt="" style="display:block;">
+      </div>
+      <div>
+        <h1>報價單匯出系統</h1>
+        <p>匯入客戶原始報價單 → 轉換為標準匯入格式並匯出</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="btnResetAll">重置本期匯出狀態</button>
+      <button class="btn btn-ghost" id="btnMasterItemsTop" style="display:none;">品項主檔 <span id="masterItemsCountTop" class="mono">0</span> 筆</button>
+      <button class="btn btn-secondary" id="btnBatchImport">批次匯入客戶</button>
+      <button class="btn btn-secondary" id="btnBatchQuotes">批次匯入報價單</button>
+      <button class="btn btn-primary" id="btnAddCustomer">＋ 新增客戶</button>
+    </div>
+  </div>
+
+  <div class="tab-row" id="tabRow">
+    <button class="tab-btn active" data-tab="hasCode">有貨號客戶</button>
+    <button class="tab-btn" data-tab="noCode">無貨號客戶</button>
+  </div>
+
+  <div id="masterItemsPanel" style="display:none;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:16px;">
+    <div style="flex:1;">
+      <div style="font-weight:700;font-size:13.5px;">忠欣品項主檔（全公司共用）</div>
+      <div class="hint">無貨號客戶的品項比對，都是拿客戶的料號對照表去對這份主檔的料號。目前共 <span id="masterItemsCount" class="mono">0</span> 筆。</div>
+    </div>
+    <button class="btn btn-secondary" id="btnMasterItems">上傳／更新主檔</button>
+  </div>
+
+  <div class="stage-row" id="stageRow"></div>
+
+  <div class="workspace">
+    <div class="list-panel">
+      <div class="list-panel-head">
+        <strong id="listTitle" class="list-title"></strong>
+        <span id="listHint" class="hint"></span>
+        <div style="flex:1;"></div>
+        <div class="search-box" style="width:240px;">
+          <input type="text" id="searchInput" placeholder="搜尋客戶代號或名稱…">
+        </div>
+        <select id="unitCategoryFilterSelect" class="raw-select" style="display:none;">
+          <option value="all">全部單位</option>
+          <option value="kg">kg</option>
+          <option value="台斤">台斤</option>
+          <option value="">未設定單位</option>
+        </select>
+        <select id="cycleFilterSelect" class="raw-select">
+          <option value="all">全部報價週期</option>
+          <option value="7天">7天</option>
+          <option value="10天">10天</option>
+          <option value="15天">15天</option>
+          <option value="30天">30天</option>
+        </select>
+      </div>
+      <div class="cust-list-card">
+        <div class="cust-list-head" id="custListHead"></div>
+        <div id="custListBody"></div>
+        <div class="cust-list-foot" id="custListFoot"></div>
+      </div>
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="glyph">📋</div>
+        <h3>還沒有客戶資料</h3>
+        <p>請先「新增客戶」或「批次匯入客戶」建立客戶主檔</p>
+      </div>
+    </div>
+
+    <div class="detail-panel">
+      <div id="detailCard"></div>
+      <div class="tray-card">
+        <div class="tray-head">
+          <div>
+            <div class="tray-title">本期匯出清單</div>
+            <div class="hint" style="margin-top:2px;">勾選的客戶會合併成一份匯入檔</div>
+          </div>
+          <span class="tray-count" id="trayCount">0</span>
+        </div>
+        <div class="tray-list" id="trayList"></div>
+        <div class="tray-foot">
+          <div class="tray-total hint">合計品項<strong class="mono" id="trayItemsTotal">0 項</strong></div>
+          <button class="btn tray-export-btn" id="btnBatchExport" disabled>匯出並標記已匯出</button>
+          <div style="display:flex;gap:7px;">
+            <button class="btn btn-secondary" style="flex:1;" id="btnBatchEdit" disabled>批次修改</button>
+            <button class="btn btn-danger-outline" style="flex:1;" id="btnBatchDelete" disabled>批次刪除</button>
+            <button class="btn btn-secondary" style="flex:1;" id="btnClearTray">清空清單</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;margin-top:10px;font-size:11px;color:var(--ink-soft);" class="mono">前端版本 <span id="frontendVersionStamp"></span></div>
+</div>
+
+<!-- 備註全文彈出視窗（動態定位） -->
+<div class="row-menu" id="noteFullTextPopover" style="max-width:320px;padding:12px 14px;white-space:normal;line-height:1.6;font-size:13px;color:var(--ink);"></div>
+
+<!-- ============ 新增/編輯客戶 Modal ============ -->
+<div class="overlay" id="ovCustomer">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="custModalTitle">新增客戶</h2>
+        <div class="sub">建立客戶代號與名稱，供報價單匯入比對</div>
+      </div>
+      <button class="modal-close" data-close="ovCustomer">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field-row">
+        <div class="field">
+          <label>客戶代號 *</label>
+          <input type="text" id="custCode" placeholder="例如 C001">
+        </div>
+        <div class="field">
+          <label>客戶名稱</label>
+          <input type="text" id="custName" placeholder="例如 台灣善美的">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>報價種類</label>
+          <select id="custProductCodeMode">
+            <option value="有貨號">有貨號</option>
+            <option value="無貨號">無貨號</option>
+          </select>
+          <div class="hint">是否有客戶貨號欄位；若「無貨號」，比對品項改用商品名稱</div>
+        </div>
+        <div class="field">
+          <label>報價週期</label>
+          <select id="custQuoteCycle">
+            <option value="7天">7天</option>
+            <option value="10天">10天</option>
+            <option value="15天">15天</option>
+            <option value="30天">30天</option>
+          </select>
+          <div class="hint">到期日 = 最後匯出日 + 週期天數</div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>匯出狀態</label>
+          <select id="custExportStatus">
+            <option value="未匯出">尚未匯出</option>
+            <option value="已匯出">已匯出</option>
+          </select>
+          <div class="hint">手動調整時，若切換為「已匯出」會以現在時間重新計算到期日</div>
+        </div>
+        <div class="field" id="custUnitCategoryField">
+          <label>單位分類</label>
+          <select id="custUnitCategory">
+            <option value="">未設定</option>
+            <option value="kg">kg</option>
+            <option value="台斤">台斤</option>
+          </select>
+          <div class="hint">只對無貨號客戶有意義，記錄這位客戶報價慣用的單位系統</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>備註</label>
+        <input type="text" id="custNotes" placeholder="需要特別注意的事，會用紅字顯示在客戶名稱旁邊">
+      </div>
+      <div class="field">
+        <label>報價單檔案位置</label>
+        <input type="text" id="custQuoteFileLocation" placeholder="例如 Z:\報價單\台灣善美的\ 或雲端連結，純粹方便記錄查找，不影響匯出">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovCustomer">取消</button>
+      <button class="btn btn-primary" id="btnSaveCustomer">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 批次匯入客戶 Modal ============ -->
+<div class="overlay" id="ovBatch">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>批次匯入客戶</h2>
+        <div class="sub">上傳 Excel，第一列為標題：客戶代號、客戶名稱、報價種類、報價週期、匯出狀態</div>
+      </div>
+      <button class="modal-close" data-close="ovBatch">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="batchDropzone">
+        <strong>點擊選擇檔案</strong> 或拖曳 Excel 檔案到此處<br>只有「客戶代號」是必要欄位，其餘欄位缺少時會用預設值（有貨號／7天／尚未匯出）
+        <input type="file" id="batchFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+      <div id="batchPreviewWrap" style="margin-top:14px;display:none;">
+        <div class="hint" id="batchSummary" style="margin-bottom:8px;"></div>
+        <div class="preview-scroll"><table id="batchPreviewTable"></table></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovBatch">取消</button>
+      <button class="btn btn-primary" id="btnConfirmBatch" disabled>確認匯入</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 批次匯入報價單 Modal ============ -->
+<div class="overlay" id="ovBatchQuotes">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2>批次匯入報價單</h2>
+        <div class="sub">依檔名自動比對「已設定匯出格式」的客戶，一次匯出多家報價單</div>
+      </div>
+      <button class="modal-close" data-close="ovBatchQuotes">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="batchQuotesDropzone">
+        拖曳多個報價單檔案到此處<br>檔名需包含客戶代號或客戶名稱才能自動辨識；可以分好幾次選取或拖曳，會自動累加、不會蓋掉之前選的
+        <input type="file" id="batchQuotesFileInput" accept=".xlsx,.xls,.csv" multiple style="display:none;">
+        <input type="file" id="batchQuotesFolderInput" webkitdirectory directory multiple style="display:none;">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-secondary small" id="btnBatchQuotesPickFiles">選擇檔案</button>
+        <button class="btn btn-secondary small" id="btnBatchQuotesPickFolder">選擇資料夾</button>
+        <button class="btn btn-ghost small" id="btnBatchQuotesClear">清空清單</button>
+      </div>
+      <div id="batchQuotesPreviewWrap" style="margin-top:14px;display:none;">
+        <div class="hint" id="batchQuotesSummary" style="margin-bottom:8px;"></div>
+        <div class="preview-scroll"><table id="batchQuotesPreviewTable"></table></div>
+      </div>
+      <div id="batchQuotesProgressWrap" style="margin-top:14px;display:none;">
+        <div class="hint" id="batchQuotesProgress"></div>
+        <div class="loading-progress-wrap" style="width:100%;margin-top:6px;"><div class="loading-progress-bar" id="batchQuotesProgressBar"></div></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovBatchQuotes">取消</button>
+      <button class="btn btn-export" id="btnConfirmBatchQuotes" disabled>開始批次匯出</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 查看紀錄 Modal ============ -->
+<div class="overlay" id="ovHistory">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2 id="historyTitle">匯出紀錄</h2>
+        <div class="sub">此客戶最近一次匯出的相關資訊</div>
+      </div>
+      <button class="modal-close" data-close="ovHistory">✕</button>
+    </div>
+    <div class="modal-body">
+      <table class="kv-table" id="historyTable"></table>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovHistory">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 忠欣品項主檔 上傳/更新 Modal ============ -->
+<div class="overlay" id="ovMasterItems">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>忠欣品項主檔</h2>
+        <div class="sub">全公司共用，料號的正式來源；上傳會整份取代目前的主檔</div>
+      </div>
+      <button class="modal-close" data-close="ovMasterItems">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="masterItemsDropzone">
+        <strong>點擊選擇檔案</strong> 或拖曳 Excel 檔案到此處<br>第一列為標題，需包含「品項代號」「品項名稱」欄位；「規格代號」「規格」「等級」可省略
+        <input type="file" id="masterItemsFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+      <div id="masterItemsPreviewWrap" style="margin-top:14px;display:none;">
+        <div class="hint" id="masterItemsSummary" style="margin-bottom:8px;"></div>
+        <div class="preview-scroll"><table id="masterItemsPreviewTable"></table></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovMasterItems">取消</button>
+      <button class="btn btn-primary" id="btnConfirmMasterItems" disabled>確認匯入（整份取代）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 客戶料號對照表 上傳 Modal ============ -->
+<div class="overlay" id="ovLookup">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2 id="lookupTitle">料號對照表</h2>
+        <div class="sub">這個客戶自己的「客戶品項名稱 → 忠欣料號」對照表</div>
+      </div>
+      <button class="modal-close" data-close="ovLookup">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="hint" style="margin-bottom:8px;font-weight:600;color:var(--ink);" id="lookupFormLabel">新增單筆對照</p>
+      <div class="field-row" style="align-items:flex-end;">
+        <div class="field" style="margin-bottom:0;">
+          <label>客戶品項名稱</label>
+          <input type="text" id="newLookupCustName" placeholder="例如 美生菜(客戶自己的叫法)">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>忠欣料號</label>
+          <input type="text" id="newLookupItemCode" list="masterItemsDatalist" placeholder="輸入或選擇料號">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>忠欣品項名稱</label>
+          <input type="text" id="newLookupItemName" placeholder="自動帶入" disabled>
+        </div>
+        <button class="btn btn-ghost" id="btnCancelEditLookupEntry" style="flex-shrink:0;display:none;">取消</button>
+        <button class="btn btn-secondary" id="btnAddLookupEntry" style="flex-shrink:0;">新增</button>
+      </div>
+      <datalist id="masterItemsDatalist"></datalist>
+      <div class="hint" id="lookupExistingSummary" style="margin:14px 0 6px;"></div>
+      <div class="preview-scroll" style="max-height:220px;"><table id="lookupExistingTable"></table></div>
+
+      <p class="hint" style="margin:18px 0 8px;font-weight:600;color:var(--ink);">或整批上傳（會整份取代上面現有的對照）</p>
+      <div class="dropzone" id="lookupDropzone">
+        <strong>點擊選擇檔案</strong> 或拖曳 Excel 檔案到此處<br>第一列為標題，需包含「客戶品項名稱」「忠欣料號」欄位（「忠欣品項名稱」可省略）
+        <input type="file" id="lookupFileInput" accept=".xlsx,.xls,.csv" style="display:none;">
+      </div>
+      <div id="lookupPreviewWrap" style="margin-top:14px;display:none;">
+        <div class="hint" id="lookupSummary" style="margin-bottom:8px;"></div>
+        <div class="preview-scroll"><table id="lookupPreviewTable"></table></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovLookup">關閉</button>
+      <button class="btn btn-primary" id="btnConfirmLookup" disabled>確認整批匯入（整份取代）</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 批次修改 Modal ============ -->
+<div class="overlay" id="ovBatchEdit">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h2>批次修改</h2>
+        <div class="sub" id="batchEditSub">已選擇 0 筆客戶</div>
+      </div>
+      <button class="modal-close" data-close="ovBatchEdit">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="hint" style="margin-bottom:14px;">勾選要修改的欄位，沒勾選的欄位維持原樣不變。</p>
+      <div class="field">
+        <label><input type="checkbox" id="beApplyMode" style="width:auto;margin-right:6px;">報價種類</label>
+        <select id="beMode" disabled>
+          <option value="有貨號">有貨號</option>
+          <option value="無貨號">無貨號</option>
+        </select>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="beApplyCycle" style="width:auto;margin-right:6px;">報價週期</label>
+        <select id="beCycle" disabled>
+          <option value="7天">7天</option>
+          <option value="10天">10天</option>
+          <option value="15天">15天</option>
+          <option value="30天">30天</option>
+        </select>
+      </div>
+      <div class="field">
+        <label><input type="checkbox" id="beApplyStatus" style="width:auto;margin-right:6px;">匯出狀態</label>
+        <select id="beStatus" disabled>
+          <option value="未匯出">尚未匯出</option>
+          <option value="已匯出">已匯出</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" data-close="ovBatchEdit">取消</button>
+      <button class="btn btn-primary" id="btnConfirmBatchEdit">套用</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 上傳報價單 / 對應精靈 Modal ============ -->
+<div class="overlay" id="ovWizard">
+  <div class="modal wide">
+    <div class="modal-head">
+      <div>
+        <h2 id="wizardTitle">上傳報價單</h2>
+        <div class="sub" id="wizardSub"></div>
+      </div>
+      <button class="modal-close" data-close="ovWizard">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="wizard-steps">
+        <div class="step" data-step="1"></div>
+        <div class="step" data-step="2"></div>
+        <div class="step" data-step="3"></div>
+      </div>
+
+      <!-- Step 1: 上傳檔案 -->
+      <div class="wiz-panel" data-panel="1">
+        <div class="dropzone" id="wizDropzone">
+          <strong>點擊選擇檔案</strong> 或拖曳客戶原始報價單到此處<br>支援 .xlsx / .xls，可一次選取多個檔案
+          <div class="hint" style="color:var(--rust-600);font-weight:600;margin-top:6px;">單一客戶上傳報價單時，多筆報價單格式必須相同（欄位順序、起始列都要一樣）</div>
+          <input type="file" id="wizFileInput" accept=".xlsx,.xls,.csv" multiple style="display:none;">
+        </div>
+      </div>
+
+      <!-- Step 2: 欄位對應 -->
+      <div class="wiz-panel" data-panel="2" style="display:none;">
+        <p class="hint" style="margin-bottom:10px;">點選「資料從此列開始」標記第一筆品項所在的列，接著為每一欄指定對應的目標欄位。若同一張表橫向並排好幾組品名／單價（例如一列裡有好幾種商品並列），只要把每一組各自的欄位都指定好（可以重複指定同一種欄位給不同欄），系統會自動辨識成好幾組分開解析。</p>
+        <div class="preview-scroll" id="wizMapPreviewWrap"><table id="wizMapPreviewTable"></table></div>
+        <div class="map-grid" id="wizMapGrid" style="margin-top:16px;"></div>
+        <div class="field" style="margin-top:14px;">
+          <label><input type="checkbox" id="wizSaveMapping" checked style="width:auto;margin-right:6px;">將此對應方式儲存為此客戶的範本，下次自動套用</label>
+        </div>
+      </div>
+
+      <!-- Step 3: 預覽結果 -->
+      <div class="wiz-panel" data-panel="3" style="display:none;">
+        <div class="result-summary" id="wizResultSummary"></div>
+        <div class="preview-scroll" id="wizResultPreviewWrap"><table id="wizResultPreviewTable"></table></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="wizBack" style="display:none;">上一步</button>
+      <div style="flex:1;"></div>
+      <button class="btn btn-ghost" data-close="ovWizard">取消</button>
+      <button class="btn btn-primary" id="wizNext">下一步</button>
+      <button class="btn btn-export" id="wizExport" style="display:none;">匯出並標記已匯出</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="ring"></div><span id="loadingText">處理中…</span><div class="loading-progress-wrap" id="loadingProgressWrap" style="display:none;"><div class="loading-progress-bar" id="loadingProgressBar"></div></div></div>
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script src="app.js?v=2026-09-25-supabase-v22"></script>
+</body>
+</html>

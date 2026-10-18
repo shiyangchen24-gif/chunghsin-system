@@ -1,0 +1,3439 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>忠欣 · 打勾單系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --ink:       #0f0f10;
+  --ink2:      #4b5563;
+  --ink3:      #9ca3af;
+  --line:      #e5e7eb;
+  --line2:     #f3f4f6;
+  --white:     #ffffff;
+  --page:      #f9fafb;
+  --sidebar-w: 220px;
+
+  --red:       #e93e38;
+  --red-bg:    #ffe4e4;
+  --red-bd:    #ffbbbb;
+  --red-dk:    #a01010;
+
+  --grn:       #01ab56;
+  --grn-bg:    #daf7e5;
+  --grn-bd:    #7de8b0;
+  --grn-dk:    #00612e;
+
+  --blu:       #2d79e4;
+  --blu-bg:    #e5effe;
+  --blu-bd:    #a8c4f8;
+  --blu-dk:    #1148a0;
+
+  --amber:     #ffa836;
+  --amber-bg:  #fdf2d8;
+  --amber-bd:  #ffd98a;
+  --amber-dk:  #7a4500;
+
+  --accent:    #6366f1;   /* indigo — signature colour */
+  --accent-bg: #eef2ff;
+  --accent-lt: #c7d2fe;
+
+  --radius:  14px;
+  --r-sm:    8px;
+  --r-xs:    5px;
+  --shadow:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md: 0 4px 24px rgba(0,0,0,.08), 0 2px 8px rgba(0,0,0,.04);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,.12), 0 4px 12px rgba(0,0,0,.06);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Noto Sans TC", sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOP BAR
+═══════════════════════════════════════════════════ */
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  height: 56px;
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; padding: 0 20px;
+  gap: 16px;
+  box-shadow: 0 1px 0 var(--line);
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.brand-mark {
+  width: clamp(24px, 4vw, 36px); height: clamp(24px, 4vw, 36px);
+  border-radius: 8px; overflow: hidden; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.brand-mark img {
+  width: 100%; height: 100%; object-fit: contain;
+}
+.brand-name {
+  font-size: clamp(11px, 2vw, 15px); font-weight: 700; color: var(--ink);
+  letter-spacing: -.3px; white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-sub {
+  font-size: 11px; color: var(--ink3); font-weight: 400;
+}
+.topbar-date {
+  font-size: 12px; color: var(--ink3);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.user-tag {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-lt);
+  border-radius: var(--r-sm);
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.user-tag:hover { background: #e0e7ff; }
+.user-tag-avatar {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-lt);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.user-tag-name {
+  font-size: 12px; font-weight: 600; color: var(--accent);
+}
+/* 暱稱設定 Modal */
+.user-modal {
+  background: var(--white); border-radius: 18px;
+  width: 90%; max-width: 320px; padding: 24px;
+  box-shadow: var(--shadow-lg);
+  transform: scale(.94) translateY(8px);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.overlay.open .user-modal { transform: scale(1) translateY(0); }
+.user-modal-title {
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  margin-bottom: 6px;
+}
+.user-modal-sub {
+  font-size: 12px; color: var(--ink3); margin-bottom: 16px;
+}
+.user-name-input {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  font-size: 16px; font-weight: 600; color: var(--ink);
+  background: var(--page); outline: none; text-align: center;
+  letter-spacing: .04em;
+  transition: border-color .15s, box-shadow .15s;
+}
+.user-name-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+  background: var(--white);
+}
+.user-icon-row {
+  display: flex; gap: 8px; justify-content: center;
+  flex-wrap: wrap; margin: 14px 0;
+}
+.user-icon-btn {
+  width: 48px; height: 48px; border-radius: var(--r-sm);
+  border: 2px solid var(--line); background: var(--page);
+  cursor: pointer; padding: 5px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .12s, border-color .12s, background .12s;
+  overflow: hidden;
+}
+.user-icon-btn img { width: 100%; height: 100%; object-fit: contain; }
+.user-icon-btn:hover { transform: scale(1.15); background: var(--line2); }
+.user-icon-btn.selected {
+  border-color: var(--accent); background: var(--accent-bg);
+  transform: scale(1.1);
+}
+.sync-wrap {
+  display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+}
+.sync-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--grn);
+  flex-shrink: 0;
+  transition: background .3s;
+}
+.sync-dot.syncing { background: var(--amber); animation: pulse-dot 1s infinite; }
+.sync-dot.error   { background: var(--red); }
+.sync-label {
+  font-size: 11px; color: var(--ink3); transition: color .3s; white-space: nowrap;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; } 50% { opacity: .3; }
+}
+
+/* ═══════════════════════════════════════════════════
+   STAT STRIP
+═══════════════════════════════════════════════════ */
+/* ── 儀表板卡片列 ── */
+.statstrip-wrap {
+  margin: 12px 16px 0;
+  overflow: visible;
+}
+.statstrip {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  background: transparent;
+  padding: 0;
+}
+.stat-item {
+  flex: 1 1 120px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-radius: 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  min-width: 100px;
+  transition: box-shadow .15s, transform .15s;
+  white-space: nowrap;
+}
+.stat-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+.stat-item.dash-active { box-shadow: 0 0 0 2.5px var(--accent) !important; transform: translateY(-2px); }
+.stat-item.red-card.dash-active   { box-shadow: 0 0 0 2.5px var(--red)   !important; }
+.stat-item.green-card.dash-active { box-shadow: 0 0 0 2.5px var(--grn)   !important; }
+.stat-item.blue-card.dash-active  { box-shadow: 0 0 0 2.5px var(--blu)   !important; }
+.stat-item.amber-card.dash-active { box-shadow: 0 0 0 2.5px var(--amber) !important; }
+.stat-item.red-card   { border-top: 3px solid var(--red);   background: linear-gradient(135deg, #fff, var(--red-bg)); }
+.stat-item.green-card { border-top: 3px solid var(--grn);   background: linear-gradient(135deg, #fff, var(--grn-bg)); }
+.stat-item.blue-card  { border-top: 3px solid var(--blu);   background: linear-gradient(135deg, #fff, var(--blu-bg)); }
+.stat-item.amber-card { border-top: 3px solid var(--amber); background: linear-gradient(135deg, #fff, var(--amber-bg)); }
+.stat-item.gray-card  { border-top: 3px solid var(--ink3);  background: linear-gradient(135deg, #fff, var(--line2)); }
+.stat-label-row {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 600; margin-bottom: 8px;
+}
+.stat-item.red-card   .stat-label-row { color: var(--red); }
+.stat-item.green-card .stat-label-row { color: var(--grn); }
+.stat-item.blue-card  .stat-label-row { color: var(--blu); }
+.stat-item.amber-card .stat-label-row { color: var(--amber); }
+.stat-item.gray-card  .stat-label-row { color: var(--ink3); }
+.stat-dot { display: none; }
+.stat-number {
+  font-size: 26px; font-weight: 800;
+  letter-spacing: -.5px; line-height: 1;
+}
+.stat-item.red-card   .stat-number { color: var(--red); }
+.stat-item.green-card .stat-number { color: var(--grn); }
+.stat-item.blue-card  .stat-number { color: var(--blu); }
+.stat-item.amber-card .stat-number { color: var(--amber); }
+.stat-item.gray-card  .stat-number { color: var(--ink2); }
+.progress-stat {
+  flex: 2 1 200px;
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff, var(--grn-bg));
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--grn);
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+}
+.prog-track {
+  width: 100%; background: var(--line2);
+  border-radius: 99px; overflow: hidden;
+}
+.prog-fill {
+  height: 100%; background: linear-gradient(90deg, var(--grn), #34d399);
+  border-radius: 99px; transition: width .6s cubic-bezier(.4,0,.2,1);
+}
+@keyframes prog-shine {
+  to { left: 200%; }
+}
+.prog-label { font-size: 16px; font-weight: 800; color: var(--grn); min-width: 48px; }
+
+/* ═══════════════════════════════════════════════════
+   TABS
+═══════════════════════════════════════════════════ */
+.tabs {
+  background: var(--white);
+  border-bottom: 1px solid var(--line);
+  padding: 0 20px;
+  display: flex;
+}
+.tab {
+  padding: 0 16px;
+  height: 44px;
+  line-height: 44px;
+  font-size: 13px; font-weight: 500;
+  color: var(--ink3);
+  border: none; background: none; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .15s, border-color .15s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--ink2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* ═══════════════════════════════════════════════════
+   PAGE SHELL
+═══════════════════════════════════════════════════ */
+.page { display: none; flex: 1; }
+.page.active { display: block; }
+
+/* ═══════════════════════════════════════════════════
+   TOOLBAR
+═══════════════════════════════════════════════════ */
+.toolbar {
+  padding: 12px 20px;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  border-bottom: 1px solid var(--line2);
+  background: var(--white);
+}
+.search-box {
+  position: relative; flex: 1; min-width: 150px; max-width: 280px;
+}
+.search-box input {
+  width: 100%;
+  padding: 7px 12px 7px 34px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  font-size: 13px; color: var(--ink);
+  background: var(--page);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+}
+.search-box input:focus {
+  background: var(--white);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+.search-box input::placeholder { color: var(--ink3); }
+.search-ico {
+  position: absolute; left: 9px; top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: flex; align-items: center;
+}
+.search-ico img { width: 16px; height: 16px; object-fit: contain; opacity: .6; }
+.filter-select {
+  padding: 7px 10px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  font-size: 13px; background: var(--page); color: var(--ink);
+  outline: none; cursor: pointer;
+  transition: border-color .15s;
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 13px; border-radius: var(--r-sm);
+  font-size: 13px; font-weight: 500;
+  border: none; cursor: pointer;
+  transition: all .14s; white-space: nowrap;
+}
+.btn:active { transform: scale(.97); }
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: 0 1px 3px rgba(99,102,241,.3);
+}
+.btn-primary:hover { background: #4f46e5; }
+.btn-ghost {
+  background: var(--white); color: var(--ink2);
+  border: 1px solid var(--line);
+}
+.btn-ghost:hover { background: var(--line2); color: var(--ink); }
+.btn-danger { background: var(--red-bg); color: var(--red-dk); border: 1px solid var(--red-bd); }
+.btn-danger:hover { background: #ffe4e6; }
+.btn-reset {
+  background: #fff7ed; color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+.btn-reset:hover { background: #ffedd5; }
+.btn-date {
+  background: #f0fdf4; color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.btn-date:hover { background: #dcfce7; }
+.btn-sm { padding: 5px 9px; font-size: 12px; }
+.ml-auto { margin-left: auto; }
+
+/* ═══════════════════════════════════════════════════
+   WARN BANNER
+═══════════════════════════════════════════════════ */
+.warn-strip {
+  display: none;
+  margin: 14px 20px 0;
+  background: var(--amber-bg);
+  border: 1px solid var(--amber-bd);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px; color: var(--amber-dk); font-weight: 500;
+  gap: 8px; align-items: flex-start;
+}
+.warn-strip.visible { display: flex; }
+.warn-strip-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.warn-strip-names { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.warn-chip {
+  background: #fff; border: 1px solid var(--amber-bd);
+  color: var(--amber-dk); border-radius: var(--r-xs);
+  font-size: 12px; font-weight: 600; padding: 2px 7px;
+}
+
+/* ═══════════════════════════════════════════════════
+   HINT BAR
+═══════════════════════════════════════════════════ */
+.hint-bar {
+  padding: 6px 20px;
+  font-size: 11px; color: var(--ink3);
+  border-bottom: 1px solid var(--line2);
+  background: var(--page);
+}
+
+/* ═══════════════════════════════════════════════════
+   GRID + CARDS
+═══════════════════════════════════════════════════ */
+.group-section { padding: 0 20px 20px; }
+.group-label {
+  font-size: 11px; font-weight: 600; color: var(--ink3);
+  letter-spacing: .08em; text-transform: uppercase;
+  padding: 18px 0 9px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.group-count {
+  background: var(--line2); color: var(--ink3);
+  font-size: 10px; padding: 2px 7px; border-radius: 99px;
+  font-weight: 600; letter-spacing: .04em;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 7px;
+}
+
+/* 骨架屏卡片 */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton-card {
+  position: relative;
+  padding: 16px 12px 12px;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--line);
+  background: var(--line2);
+  min-height: 80px;
+  display: flex; flex-direction: column; gap: 10px;
+  overflow: hidden;
+}
+.skeleton-line {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.skeleton-line.title { height: 14px; width: 70%; }
+.skeleton-line.sub   { height: 10px; width: 40%; }
+
+.ccard {
+  position: relative;
+  padding: 16px 12px 12px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 15px; font-weight: 700;
+  display: flex; flex-direction: column; gap: 7px;
+  min-height: 80px;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+  border: 1.5px solid transparent;
+  user-select: none;
+}
+.ccard:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.ccard:active { transform: scale(.96); }
+
+.ccard.unordered { background: var(--red-bg);   border-color: var(--red-bd);   color: var(--red-dk); }
+.ccard.ordered   { background: var(--grn-bg);   border-color: var(--grn-bd);   color: var(--grn-dk); }
+.ccard.no-order  { background: var(--blu-bg);   border-color: var(--blu-bd);   color: var(--blu-dk); }
+.ccard.warn3     {
+  background: #fefce8; border-color: #fbbf24; color: #78350f;
+  border-left: 4px solid #f59e0b;
+  animation: warn-pulse 2.6s ease-in-out infinite;
+}
+@keyframes warn-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,.2); }
+  50%      { box-shadow: 0 0 0 5px rgba(245,158,11,.06); }
+}
+
+.ccard-name { line-height: 1.35; word-break: break-all; font-size: 15px; }
+.ccard-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 400; opacity: .7;
+}
+.ccard-dot {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+}
+.unordered .ccard-dot { background: var(--red); }
+.ordered   .ccard-dot { background: var(--grn); }
+.no-order  .ccard-dot { background: var(--blu); }
+.warn3     .ccard-dot { background: var(--amber); }
+
+.warn3-badge {
+  position: absolute; top: 5px; right: 24px;
+  font-size: 9px; font-weight: 700; letter-spacing: .03em;
+  background: #f59e0b; color: #fff;
+  padding: 2px 6px; border-radius: 99px;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(245,158,11,.4);
+}
+.edit-btn {
+  position: absolute; top: 4px; right: 4px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: rgba(255,255,255,.7);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s; cursor: pointer;
+  border: none; padding: 4px;
+}
+.edit-btn img { width: 100%; height: 100%; display: block; }
+.ccard:hover .edit-btn { opacity: 1; }
+
+/* ═══════════════════════════════════════════════════
+   BACKEND TABLE
+═══════════════════════════════════════════════════ */
+.table-wrap { padding: 0 20px 28px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  padding: 9px 12px;
+  text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--ink3); letter-spacing: .05em;
+  border-bottom: 1px solid var(--line);
+  background: var(--page);
+  white-space: nowrap;
+}
+tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line2);
+  color: var(--ink); vertical-align: middle;
+}
+tbody tr:hover td { background: var(--line2); }
+tbody tr.row-warn td { background: #fffbeb; }
+tbody tr.row-warn:hover td { background: #fef3c7; }
+
+.badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; border-radius: 99px;
+  font-size: 11px; font-weight: 600;
+}
+.badge.unordered { background: var(--red-bg);   color: var(--red-dk); }
+.badge.ordered   { background: var(--grn-bg);   color: var(--grn-dk); }
+.badge.no-order  { background: var(--blu-bg);   color: var(--blu-dk); }
+.badge.warn3     { background: var(--amber-bg); color: var(--amber-dk); border: 1px solid var(--amber-bd); }
+
+/* timeline */
+.tl-list { list-style: none; display: flex; flex-direction: column; gap: 2px; min-width: 170px; }
+.tl-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink2); }
+.tl-dot  { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.tl-dot.ordered   { background: var(--grn); }
+.tl-dot.no-order  { background: var(--blu); }
+.tl-dot.unordered { background: var(--red); }
+.tl-time   { font-variant-numeric: tabular-nums; color: var(--ink3); min-width: 38px; }
+.tl-status { font-weight: 500; }
+.tl-empty  { font-size: 11px; color: var(--ink3); font-style: italic; }
+
+.warn-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--amber-bg); border: 1px solid var(--amber-bd);
+  color: var(--amber-dk); border-radius: var(--r-xs);
+  font-size: 11px; font-weight: 600; padding: 2px 7px;
+}
+
+/* ═══════════════════════════════════════════════════
+   PRINT PAGE
+═══════════════════════════════════════════════════ */
+.print-wrap { padding: 0 20px 28px; }
+.print-table { width: 100%; border-collapse: collapse; }
+.print-table th, .print-table td { text-align: center; }
+.print-table td.name-cell { font-weight: 600; text-align: left; white-space: nowrap; }
+.print-table td.name-cell.name-warn { background: #fffbeb; color: var(--amber-dk); }
+/* 列印控制面板 */
+.print-controls {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 12px 20px; background: var(--page);
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.print-ctrl-group {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--white); border: 1px solid var(--line);
+  border-radius: 8px; padding: 6px 10px;
+}
+.print-ctrl-group label { font-size: 11px; font-weight: 600; color: var(--ink3); white-space: nowrap; }
+.print-ctrl-group input[type=number],
+.print-ctrl-group select { width: 70px; border: none; outline: none; font-size: 13px; background: transparent; }
+.print-ctrl-group input[type=range] { width: 80px; }
+
+/* ═══════════════════════════════════════════════════
+   SECTION INFO
+═══════════════════════════════════════════════════ */
+.section-info {
+  padding: 7px 20px;
+  background: var(--line2); border-bottom: 1px solid var(--line);
+  font-size: 11px; color: var(--ink2);
+  display: flex; align-items: center; gap: 6px;
+}
+
+/* ═══════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════ */
+/* 重置提醒橫幅 */
+#reset-reminder {
+  display: none;
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 9000;
+  background: #1f2937;
+  color: #fff;
+  border-radius: 14px;
+  padding: 14px 20px;
+  display: none;
+  align-items: center; gap: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.25);
+  font-size: 13px;
+  max-width: 420px; width: calc(100% - 40px);
+  animation: slide-up .3s ease;
+}
+@keyframes slide-up {
+  from { opacity:0; transform: translateX(-50%) translateY(20px); }
+  to   { opacity:1; transform: translateX(-50%) translateY(0); }
+}
+#reset-reminder .remind-icon { font-size: 24px; flex-shrink: 0; }
+#reset-reminder .remind-text { flex: 1; line-height: 1.5; }
+#reset-reminder .remind-title { font-weight: 700; font-size: 14px; color: #fbbf24; margin-bottom: 2px; }
+#reset-reminder .remind-sub { font-size: 12px; color: #9ca3af; }
+#reset-reminder .remind-btn {
+  background: #fbbf24; color: #1f2937;
+  border: none; border-radius: 8px;
+  padding: 8px 14px; font-size: 12px; font-weight: 700;
+  cursor: pointer; flex-shrink: 0; white-space: nowrap;
+}
+#reset-reminder .remind-close {
+  background: none; border: none; color: #6b7280;
+  cursor: pointer; font-size: 16px; padding: 0 4px; flex-shrink: 0;
+}
+#reset-reminder .remind-close:hover { color: #fff; }
+
+/* 載入進度條 */
+#loading-bar-wrap {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 3px; z-index: 9999;
+  background: transparent;
+  transition: opacity .4s;
+}
+#loading-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #818cf8);
+  width: 0%;
+  transition: width .4s ease;
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px rgba(99,102,241,.5);
+}
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink); color: #fff;
+  padding: 10px 18px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500;
+  transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+  z-index: 999; pointer-events: none; white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ═══════════════════════════════════════════════════
+   MODAL / OVERLAY
+═══════════════════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.30);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; opacity: 0; pointer-events: none;
+  transition: opacity .18s;
+  backdrop-filter: blur(3px);
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--white); border-radius: 18px;
+  width: 90%; max-width: 400px; padding: 24px;
+  box-shadow: var(--shadow-lg);
+  transform: scale(.94) translateY(8px);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1);
+}
+.overlay.open .modal { transform: scale(1) translateY(0); }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 18px; color: var(--ink); }
+.field { margin-bottom: 13px; }
+.field label {
+  display: block; font-size: 11px; font-weight: 600;
+  color: var(--ink2); margin-bottom: 5px; letter-spacing: .04em; text-transform: uppercase;
+}
+.field input, .field select {
+  width: 100%; padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  font-size: 14px; color: var(--ink); background: var(--page);
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+  background: var(--white);
+}
+.modal-actions { display: flex; gap: 8px; margin-top: 20px; justify-content: flex-end; }
+.modal-actions-left { margin-right: auto; }
+
+/* ═══════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════ */
+.empty { padding: 56px 24px; text-align: center; color: var(--ink3); font-size: 14px; }
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+/* ═══════════════════════════════════════════════════
+   DRAG & DROP
+═══════════════════════════════════════════════════ */
+.ccard[draggable="true"] { cursor: grab; }
+.ccard[draggable="true"]:active { cursor: grabbing; }
+.ccard.dragging {
+  opacity: .35;
+  transform: scale(.96);
+  box-shadow: none !important;
+}
+.ccard.drag-over {
+  outline: 2px dashed var(--accent);
+  outline-offset: 2px;
+}
+.drag-mode-hint {
+  display: none;
+  align-items: center; gap: 6px;
+  padding: 5px 12px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-lt);
+  border-radius: var(--r-sm);
+  font-size: 12px; color: var(--accent); font-weight: 500;
+  white-space: nowrap;
+}
+.drag-mode-active .drag-mode-hint { display: flex; }
+.drag-mode-active .ccard { cursor: grab; }
+.drag-toggle-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 500;
+  border: 1px solid var(--line); background: var(--white); color: var(--ink2);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.drag-toggle-btn.active {
+  background: var(--accent-bg); border-color: var(--accent-lt); color: var(--accent);
+}
+.drag-toggle-btn:hover { background: var(--line2); }
+.drag-toggle-btn.active:hover { background: #e0e7ff; }
+
+/* ═══════════════════════════════════════════════════
+   SERIES STRIP
+═══════════════════════════════════════════════════ */
+.series-strip-wrap {
+  margin: 10px 16px 0;
+  overflow: visible;
+}
+.series-strip {
+  background: transparent;
+  padding: 0;
+  display: flex; flex-wrap: wrap; gap: 10px;
+  overflow-x: visible;
+}
+.series-item {
+  flex: 1 1 100px;
+  display: flex; flex-direction: column; justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 2px 6px rgba(0,0,0,.05);
+  white-space: nowrap; min-width: 90px;
+  cursor: pointer;
+  transition: box-shadow .15s, transform .15s, border-color .15s;
+}
+.series-item:hover { box-shadow: 0 4px 12px rgba(0,0,0,.1); transform: translateY(-1px); }
+.series-item.active { border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 0 0 2px var(--accent); }
+.series-label { font-size: 11px; font-weight: 700; color: var(--accent); margin-bottom: 8px; }
+.series-nums { display: flex; align-items: baseline; gap: 4px; }
+.series-ordered { font-size: 20px; font-weight: 800; color: var(--grn-dk); letter-spacing: -.5px; }
+.series-total   { font-size: 11px; color: var(--ink3); }
+.series-pct     { font-size: 11px; font-weight: 600; color: var(--grn); }
+
+/* ═══════════════════════════════════════════════════
+   NOTICE BOARD
+═══════════════════════════════════════════════════ */
+.notice-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Press Start 2P', monospace;
+  flex-wrap: wrap;
+}
+.notice-input {
+  padding: 5px 10px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  font-size: 13px; color: var(--ink); background: var(--page);
+  outline: none; flex: 1; min-width: 120px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.notice-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+  background: var(--white);
+}
+.notice-send {
+  padding: 5px 12px; border-radius: var(--r-sm);
+  font-size: 12px; font-weight: 600;
+  background: var(--accent); color: #fff;
+  border: none; cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.notice-send:hover { background: #4f46e5; }
+.notice-empty {
+  font-size: 12px; color: var(--ink3); font-style: italic;
+}
+.notice-author-input {
+  padding: 5px 8px;
+  border: 1px solid var(--line); border-radius: var(--r-sm);
+  font-size: 12px; color: var(--ink); background: var(--page);
+  outline: none; width: 68px;
+  transition: border-color .15s;
+}
+.notice-author-input:focus { border-color: var(--accent); }
+
+/* ═══════════════════════════════════════════════════
+   ANALYTICS PAGE
+═══════════════════════════════════════════════════ */
+.analytics-wrap {
+  padding: 20px;
+}
+.analytics-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.analytics-title {
+  font-size: 15px; font-weight: 700; color: var(--ink);
+}
+.analytics-month-nav {
+  display: flex; align-items: center; gap: 8px;
+}
+.month-btn {
+  width: 30px; height: 30px; border-radius: var(--r-sm);
+  border: 1px solid var(--line); background: var(--white);
+  cursor: pointer; font-size: 14px; color: var(--ink2);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.month-btn:hover { background: var(--line2); }
+.month-label {
+  font-size: 14px; font-weight: 600; color: var(--ink);
+  min-width: 80px; text-align: center;
+}
+.analytics-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.analytics-card-title {
+  font-size: 12px; font-weight: 600; color: var(--ink3);
+  letter-spacing: .06em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.chart-legend {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 12px; color: var(--ink2);
+}
+.legend-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+/* SVG 折線圖容器 */
+.chart-svg-wrap {
+  width: 100%; overflow-x: auto;
+}
+.chart-svg-wrap svg {
+  display: block; min-width: 320px;
+}
+/* 今日摘要卡片 */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.summary-card {
+  background: var(--page);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+}
+.summary-card-label {
+  font-size: 11px; color: var(--ink3); font-weight: 500;
+  display: flex; align-items: center; gap: 4px;
+  margin-bottom: 4px;
+}
+.summary-card-val {
+  font-size: 26px; font-weight: 800; color: var(--ink);
+  letter-spacing: -.5px; line-height: 1;
+}
+.summary-card-sub {
+  font-size: 11px; color: var(--ink3); margin-top: 2px;
+}
+/* 無資料提示 */
+.analytics-empty {
+  text-align: center; padding: 48px 20px;
+  color: var(--ink3); font-size: 14px;
+}
+.analytics-empty-icon { font-size: 36px; margin-bottom: 8px; }
+
+/* ═══════════════════════════════════════════════════
+   PRINT MEDIA
+═══════════════════════════════════════════════════ */
+@media print {
+  body { background: white; }
+  /* 隱藏所有 UI 元素 */
+  .topbar, .statstrip-wrap, .series-strip-wrap, .tabs, .toolbar,
+  .hint-bar, .warn-strip, .section-info, .no-print,
+  #toast, #confirm-overlay, #user-overlay, #overlay, #manual-overlay,
+  #loading-bar-wrap, #reset-reminder, .print-controls,
+  #import-status, #print-placeholder
+  { display: none !important; }
+  /* 只顯示列印表格 */
+  .page { display: none !important; }
+  #print-page { display: block !important; }
+  .print-wrap { padding: 0; margin: 0; }
+  /* 確保 overlay 在列印時完全隱藏 */
+  .overlay { display: none !important; }
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .stat-item { padding-right: 14px; margin-right: 14px; }
+  .stat-number { font-size: 18px; }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+}
+</style>
+</head>
+<body>
+
+<!-- ── 載入進度條 ──────────────────────────────── -->
+<div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+
+<!-- ── 重置提醒橫幅 ─────────────────────────────── -->
+<div id="reset-reminder">
+  <div class="remind-icon">⚠️</div>
+  <div class="remind-text">
+    <div class="remind-title">今日尚未重置叫貨狀態</div>
+    <div class="remind-sub" id="remind-sub">請在今日業務結束後按「重置今日」，確保3天未叫資料正確</div>
+  </div>
+  <button class="remind-btn" onclick="resetAll();hideResetReminder()">立即重置</button>
+  <button class="remind-close" onclick="hideResetReminder()" title="關閉">✕</button>
+</div>
+
+<!-- ── TOP BAR ──────────────────────────────────── -->
+<header class="topbar no-print">
+  <div class="brand">
+    <div class="brand-mark"><img src="carrot.png" alt="logo"></div>
+    <div>
+      <div class="brand-name">忠欣打勾單系統</div>
+    </div>
+  </div>
+  <!-- 分頁標籤列 -->
+  <div style="display:flex;align-items:flex-end;gap:0;margin-left:16px;flex-shrink:0;align-self:stretch;">
+    <!-- 當前頁（打勾單，不可點擊） -->
+    <div style="
+      display:inline-flex;align-items:center;gap:5px;
+      padding:0 16px;height:100%;
+      font-size:12px;font-weight:700;color:var(--accent);
+      background:var(--page);
+      border-left:1px solid var(--line);
+      border-right:1px solid var(--line);
+      border-top:2px solid var(--accent);
+      cursor:default;white-space:nowrap;">
+      <img src="memo-circle-check.png" style="width:16px;height:16px;vertical-align:middle;margin-right:5px;"> 打勾單
+    </div>
+    <!-- 交接報告（連結到外部） -->
+    <a href="https://shiyangchen24-gif.github.io/shift.report2026/" target="_blank"
+       style="
+         display:inline-flex;align-items:center;gap:5px;
+         padding:0 16px;height:100%;
+         font-size:12px;font-weight:600;color:var(--ink3);
+         background:var(--line2);
+         border-left:0;border-right:1px solid var(--line);
+         border-top:2px solid transparent;
+         text-decoration:none;white-space:nowrap;
+         transition:color .15s,background .15s,border-top-color .15s;"
+       onmouseover="this.style.color='var(--ink)';this.style.background='var(--white)';this.style.borderTopColor='var(--line)'"
+       onmouseout="this.style.color='var(--ink3)';this.style.background='var(--line2)';this.style.borderTopColor='transparent'">
+      <img src="fail.png" style="width:16px;height:16px;vertical-align:middle;margin-right:5px;"> 異常表/交接表
+    </a>
+  </div>
+  <!-- ★ 同步狀態 + 最後同步時間放在品牌名稱右側 -->
+  <div style="display:flex;align-items:center;gap:10px;margin-left:12px;padding-left:12px;border-left:1px solid var(--line);flex-shrink:0;">
+    <div class="sync-wrap">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span class="sync-label" id="sync-label">已同步</span>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;">
+      <span style="font-size:9px;color:var(--ink3);">最後同步</span>
+      <span style="font-size:12px;font-weight:700;color:var(--ink2);" id="last-sync-time">—</span>
+    </div>
+  </div>
+  <div id="topbar-date" class="topbar-date"></div>
+  <div class="user-tag" id="user-tag" onclick="openUserModal()" title="點擊設定暱稱">
+    <div class="user-tag-avatar" id="user-avatar">?</div>
+    <span class="user-tag-name" id="user-tag-name">設定暱稱</span>
+  </div>
+</header>
+
+<!-- 暱稱設定 Modal -->
+<div class="overlay" id="user-overlay" onclick="if(event.target===this)closeUserModal()">
+  <div class="user-modal">
+    <div class="user-modal-title">👤 我是誰？</div>
+    <div class="user-modal-sub">設定暱稱和專屬圖示，你的叫貨操作會顯示在後台記錄和卡片上</div>
+    <input class="user-name-input" id="user-name-input" placeholder="輸入暱稱" maxlength="6"
+           onkeydown="if(event.key==='Enter')saveUserName()">
+    <div class="user-icon-row" id="user-icon-row"></div>
+    <div style="display:flex;gap:8px;margin-top:4px;">
+      <button class="btn btn-ghost" style="flex:1" onclick="closeUserModal()">取消</button>
+      <button class="btn btn-primary" style="flex:1" onclick="saveUserName()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── STAT STRIP ───────────────────────────────── -->
+<div class="statstrip-wrap no-print"><div class="statstrip">
+  <div class="stat-item red-card" data-filter="未叫貨" onclick="filterByDash('未叫貨')" style="cursor:pointer;" title="點擊篩選未叫貨">
+    <div class="stat-label-row">未叫貨</div>
+    <div class="stat-number" id="c-un">0</div>
+  </div>
+  <div class="stat-item green-card" data-filter="有叫貨" onclick="filterByDash('有叫貨')" style="cursor:pointer;" title="點擊篩選已叫貨">
+    <div class="stat-label-row">已叫貨</div>
+    <div class="stat-number" id="c-or">0</div>
+  </div>
+  <div class="stat-item blue-card" data-filter="今日不叫貨" onclick="filterByDash('今日不叫貨')" style="cursor:pointer;" title="點擊篩選今日不叫">
+    <div class="stat-label-row">今日不叫</div>
+    <div class="stat-number" id="c-no">0</div>
+  </div>
+  <div class="stat-item amber-card" data-filter="warn3" onclick="filterByDash('warn3')" style="cursor:pointer;" title="點擊篩選3天未叫">
+    <div class="stat-label-row">⚠ 3天未叫</div>
+    <div class="stat-number" id="c-warn">0</div>
+  </div>
+  <div class="stat-item gray-card">
+    <div class="stat-label-row">總計</div>
+    <div class="stat-number" id="c-tot">0</div>
+  </div>
+  <div class="progress-stat">
+    <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-size:11px;font-weight:700;color:var(--grn);">叫貨進度</span>
+        <span class="prog-label" id="prog-pct" style="font-size:20px;font-weight:800;color:var(--grn);">0%</span>
+      </div>
+      <!-- 主進度條 -->
+      <div class="prog-track" style="height:12px;border-radius:99px;">
+        <div class="prog-fill" id="prog" style="width:0%;height:100%;border-radius:99px;position:relative;overflow:hidden;">
+          <!-- 光澤動畫 -->
+          <div style="position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:prog-shine 2s linear infinite;"></div>
+        </div>
+      </div>
+      <!-- 已叫 / 總計 小字 -->
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink3);">
+        <span>已叫 <b id="prog-ord" style="color:var(--grn);">0</b> 家</span>
+        <span>總計 <b id="prog-tot2" style="color:var(--ink2);">0</b> 家</span>
+      </div>
+    </div>
+  </div>
+</div></div>
+
+<!-- ── SERIES STRIP ─────────────────────────────── -->
+<div class="series-strip-wrap no-print"><div class="series-strip" id="series-strip"></div></div>
+
+<!-- 留言板已移除 -->
+
+<!-- ── TABS ─────────────────────────────────────── -->
+<nav class="tabs no-print">
+  <button class="tab active" onclick="switchTab('check',this)">打勾單</button>
+  <button class="tab" onclick="switchTab('backend',this)">後台管理</button>
+  <button class="tab" onclick="switchTab('analytics',this)"><img src="graph.png" alt="趨勢" style="width:16px;height:16px;vertical-align:middle;margin-right:5px;">趨勢分析</button>
+  <button class="tab" onclick="switchTab('print',this)">列印預覽</button>
+</nav>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: 打勾單
+══════════════════════════════════════════════════ -->
+<div id="check-page" class="page active">
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-ico"><img src="magnifying-glass-wave.png"></span>
+      <input type="text" id="q-front" placeholder="搜尋客戶…" oninput="renderGrid()">
+    </div>
+    <select id="filter-fixed" class="filter-select" onchange="renderGrid()">
+      <option value="">全部負責人</option>
+    </select>
+    <select id="filter-status" class="filter-select" onchange="renderGrid()">
+      <option value="">全部狀態</option>
+      <option value="未叫貨">未叫貨</option>
+      <option value="有叫貨">已叫貨</option>
+      <option value="今日不叫貨">今日不叫貨</option>
+      <option value="warn3">⚠ 3天未叫</option>
+    </select>
+    <div class="ml-auto" style="display:flex;gap:8px;align-items:center;">
+      <button class="drag-toggle-btn" id="drag-toggle-btn" onclick="toggleDragMode()">⠿ 調整順序</button>
+      <span class="drag-mode-hint">拖曳卡片可調整同組排列順序</span>
+      <button class="btn btn-date" onclick="updateAllDates()">📅 更新日期</button>
+      <button class="btn btn-ghost" onclick="openAddModal()">＋ 新增</button>
+      <button class="btn btn-reset" onclick="resetAll()">↺ 重置今日</button>
+    </div>
+  </div>
+
+  <!-- ⚠ 3天未叫警示橫幅 -->
+  <div class="warn-strip" id="warn-strip">
+    <span class="warn-strip-icon">⚠</span>
+    <div>
+      <div style="font-weight:600;margin-bottom:4px;">連續 3 天未叫貨的客戶</div>
+      <div class="warn-strip-names" id="warn-names"></div>
+    </div>
+  </div>
+
+  <div class="hint-bar">左鍵 切換叫貨狀態・右鍵 標記「今日不叫貨」</div>
+  <div id="grid-container"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: 後台管理
+══════════════════════════════════════════════════ -->
+<div id="backend-page" class="page">
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-ico"><img src="magnifying-glass-wave.png"></span>
+      <input type="text" id="q-back" placeholder="搜尋客戶或負責人…" oninput="renderTable()">
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);cursor:pointer;">
+      <input type="checkbox" id="chk-warn3" onchange="renderTable()" style="accent-color:var(--amber);width:14px;height:14px;">
+      只顯示3天未叫
+    </label>
+    <button class="btn btn-ghost ml-auto" onclick="openAddModal()">＋ 新增客戶</button>
+    <button class="btn btn-danger btn-sm" onclick="clearAllHistory()">🗑 清除歷史記錄</button>
+  </div>
+  <div class="section-info">
+    📋 條列每次叫貨狀態的變更時間點・連續3天未叫貨以 <strong style="color:var(--amber-dk);">⚠ 橙底</strong> 標示
+  </div>
+  <div class="table-wrap">
+    <table id="history-table">
+      <thead><tr id="history-thead-row"></tr></thead>
+      <tbody id="backend-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: 趨勢分析
+══════════════════════════════════════════════════ -->
+<div id="analytics-page" class="page">
+  <div class="analytics-wrap">
+
+    <!-- 標頭：月份切換 -->
+    <div class="analytics-header">
+      <div class="analytics-title"><img src="graph.png" alt="趨勢" style="width:20px;height:20px;vertical-align:middle;margin-right:7px;">每月叫貨趨勢</div>
+      <div class="analytics-month-nav">
+        <button class="month-btn" onclick="analyticsChangeMonth(-1)">‹</button>
+        <span class="month-label" id="analytics-month-label"></span>
+        <button class="month-btn" onclick="analyticsChangeMonth(1)">›</button>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="openManualDataModal()" style="margin-left:auto;">✏ 手動輸入數據</button>
+    </div>
+
+    <!-- 今日 / 當月摘要 -->
+    <div class="summary-grid" id="analytics-summary"></div>
+
+    <!-- 折線圖 -->
+    <div class="analytics-card">
+      <div class="analytics-card-title">每日店家數量趨勢</div>
+      <div class="chart-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span>已叫貨</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#ef4444"></span>未叫貨</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span>今日不叫</span>
+      </div>
+      <div class="chart-svg-wrap" id="analytics-chart"></div>
+    </div>
+
+    <!-- 每日明細表 -->
+    <div class="analytics-card">
+      <div class="analytics-card-title">每日明細</div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;" id="analytics-table"></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     PAGE: 列印預覽
+══════════════════════════════════════════════════ -->
+<div id="print-page" class="page">
+  <div class="toolbar no-print">
+    <span style="font-size:14px;font-weight:600;">列印預覽</span>
+    <div class="ml-auto" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <label class="btn btn-ghost" style="cursor:pointer;">
+        📂 匯入 Excel
+        <input type="file" id="excel-import" accept=".xls,.xlsx" style="display:none" onchange="importExcel(this)">
+      </label>
+      <button class="btn btn-ghost" id="btn-export-excel" onclick="exportExcel()" style="display:none;">⬇ 匯出 Excel</button>
+      <button class="btn btn-primary" onclick="window.print()">🖨 列印</button>
+    </div>
+  </div>
+  <!-- 格式控制面板 -->
+  <div class="print-controls no-print" id="print-controls" style="display:none;">
+    <div class="print-ctrl-group">
+      <label>列高</label>
+      <input type="number" id="ctrl-row-h" value="22" min="12" max="60" step="1" oninput="applyPrintStyle()">
+      <span style="font-size:11px;color:var(--ink3);">px</span>
+    </div>
+    <div class="print-ctrl-group">
+      <label>欄寬</label>
+      <input type="number" id="ctrl-col-w" value="28" min="16" max="80" step="1" oninput="applyPrintStyle()">
+      <span style="font-size:11px;color:var(--ink3);">px</span>
+    </div>
+    <div class="print-ctrl-group">
+      <label>名稱欄寬</label>
+      <input type="number" id="ctrl-name-w" value="90" min="50" max="200" step="5" oninput="applyPrintStyle()">
+      <span style="font-size:11px;color:var(--ink3);">px</span>
+    </div>
+    <div class="print-ctrl-group">
+      <label>字體大小</label>
+      <input type="number" id="ctrl-font-size" value="11" min="7" max="18" step="1" oninput="applyPrintStyle()">
+      <span style="font-size:11px;color:var(--ink3);">px</span>
+    </div>
+    <div class="print-ctrl-group">
+      <label>字型</label>
+      <select id="ctrl-font-family" onchange="applyPrintStyle()">
+        <option value="system-ui,sans-serif">系統字體</option>
+        <option value="'Microsoft JhengHei',sans-serif">微軟正黑體</option>
+        <option value="'Noto Sans TC',sans-serif">Noto Sans</option>
+        <option value="monospace">等寬字體</option>
+      </select>
+    </div>
+    <div class="print-ctrl-group">
+      <label>格線</label>
+      <select id="ctrl-border" onchange="applyPrintStyle()">
+        <option value="all">全部</option>
+        <option value="has-text">有文字才顯示</option>
+        <option value="none">無格線</option>
+      </select>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="resetPrintStyle()">↺ 重設</button>
+  </div>
+  <div id="import-status" style="padding:6px 20px;font-size:13px;color:var(--ink2);display:none;"></div>
+  <div id="print-placeholder" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:12px;color:var(--ink3);">
+    <div style="font-size:40px;">📂</div>
+    <div style="font-size:15px;font-weight:600;color:var(--ink2);">尚未匯入 Excel</div>
+    <div style="font-size:13px;">請點選上方「匯入 Excel」按鈕，載入打勾單後即可預覽與列印</div>
+  </div>
+  <div class="print-wrap">
+    <table class="print-table" id="print-table"></table>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- 確認 Dialog -->
+<div class="overlay" id="confirm-overlay">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-title" style="font-size:14px;white-space:pre-line;" id="confirm-msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="confirm-cancel">取消</button>
+      <button class="btn btn-danger" id="confirm-ok">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="overlay" id="overlay" onclick="bgClose(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">新增客戶</div>
+    <div class="field"><label>客戶名稱 *</label><input id="m-name" placeholder="請輸入廠商名稱"></div>
+    <div class="field">
+      <label>叫貨狀態</label>
+      <select id="m-status">
+        <option value="未叫貨">未叫貨</option>
+        <option value="有叫貨">有叫貨</option>
+        <option value="今日不叫貨">今日不叫貨</option>
+      </select>
+    </div>
+    <div class="field"><label>負責人</label><input id="m-fixed" placeholder="請輸入負責人"></div>
+    <div class="field"><label>日期</label><input type="date" id="m-date"></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger modal-actions-left" id="btn-del" style="display:none" onclick="deleteClient()">刪除</button>
+      <button class="btn btn-ghost" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveClient()">儲存</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- 手動輸入趨勢數據 Modal -->
+<div class="overlay" id="manual-overlay" onclick="if(event.target===this)closeManualDataModal()">
+  <div class="modal">
+    <div class="modal-title">✏ 手動輸入每日數據</div>
+    <div class="field"><label>日期</label><input type="date" id="manual-date"></div>
+    <div class="field"><label>已叫貨家數</label><input type="number" id="manual-ord" min="0" placeholder="0"></div>
+    <div class="field"><label>未叫貨家數</label><input type="number" id="manual-un" min="0" placeholder="0"></div>
+    <div class="field"><label>今日不叫家數</label><input type="number" id="manual-no" min="0" placeholder="0"></div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:-6px;margin-bottom:13px;">填寫後該日期的趨勢圖將優先使用此數據</div>
+    <div class="modal-actions">
+      <button class="btn btn-danger modal-actions-left" id="btn-manual-del" style="display:none" onclick="deleteManualData()">刪除此筆</button>
+      <button class="btn btn-ghost" onclick="closeManualDataModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveManualDataForm()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  CLOUD SYNC — 時間戳機制（重構版）
+//  規則：雲端 ts > 本機 ts → 用雲端；否則保留本機
+// ══════════════════════════════════════════════════════════
+// ── Supabase 設定 ──────────────────────────────────────
+const SUPABASE_URL = 'https://ozlsmfmpqzdcskqrlccw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96bHNtZm1wcXpkY3NrcXJsY2N3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyODYxMDYsImV4cCI6MjEwNjg2MjEwNn0.GjZ1b5udgssqM4L7Y8UNkd6FV-oyXU-8GHGLyVVDTSI';
+const _sb          = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SB_TABLE     = 'zhongxin_store';
+const ALLOWED_KEYS = ['zhongxin_v4','zhongxin_hist_v4','zhongxin_order_v1',
+                      'zhongxin_notices_v1','zhongxin_manual_v1','zhongxin_warn3_v1'];
+
+let _syncInterval = null;
+let _isSyncing    = false;
+let _localLockUntil = 0;   // lockLocal 用：此時間戳前禁止雲端覆蓋本機
+let _firstLoad = true;         // 首次載入旗標，強制接受雲端資料
+
+// ── lockLocal：操作後短暫鎖定，防止輪詢把剛寫的資料蓋回 ──
+function lockLocal(ms) {
+  _localLockUntil = Date.now() + ms;
+}
+function unlockLocal() {
+  _localLockUntil = 0;
+}
+
+function setSyncDot(state) {
+  const dot   = document.getElementById('sync-dot');
+  const label = document.getElementById('sync-label');
+  dot.className = 'sync-dot' + (state ? ' ' + state : '');
+  if (label) {
+    if (state === 'syncing') { label.textContent = '同步中…'; label.style.color = 'var(--amber)'; }
+    else if (state === 'error') { label.textContent = '同步失敗'; label.style.color = 'var(--red)'; }
+    else {
+      label.textContent = '已同步'; label.style.color = 'var(--ink3)';
+      // 更新最後同步時間
+      const now = new Date();
+      const t = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+      const el = document.getElementById('last-sync-time');
+      if (el) el.textContent = t;
+    }
+  }
+}
+
+// ── 載入進度條控制 ───────────────────────────────────────
+let _loadingDone = false;
+function setLoadingProgress(pct, subText) {
+  const bar  = document.getElementById('loading-bar');
+  const sub  = document.getElementById('loading-sub');
+  if (bar) bar.style.width = pct + '%';
+  if (sub && subText) sub.textContent = subText;
+}
+
+
+// ── 時間戳（Supabase 版不再依賴，保留空函式避免呼叫報錯）──
+function getLocalTs() { return 0; }
+function setLocalTs(ts) {}
+function touchTs() { return Date.now(); }
+
+// ── Supabase 單筆寫入 ────────────────────────────────────
+async function _pushOne(key, value) {
+  const { error } = await _sb.from(SB_TABLE)
+    .upsert({ key, value: JSON.stringify(value), updated_at: new Date().toISOString() },
+             { onConflict: 'key' });
+  if (error) { console.error('Supabase 寫入失敗', error); throw error; }
+}
+
+// ── 單一客戶更新（直接讀最新 db → 改一筆 → 寫回）────────
+async function _pushUpdateClient(name, status, date) {
+  // 讀最新的 db（防止並發覆蓋）
+  const { data, error: fetchErr } = await _sb.from(SB_TABLE)
+    .select('value').eq('key', 'zhongxin_v4').single();
+  if (fetchErr) throw fetchErr;
+
+  const latestDB = JSON.parse(data.value);
+  if (!latestDB[name]) throw new Error('client not found: ' + name);
+
+  // ★ 只更新 status，date 用空字串或簡單標記，不存裝置本地日期
+  // 避免不同裝置日期不同造成 syncFromCloud 反覆覆蓋
+  latestDB[name].status = status;
+  latestDB[name].date   = status === '未叫貨' ? '' : 'ordered';  // 統一用 'ordered' 代表今日已叫
+
+  const { error } = await _sb.from(SB_TABLE)
+    .upsert({ key: 'zhongxin_v4', value: JSON.stringify(latestDB),
+              updated_at: new Date().toISOString() }, { onConflict: 'key' });
+  if (error) throw error;
+}
+
+// ── 從雲端同步 ──────────────────────────────────────────
+async function syncFromCloud() {
+  if (_isSyncing) return;
+  // 若剛剛有本機操作，短暫跳過，防止雲端舊資料覆蓋
+  if (Date.now() < _localLockUntil) {
+    setSyncDot('');   // ★ 鎖定期間也要把 dot 設回正常，不顯示「同步中」
+    return;
+  }
+  _isSyncing = true;
+  setSyncDot('syncing');
+  if (!_loadingDone) setLoadingProgress(60, '正在從雲端同步…');
+  try {
+    const { data: rows, error: fetchErr } = await _sb.from(SB_TABLE).select('key,value');
+    if (fetchErr) throw fetchErr;
+    // 把陣列轉成 { key: value } 格式
+    const data = {};
+    rows.forEach(r => { data[r.key] = r.value; });
+
+    // ★ 完全移除時間戳判斷（裝置日期不同會導致 useCloud 誤判）
+    // ★ 改用純內容比對：lockLocal 是唯一保護機制，確保本機操作不被覆蓋
+
+    const wasFirstLoad = _firstLoad;
+    _firstLoad = false;
+    let updated = false;
+
+    // ── db（叫貨狀態）──
+    if (data.zhongxin_v4) {
+      const cloudDB    = JSON.parse(data.zhongxin_v4);
+      const cloudCount = Object.keys(cloudDB).length;
+      if (cloudCount >= MIN_CLIENT_COUNT) {
+        const diffNames = Object.keys(cloudDB).filter(n =>
+          !db[n]
+          || db[n].status !== cloudDB[n].status
+          || db[n].fixed  !== cloudDB[n].fixed
+          // ★ 不比較 date，因為不同裝置日期不同會造成誤判覆蓋
+        ).concat(Object.keys(db).filter(n => !cloudDB[n]));
+
+        if (diffNames.length > 0) {
+          db = cloudDB;
+          localStorage.setItem('zhongxin_v4', data.zhongxin_v4);
+          diffNames.forEach(n => { if (db[n]) updateCardDOM(n); });
+          updateStats();
+          renderSeriesStrip();
+          buildFixedFilter();   // ★ db 更新後重建負責人下拉選單
+          if (document.getElementById('backend-page').classList.contains('active')) {
+            renderTable();
+          }
+        }
+      } else if (Object.keys(db).length >= MIN_CLIENT_COUNT) {
+        console.warn(`⚠️ 雲端只有 ${cloudCount} 位，自動修正`);
+        _isSyncing = false;
+        save();
+        return;
+      }
+    }
+
+    // ── historyLog ──
+    if (data.zhongxin_hist_v4) {
+      const cloudHist = JSON.parse(data.zhongxin_hist_v4);
+      if (JSON.stringify(historyLog) !== JSON.stringify(cloudHist)) {
+        const localTodayEntry = historyLog.find(h => h.date === todayStr);
+        const localEditLog    = localTodayEntry ? (localTodayEntry.editLog || {}) : {};
+        const localEditCount  = Object.values(localEditLog).reduce((s, a) => s + a.length, 0);
+
+        historyLog = cloudHist;
+
+        const cloudTodayEntry = historyLog.find(h => h.date === todayStr);
+        const cloudWasCleared = !!(cloudTodayEntry && cloudTodayEntry.clearedAt);
+        const cloudEditCount  = cloudTodayEntry
+          ? Object.values(cloudTodayEntry.editLog || {}).reduce((s, a) => s + a.length, 0)
+          : 0;
+
+        if (!cloudWasCleared && localEditCount > cloudEditCount) {
+          if (cloudTodayEntry) cloudTodayEntry.editLog = localEditLog;
+          else if (localTodayEntry) historyLog.push(localTodayEntry);
+        }
+
+        localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+        updated = true;
+      }
+    }
+
+    // ── groupOrder ──
+    if (data.zhongxin_order_v1) {
+      const cloudOrder = JSON.parse(data.zhongxin_order_v1);
+      if (JSON.stringify(groupOrder) !== JSON.stringify(cloudOrder)) {
+        groupOrder = cloudOrder;
+        localStorage.setItem('zhongxin_order_v1', data.zhongxin_order_v1);
+        updated = true;
+      }
+    }
+
+    // ── notices ──
+    if (data.zhongxin_notices_v1) {
+      const cloudNotices = JSON.parse(data.zhongxin_notices_v1);
+      if (JSON.stringify(notices) !== JSON.stringify(cloudNotices)) {
+        notices = cloudNotices;
+        localStorage.setItem('zhongxin_notices_v1', data.zhongxin_notices_v1);
+            }
+    }
+
+    // ── manualData ──
+    if (data.zhongxin_manual_v1) {
+      const cloudManual = JSON.parse(data.zhongxin_manual_v1);
+      if (JSON.stringify(manualData) !== JSON.stringify(cloudManual)) {
+        manualData = cloudManual;
+        localStorage.setItem('zhongxin_manual_v1', data.zhongxin_manual_v1);
+        updated = true;
+      }
+    }
+
+    // ── manualWarn3（雲端是權威來源，直接覆蓋本地）──
+    if (data.zhongxin_warn3_v1) {
+      const cloudWarn3 = JSON.parse(data.zhongxin_warn3_v1);
+      const localArr   = [...manualWarn3].sort().join(',');
+      const cloudArr   = [...cloudWarn3].sort().join(',');
+      if (localArr !== cloudArr) {
+        manualWarn3 = new Set(cloudWarn3);
+        localStorage.setItem('zhongxin_warn3_v1', data.zhongxin_warn3_v1);
+        updated = true;
+        console.log('⚠ warn3 同步：', cloudWarn3.length, '位客戶');
+      }
+    }
+
+    if (updated) { buildFixedFilter(); renderAll(); }
+    setSyncDot('');
+    // ★ 首次同步完成，進度條跑滿後淡出
+    if (wasFirstLoad) {
+      setLoadingProgress(100, '');
+      const bar = document.getElementById('loading-bar-wrap');
+      setTimeout(() => { if (bar) bar.style.opacity = '0'; }, 400);
+      setTimeout(() => { if (bar) bar.style.display = 'none'; }, 900);
+    }
+  } catch(e) {
+    console.error('雲端同步失敗', e);
+    setSyncDot('error');
+  } finally {
+    _isSyncing = false;
+  }
+}
+
+// ── save ─────────────────────────────────────────────────
+function save(fromInit = false) {
+  if (Object.keys(db).length < MIN_CLIENT_COUNT) {
+    console.warn('⚠️ db 只有', Object.keys(db).length, '筆，不儲存'); return;
+  }
+  localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+  if (!fromInit) {
+    lockLocal(30000);
+    const ts = touchTs();
+    Promise.all([
+      _pushOne('zhongxin_v4', db),
+      _pushOne('zhongxin_ts_v1', ts)
+    ]).then(() => { unlockLocal(); }).catch(() => { unlockLocal(); });
+  }
+}
+
+// ── saveHistory ──────────────────────────────────────────
+function saveHistory() {
+  localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+  lockLocal(30000);
+  const ts = touchTs();
+  Promise.all([
+    _pushOne('zhongxin_hist_v4', historyLog),
+    _pushOne('zhongxin_ts_v1', ts)
+  ]).then(() => { unlockLocal(); }).catch(() => { unlockLocal(); });
+}
+
+// ── saveOrder ────────────────────────────────────────────
+function saveOrder() {
+  localStorage.setItem('zhongxin_order_v1', JSON.stringify(groupOrder));
+  lockLocal(30000);
+  const ts = touchTs();
+  Promise.all([
+    _pushOne('zhongxin_order_v1', groupOrder),
+    _pushOne('zhongxin_ts_v1', ts)
+  ]).then(() => { unlockLocal(); }).catch(() => { unlockLocal(); });
+}
+
+// ── saveNotices（不影響 ts）──────────────────────────────
+function saveNotices() {
+  localStorage.setItem('zhongxin_notices_v1', JSON.stringify(notices));
+  pushInBackground(() => _pushOne('zhongxin_notices_v1', notices));
+}
+
+// ── 背景推送（不阻塞畫面，推送完自動解鎖）────────────────
+function pushInBackground(...pushFns) {
+  lockLocal(30000);
+  Promise.all(pushFns.map(fn => fn()))
+    .then(() => { unlockLocal(); setSyncDot(''); })
+    .catch(() => { unlockLocal(); setSyncDot('error'); });
+}
+
+function saveManualData() {
+  localStorage.setItem('zhongxin_manual_v1', JSON.stringify(manualData));
+  _pushOne('zhongxin_manual_v1', manualData).catch(() => {});
+}
+
+function saveManualWarn3() {
+  const arr = [...manualWarn3];
+  localStorage.setItem('zhongxin_warn3_v1', JSON.stringify(arr));
+  pushInBackground(() => _pushOne('zhongxin_warn3_v1', arr));
+}
+
+// ── clearAllHistory ──────────────────────────────────────
+function clearAllHistory() {
+  showConfirm(
+    '確定要清除所有歷史記錄？\n此操作無法復原，後台管理的歷史欄位將全部消失。',
+    () => {
+      // ★ 完全清空歷史，包含今日 editLog
+      historyLog = [];
+      // ★ 加入 clearedAt 時間戳，讓其他裝置能明確識別這是「清除操作」
+      historyLog.push({ date: todayStr, records: {}, editLog: {}, clearedAt: Date.now() });
+      localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+      renderAll();
+      toast('✅ 歷史記錄已清除，同步中…');
+      // ★ 更新 ts 確保其他裝置的 useCloud = true，強制接受新資料
+      const ts = touchTs();
+      pushInBackground(
+        () => _pushOne('zhongxin_hist_v4', historyLog),
+        () => _pushOne('zhongxin_ts_v1', ts)
+      );
+    }
+  );
+}
+
+// ── 重置提醒邏輯 ─────────────────────────────────────────
+function hasResetToday() {
+  // 檢查今天的 historyLog records 有沒有資料（代表今天有按過重置）
+  const entry = historyLog.find(h => h.date === todayStr);
+  return !!(entry && entry.records && Object.keys(entry.records).length > 0);
+}
+
+function showResetReminder(subText) {
+  const el = document.getElementById('reset-reminder');
+  if (!el) return;
+  if (subText) document.getElementById('remind-sub').textContent = subText;
+  el.style.display = 'flex';
+}
+
+function hideResetReminder() {
+  const el = document.getElementById('reset-reminder');
+  if (el) el.style.display = 'none';
+  // 記住今天已關閉，避免重複提醒
+  localStorage.setItem('zhongxin_remind_dismissed', todayStr);
+}
+
+let _lastReminderDate = '';  // 避免同一天午夜重複提醒
+
+function checkResetReminder() {
+  const now  = new Date();
+  const h    = now.getHours();
+  const m    = now.getMinutes();
+
+  // ★ 午夜 00:00（精確到分鐘）且今天尚未重置 → Toast 提醒
+  if (h === 0 && m === 0) {
+    const dateKey = now.toDateString();
+    if (_lastReminderDate !== dateKey && !hasResetToday()) {
+      _lastReminderDate = dateKey;
+      toast('⚠ 今日尚未重置叫貨狀態，請記得按「重置今日」！', false);
+      showResetReminder('已到午夜 00:00，請記得重置今日叫貨狀態，確保3天未叫資料正確');
+    }
+  }
+}
+
+// ── BOOT ─────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  init();          // ★ 先讀取 localStorage
+  syncFromCloud(); // 首次同步
+
+  // ★ Supabase Realtime：訂閱資料庫變更，有人操作立即推送
+  _sb.channel('zhongxin-changes')
+    .on('postgres_changes', {
+      event: 'UPDATE',
+      schema: 'public',
+      table: SB_TABLE
+    }, payload => {
+      // 有其他裝置更新了資料，立即拉取最新狀態
+      if (Date.now() >= _localLockUntil) {
+        syncFromCloud();
+      }
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        console.log('✅ Supabase Realtime 已連線');
+        setSyncDot('');
+      }
+    });
+
+  // 備用輪詢（Realtime 斷線時保底）
+  _syncInterval = setInterval(() => {
+    if (Date.now() >= _localLockUntil) syncFromCloud();
+  }, 30000);  // 30秒輪詢一次（備用）
+
+  // 每分鐘檢查重置提醒
+  setInterval(checkResetReminder, 60 * 1000);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      syncFromCloud();
+      checkResetReminder();
+    }
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+const today   = new Date();
+const todayStr = today.getFullYear() + '/' +
+  String(today.getMonth()+1).padStart(2,'0') + '/' +
+  String(today.getDate()).padStart(2,'0');
+const todayISO = today.getFullYear() + '-' +
+  String(today.getMonth()+1).padStart(2,'0') + '-' +
+  String(today.getDate()).padStart(2,'0');
+
+let db = {};
+let historyLog = [];
+let groupOrder = {}; // { groupName: [clientName, ...] }
+let notices = [];    // [{ id, author, text, time }]
+let manualData = {}; // { 'YYYY/MM/DD': { ord, un, no } } 手動輸入的趨勢數據
+let manualWarn3 = new Set(); // 手動標示的三天未叫客戶
+let editing = null;
+let dragMode = false;
+let dragSrcName = null;
+const HISTORY_DAYS = 6;
+const NOTICE_MAX = 20; // 最多顯示幾則留言
+
+// 操作者識別
+let currentUser = { name: '', color: '#6366f1' };
+const USER_ICONS = [
+  'thief.png','motorcyclist.png','apple.png','a.png','kitty.png',
+  'github.png','ant.png','snail.png','cat__1_.png','chick.png',
+  'giraffe.png','squirrel.png','crab.png','elephant.png','jellyfish.png'
+];
+
+// ★ 資料版本控制：本機客戶數若低於此值，視為舊資料自動清除
+const MIN_CLIENT_COUNT = 600; // 638位，設600作為安全下限
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+function init() {
+  document.getElementById('topbar-date').textContent = todayStr;
+
+  // ★ 啟動時先檢查本機資料是否為舊版（客戶數 < MIN_CLIENT_COUNT）
+  const v4raw = localStorage.getItem('zhongxin_v4');
+  if (v4raw) {
+    try {
+      const localDB = JSON.parse(v4raw);
+      const localCount = Object.keys(localDB).length;
+      if (localCount < MIN_CLIENT_COUNT) {
+        // 舊資料！清除本機，等 syncFromCloud 從雲端拉新資料
+        console.warn(`⚠️ 本機資料只有 ${localCount} 位（舊版），自動清除`);
+        localStorage.removeItem('zhongxin_v4');
+        localStorage.removeItem('zhongxin_v3');
+        localStorage.removeItem('zhongxin_hist_v4');
+        localStorage.removeItem('zhongxin_hist');
+      } else {
+        db = localDB;
+      }
+    } catch(e) {
+      localStorage.removeItem('zhongxin_v4');
+    }
+  }
+
+  // 若本機沒有資料（或剛清除），先用 INIT 初始化，等雲端同步覆蓋
+  if (!Object.keys(db).length) {
+    const v3 = localStorage.getItem('zhongxin_v3');
+    const v3data = v3 ? JSON.parse(v3) : null;
+    if (v3data && Object.keys(v3data).length >= MIN_CLIENT_COUNT) {
+      db = v3data;
+    } else {
+      db = {};   // 空物件，等雲端同步覆蓋
+    }
+  }
+
+  const hv4 = localStorage.getItem('zhongxin_hist_v4');
+  if (hv4) { historyLog = JSON.parse(hv4); }
+  else {
+    const hv3 = localStorage.getItem('zhongxin_hist');
+    historyLog = hv3 ? JSON.parse(hv3) : [];
+    if (hv3) localStorage.setItem('zhongxin_hist_v4', hv3);
+  }
+
+  const go = localStorage.getItem('zhongxin_order_v1');
+  groupOrder = go ? JSON.parse(go) : {};
+
+  const nt = localStorage.getItem('zhongxin_notices_v1');
+  notices = nt ? JSON.parse(nt) : [];
+
+  const md = localStorage.getItem('zhongxin_manual_v1');
+  manualData = md ? JSON.parse(md) : {};
+
+  const mw = localStorage.getItem('zhongxin_warn3_v1');
+  manualWarn3 = new Set(mw ? JSON.parse(mw) : []);
+
+  // 讀取操作者暱稱
+  const savedUser = localStorage.getItem('zhongxin_user_v1');
+  if (savedUser) { currentUser = JSON.parse(savedUser); }
+
+  // 還原留言板暱稱
+  const savedAuthor = localStorage.getItem('zhongxin_notice_author');
+  const noticeAuthorEl = document.getElementById('notice-author');
+  if (savedAuthor && noticeAuthorEl) noticeAuthorEl.value = savedAuthor;
+
+  ensureTodayEditLog();
+  save(true);   // ← 初始化：只存本機，不推雲端
+  buildFixedFilter();
+  renderAll();
+  updateUserTag();
+
+  // 第一次使用時彈出暱稱設定
+  if (!currentUser.name) {
+    setTimeout(openUserModal, 600);
+  }
+  // 初始進度條
+  setLoadingProgress(30, '讀取本機資料中…');
+}
+
+function ensureTodayEditLog() {
+  let e = historyLog.find(h => h.date === todayStr);
+  if (!e) {
+    e = { date: todayStr, records: {}, editLog: {} };
+    historyLog.push(e);
+    if (historyLog.length > HISTORY_DAYS) historyLog = historyLog.slice(-HISTORY_DAYS);
+  } else if (!e.editLog) { e.editLog = {}; }
+}
+
+function getTodayEntry() { return historyLog.find(h => h.date === todayStr); }
+
+// ══════════════════════════════════════════════════════════
+//  3-DAY WARN DETECTION  ← 核心邏輯說明於下方
+// ══════════════════════════════════════════════════════════
+function computeWarn3() {
+  // 從 historyLog 計算最近3次重置都未叫的客戶
+  const completed = historyLog
+    .filter(h => h.date !== todayStr && h.records && Object.keys(h.records).length > 0)
+    .sort((a, b) => a.date < b.date ? -1 : 1);
+
+  const autoWarn = new Set();
+  if (completed.length >= 3) {
+    const recent3 = completed.slice(-3);
+    Object.keys(db).forEach(n => {
+      const missedAll3 = recent3.every(h => {
+        const s = h.records[n];
+        return !s || s === '未叫貨';
+      });
+      if (missedAll3) autoWarn.add(n);
+    });
+  }
+  return autoWarn;
+}
+
+function getWarn3Set() {
+  const warn = new Set();
+  // ★ 使用雲端同步的 warn3（manualWarn3），不在各裝置自己計算
+  manualWarn3.forEach(n => { if (db[n]) warn.add(n); });
+  return warn;
+}
+
+// 手動切換某客戶的三天未叫標示
+function toggleManualWarn3(n) {
+  if (manualWarn3.has(n)) {
+    manualWarn3.delete(n);
+    toast(n + ' 已移除三天未叫標示');
+  } else {
+    manualWarn3.add(n);
+    toast(n + ' 已標示為三天未叫');
+  }
+  saveManualWarn3();
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SNAPSHOT + RESET
+// ══════════════════════════════════════════════════════════
+function snapshotOnReset() {
+  const records = {};
+  Object.keys(db).forEach(n => { records[n] = db[n].status; });
+  let entry = getTodayEntry();
+  if (entry) { entry.records = records; }
+  else {
+    entry = { date: todayStr, records, editLog: {} };
+    historyLog.push(entry);
+    if (historyLog.length > HISTORY_DAYS) historyLog = historyLog.slice(-HISTORY_DAYS);
+  }
+  saveHistory();
+}
+
+function renderIcon(icon, size = '18px') {
+  if (!icon) return '';
+  if (icon.endsWith('.png')) {
+    return `<img src="${icon}" style="width:${size};height:${size};object-fit:contain;vertical-align:middle;border-radius:50%;">`;
+  }
+  return `<span style="font-size:${size};">${icon}</span>`;
+}
+
+function logEditTime(name, status) {
+  ensureTodayEditLog();   // 確保今日記錄存在
+  const entry = getTodayEntry();
+  if (!entry) return;
+  if (!entry.editLog) entry.editLog = {};
+  if (!entry.editLog[name]) entry.editLog[name] = [];
+  const now = new Date();
+  const t = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const last = entry.editLog[name].at(-1);
+  if (last && last.time === t && last.status === status && last.user === currentUser.name) return;
+  entry.editLog[name].push({ time: t, status, user: currentUser.name || '?', icon: currentUser.icon || '👤' });
+  saveHistory();
+}
+
+// ══════════════════════════════════════════════════════════
+//  FILTER BUILD
+// ══════════════════════════════════════════════════════════
+function buildFixedFilter() {
+  const sel = document.getElementById('filter-fixed');
+  const cur = sel.value;  // 先記住目前選的值
+  const all = [...new Set(Object.values(db).map(d => d.fixed).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">全部負責人</option>';
+  all.forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.textContent = f;
+    sel.appendChild(o);
+  });
+  // ★ 重建後強制恢復原本選的值（避免 innerHTML 重建後 value 被清空）
+  if (cur && all.includes(cur)) {
+    sel.value = cur;
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER ALL
+// ══════════════════════════════════════════════════════════
+function renderAll() {
+  updateStats();
+  renderSeriesStrip();
+  renderGrid();
+  renderTable();
+  renderPrint();
+  // 只在分析頁面顯示時才渲染（避免效能問題）
+  if (document.getElementById('analytics-page').classList.contains('active')) {
+    renderAnalytics();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  NOTICE BOARD
+// ══════════════════════════════════════════════════════════
+function renderNotices() {
+  const list   = document.getElementById('notice-list');
+  const ticker = document.getElementById('notice-ticker-inner');
+  const badge  = document.getElementById('notice-badge');
+  // 跑馬燈已移除，元素不存在時直接 return
+  if (!list) return;
+
+  if (!notices.length) {
+    list.innerHTML = '';
+    if (ticker) ticker.innerHTML = '<span class="notice-ticker-empty">── 尚無留言 ──</span>';
+    if (badge) badge.classList.remove('visible');
+    return;
+  }
+
+  const shown = notices.slice(-NOTICE_MAX).reverse();
+
+  // ── 展開列表 ──
+  list.innerHTML = shown.map(n => `
+    <li class="notice-item">
+      <span class="notice-author">${esc(n.author||'?')}</span>
+      <span class="notice-text">${esc(n.text)}</span>
+      <span class="notice-time">${esc(n.time)}</span>
+      <button class="notice-del" onclick="deleteNotice('${esc(n.id)}')" title="刪除">✕</button>
+    </li>`).join('');
+
+  // ── 跑馬燈（訊息複製兩份讓滾動無縫循環）──
+  const msgs = [...shown, ...shown].map(n =>
+    `<span class="notice-ticker-msg">
+      <span class="t-author">${esc(n.author||'?')}</span>
+      <span class="t-sep">›</span>
+      <span>${esc(n.text)}</span>
+      <span class="t-time">${esc(n.time)}</span>
+    </span>`
+  ).join('<span class="notice-ticker-msg"><span class="t-sep" style="opacity:.2">◆</span></span>');
+  if (ticker) {
+    ticker.innerHTML = msgs;
+    const totalLen = shown.reduce((s, n) => s + n.text.length + n.author.length, 0);
+    const duration = Math.max(12, Math.min(40, totalLen * 0.6)) + 's';
+    ticker.style.animationDuration = duration;
+  }
+  if (badge) {
+    badge.textContent = shown.length;
+    badge.classList.add('visible');
+  }
+}
+
+let noticeBoardOpen = false;
+function toggleNoticeBoard() {
+  noticeBoardOpen = !noticeBoardOpen;
+  const board = document.getElementById('notice-board');
+  board.classList.toggle('open', noticeBoardOpen);
+  const chevron = document.getElementById('notice-chevron');
+  if (chevron) chevron.textContent = noticeBoardOpen ? '▲' : '▼';
+  if (noticeBoardOpen) {
+    const ni = document.getElementById('notice-input');
+    if (ni) setTimeout(() => ni.focus(), 150);
+  }
+}
+
+function postNotice() {
+  const input  = document.getElementById('notice-input');
+  if (!input) return;
+  const author = (document.getElementById('notice-author')?.value || '匿名').trim().slice(0,6);
+  const text   = input.value.trim();
+  if (!text) { input.focus(); return; }
+  const now = new Date();
+  const time = String(now.getMonth()+1).padStart(2,'0') + '/' +
+               String(now.getDate()).padStart(2,'0') + ' ' +
+               String(now.getHours()).padStart(2,'0') + ':' +
+               String(now.getMinutes()).padStart(2,'0');
+  notices.push({ id: Date.now().toString(36), author, text, time });
+  if (notices.length > NOTICE_MAX) notices = notices.slice(-NOTICE_MAX);
+  input.value = '';
+  saveNotices();
+  // 儲存暱稱供下次使用
+  localStorage.setItem('zhongxin_notice_author', author);
+}
+
+function deleteNotice(id) {
+  notices = notices.filter(n => n.id !== id);
+  saveNotices(); renderNotices();
+}
+
+// ── 系列統計 ────────────────────────────────────────────
+const SERIES_LIST = [
+  { key: '壽司郎', label: '壽司郎' },
+  { key: '杏子',   label: '杏子' },
+  { key: '銀穗',   label: '銀穗' },
+  { key: 'YAYOI',  label: 'YAYOI' },
+  { key: '花月嵐', label: '花月嵐' },
+];
+
+let _activeSeriesKey = null;
+
+const SERIES_EXTRA = {
+  '杏子':  ['勝牛', '王將', '橋村'],
+  '花月嵐': ['燒丼統領', '蛋包林口', '蛋包南港'],
+};
+
+function getSeriesMembers(key) {
+  const extra = SERIES_EXTRA[key] || [];
+  if (key === '壽司郎') {
+    return Object.keys(db).filter(n => n.startsWith('壽司') && !n.startsWith('壽司郎'));
+  }
+  if (key === 'YAYOI') {
+    return Object.keys(db).filter(n => n.startsWith('YAYOI') || n.startsWith('Ya'));
+  }
+  if (key === '花月嵐') {
+    return Object.keys(db).filter(n =>
+      (n.startsWith('花月') && !n.startsWith('花月嵐')) ||
+      extra.includes(n)
+    );
+  }
+  if (key === '杏子') {
+    return Object.keys(db).filter(n =>
+      n.startsWith('杏子') ||
+      extra.some(prefix => n.startsWith(prefix))
+    );
+  }
+  return Object.keys(db).filter(n => n.startsWith(key));
+}
+
+function renderSeriesStrip() {
+  const strip = document.getElementById('series-strip');
+  if (!strip) return;
+  let html = '';
+  SERIES_LIST.forEach(({ key, label }) => {
+    const members = getSeriesMembers(key);
+    const total   = members.length;
+    const ordered = members.filter(n => db[n] && db[n].status === '有叫貨').length;
+    const pct     = total ? Math.round(ordered / total * 100) : 0;
+    const isActive = _activeSeriesKey === key;
+    html += `<div class="series-item${isActive ? ' active' : ''}" onclick="toggleSeriesFilter('${key}')">
+      <div class="series-label">${label}${isActive ? ' ✕' : ''}</div>
+      <div class="series-nums">
+        <span class="series-ordered">${ordered}</span>
+        <span class="series-total">／${total}</span>
+        <span class="series-pct">${pct}%</span>
+      </div>
+    </div>`;
+  });
+  strip.innerHTML = html;
+}
+
+function toggleSeriesFilter(key) {
+  _activeSeriesKey = (_activeSeriesKey === key) ? null : key;
+  document.getElementById('q-front').value = '';
+  // 切換系列篩選時清除儀表板篩選
+  if (_activeSeriesKey) {
+    _activeDashFilter = '';
+    const sel = document.getElementById('filter-status');
+    if (sel) sel.value = '';
+    document.querySelectorAll('.stat-item[data-filter]').forEach(el => el.classList.remove('dash-active'));
+  }
+  renderSeriesStrip();
+  renderGrid();
+}
+
+// ── 局部更新單張卡片 DOM（不重建整個 grid）───────────────
+function updateCardDOM(n) {
+  const card = document.querySelector(`.ccard[data-name="${CSS.escape(n)}"]`);
+  if (!card) { renderGrid(); return; }  // 找不到就整個重建
+
+  const d = db[n];
+  const warn3 = getWarn3Set();
+  const isWarn = warn3.has(n) && d.status === '未叫貨';
+
+  let cls;
+  if (d.status === '有叫貨')        cls = 'ordered';
+  else if (d.status === '今日不叫貨') cls = 'no-order';
+  else if (isWarn)                   cls = 'warn3';
+  else                               cls = 'unordered';
+
+  card.className = `ccard ${cls}`;
+
+  // 更新底部標籤
+  const foot = card.querySelector('.ccard-foot');
+  if (foot) {
+    const todayEntry = getTodayEntry();
+    const logs = todayEntry?.editLog?.[n] || [];
+    const lastLog = logs.at?.(-1) || logs[logs.length - 1];
+    const lastUser = lastLog?.user || '';
+    const lastIcon = lastLog?.icon || '';
+    let lbl;
+    if (d.status === '有叫貨')        lbl = '已叫貨';
+    else if (d.status === '今日不叫貨') lbl = '不叫';
+    else if (isWarn)                   lbl = '連續未叫';
+    else                               lbl = '未叫貨';
+    foot.innerHTML = `
+      <span class="ccard-dot"></span>
+      <span>${lbl}</span>
+      ${lastUser
+        ? `<span style="font-size:11px;display:inline-flex;align-items:center;gap:3px;" title="${esc(lastUser)}">${renderIcon(lastIcon,'16px')} ${esc(lastUser)}</span>`
+        : (d.date ? `<span>${d.date.slice(5)}</span>` : '')}
+    `;
+  }
+
+  // warn badge
+  const badge = card.querySelector('.warn3-badge');
+  if (isWarn && !badge) {
+    const b = document.createElement('span');
+    b.className = 'warn3-badge'; b.textContent = '⚠ 連續3天未叫';
+    card.insertBefore(b, card.firstChild);
+  } else if (!isWarn && badge) {
+    badge.remove();
+  }
+}
+
+function updateStats() {
+  const names = Object.keys(db);
+  const tot = names.length;
+  const ord = names.filter(n => db[n].status === '有叫貨').length;
+  const no  = names.filter(n => db[n].status === '今日不叫貨').length;
+  const un  = tot - ord - no;
+  const warn3 = getWarn3Set();
+  const pct = tot ? Math.round(ord / tot * 100) : 0;
+
+  document.getElementById('c-un').textContent  = un;
+  document.getElementById('c-or').textContent  = ord;
+  document.getElementById('c-no').textContent  = no;
+  document.getElementById('c-warn').textContent = warn3.size;
+  document.getElementById('c-tot').textContent  = tot;
+  document.getElementById('prog').style.width   = pct + '%';
+  document.getElementById('prog-pct').textContent = pct + '%';
+  const ordEl  = document.getElementById('prog-ord');
+  const tot2El = document.getElementById('prog-tot2');
+  if (ordEl)  ordEl.textContent  = ord;
+  if (tot2El) tot2El.textContent = tot;
+
+  // ⚠ 警示橫幅
+  const warnNames = [...warn3].filter(n => db[n] && db[n].status === '未叫貨');
+  const strip = document.getElementById('warn-strip');
+  const namesEl = document.getElementById('warn-names');
+  if (warnNames.length) {
+    strip.classList.add('visible');
+    namesEl.innerHTML = warnNames.map(n => `<span class="warn-chip">${esc(n)}</span>`).join('');
+  } else {
+    strip.classList.remove('visible');
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  GRID
+// ══════════════════════════════════════════════════════════
+// 取得群組內依儲存順序排列的客戶名稱
+function getGroupNames(groupName, allNamesInGroup) {
+  const saved = groupOrder[groupName] || [];
+  // 合併：saved 中有的依序，saved 沒有的（新增的）補到後面
+  const savedSet = new Set(saved);
+  const ordered = saved.filter(n => allNamesInGroup.includes(n));
+  allNamesInGroup.forEach(n => { if (!savedSet.has(n)) ordered.push(n); });
+  return ordered;
+}
+
+// ── 儀表板卡片點擊篩選 ──────────────────────────────────
+let _activeDashFilter = '';  // 目前點選的儀表板篩選
+
+function filterByDash(status) {
+  _activeDashFilter = (_activeDashFilter === status) ? '' : status;  // 再點一次取消
+  // 同步到 filter-status select（讓篩選邏輯共用）
+  const sel = document.getElementById('filter-status');
+  if (sel) sel.value = _activeDashFilter;
+  // 更新卡片 active 狀態
+  document.querySelectorAll('.stat-item[data-filter]').forEach(el => {
+    el.classList.toggle('dash-active', el.dataset.filter === _activeDashFilter);
+  });
+  renderGrid();
+}
+
+function renderGrid() {
+  const q  = (document.getElementById('q-front').value || '').toLowerCase().trim();
+  const ff = document.getElementById('filter-fixed').value;
+  const container = document.getElementById('grid-container');
+  const warn3 = getWarn3Set();
+
+  const fs = document.getElementById('filter-status').value;
+  const seriesMembers = _activeSeriesKey ? new Set(getSeriesMembers(_activeSeriesKey)) : null;
+  const names = Object.keys(db).filter(n => {
+    const d = db[n];
+    if (seriesMembers && !seriesMembers.has(n)) return false;
+    if (!seriesMembers && q && !n.toLowerCase().includes(q)) return false;
+    if (ff && d.fixed !== ff) return false;
+    if (fs === 'warn3') return warn3.has(n) && d.status === '未叫貨';
+    if (fs && d.status !== fs) return false;
+    return true;
+  });
+
+  if (!names.length) {
+    // db 尚未載入時顯示骨架屏，有資料但查無結果時顯示空狀態
+    if (Object.keys(db).length === 0) {
+      let skeletonHtml = '<div class="group-section"><div class="card-grid">';
+      for (let i = 0; i < 12; i++) {
+        skeletonHtml += `<div class="skeleton-card">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line sub"></div>
+        </div>`;
+      }
+      skeletonHtml += '</div></div>';
+      container.innerHTML = skeletonHtml;
+    } else {
+      container.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div>查無符合條件的客戶</div>';
+    }
+    return;
+  }
+
+  // 先依 fixed 分組
+  const rawGroups = {};
+  names.forEach(n => { const g = db[n].fixed || '未分類'; (rawGroups[g] = rawGroups[g] || []).push(n); });
+
+  let html = '';
+  Object.keys(rawGroups).sort().forEach(g => {
+    const orderedNames = getGroupNames(g, rawGroups[g]);
+    const gEsc = esc(g);
+    html += `<div class="group-section" data-group="${gEsc}">
+      <div class="group-label">${gEsc}<span class="group-count">${orderedNames.length}</span></div>
+      <div class="card-grid" data-group="${gEsc}" 
+           ondragover="onDragOver(event)" ondrop="onDrop(event,'${gEsc}')">`;
+    orderedNames.forEach(n => { html += mkCard(n, warn3); });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+
+  // 若拖曳模式啟動中，重新附加拖曳事件
+  if (dragMode) attachDragEvents();
+}
+
+function mkCard(n, warn3) {
+  const d = db[n];
+  const isWarn = warn3 && warn3.has(n) && d.status === '未叫貨';
+  let cls, lbl;
+  if (d.status === '有叫貨')        { cls = 'ordered';   lbl = '已叫貨'; }
+  else if (d.status === '今日不叫貨') { cls = 'no-order';  lbl = '不叫'; }
+  else if (isWarn)                   { cls = 'warn3';      lbl = '連續未叫'; }
+  else                               { cls = 'unordered';  lbl = '未叫貨'; }
+
+  const warnTag = isWarn ? '<span class="warn3-badge">⚠ 連續3天未叫</span>' : '';
+  const nn = esc(n);
+
+  // 找出今日最後操作者
+  const todayEntry = getTodayEntry();
+  const logs = todayEntry?.editLog?.[n] || [];
+  const lastLog = logs.at(-1);
+  const lastUser = lastLog?.user || '';
+  const lastIcon = lastLog?.icon || '';
+
+  return `<div class="ccard ${cls}" data-name="${nn}"
+    onclick="toggle('${nn}')" oncontextmenu="rightClick(event,'${nn}')"
+    ondragstart="onDragStart(event,'${nn}')" ondragend="onDragEnd(event)">
+    ${warnTag}
+    <button class="edit-btn" onclick="openEditModal(event,'${nn}')" title="編輯"><img src="edit.png" alt="編輯"></button>
+    <div class="ccard-name">${nn}</div>
+    <div class="ccard-foot">
+      <span class="ccard-dot"></span>
+      <span>${lbl}</span>
+      ${lastUser ? `<span style="font-size:11px;display:inline-flex;align-items:center;gap:3px;" title="${esc(lastUser)}">${renderIcon(lastIcon,'16px')} ${esc(lastUser)}</span>` : (d.date ? `<span>${d.date.slice(5)}</span>` : '')}
+    </div>
+  </div>`;
+}
+
+function toggle(n) {
+  if (dragMode) return; // 拖曳模式中停用點擊
+  // ★ 只允許「未叫貨 → 有叫貨」，已叫貨點擊不做任何事
+  if (db[n].status === '未叫貨') changeStatus(n, '有叫貨');
+}
+function rightClick(e, n) {
+  e.preventDefault();
+  if (dragMode) return;
+  changeStatus(n, db[n].status === '今日不叫貨' ? '未叫貨' : '今日不叫貨');
+}
+function changeStatus(n, s) {
+  db[n].status = s;
+  // ★ date 統一用 'ordered' 代表今日已叫，不存裝置本地日期（避免跨日期裝置衝突）
+  db[n].date = s === '未叫貨' ? '' : 'ordered';
+  logEditTime(n, s);
+  // ★ 立即更新本地 + DOM，背景推送不阻塞畫面
+  localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+  localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+  updateCardDOM(n);   // 只更新這張卡片，不重建整個 grid
+  updateStats();
+  renderSeriesStrip();
+  toast(n + ' → ' + s);
+  // ★ 先 lockLocal，再 touchTs，確保 syncFromCloud 在推送期間不會蓋回舊狀態
+  lockLocal(30000);
+  const ts = touchTs();
+  Promise.all([
+    _pushUpdateClient(n, db[n].status, db[n].date),
+    _pushOne('zhongxin_hist_v4', historyLog),
+    _pushOne('zhongxin_ts_v1', ts)
+  ]).then(() => { unlockLocal(); })
+    .catch(() => { unlockLocal(); });
+}
+
+// ── 拖曳模式 ──────────────────────────────────────────────────────────────
+function toggleDragMode() {
+  dragMode = !dragMode;
+  const btn = document.getElementById('drag-toggle-btn');
+  const page = document.getElementById('check-page');
+  btn.classList.toggle('active', dragMode);
+  page.classList.toggle('drag-mode-active', dragMode);
+  if (dragMode) {
+    attachDragEvents();
+    toast('✏ 排序模式：拖曳卡片調整位置');
+  } else {
+    toast('✅ 排序已儲存');
+  }
+}
+
+function attachDragEvents() {
+  document.querySelectorAll('.ccard').forEach(el => {
+    el.setAttribute('draggable', 'true');
+    // 手機 touch 事件
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove',  onTouchMove,  { passive: false });
+    el.addEventListener('touchend',   onTouchEnd,   { passive: false });
+  });
+}
+
+function onDragStart(e, name) {
+  if (!dragMode) { e.preventDefault(); return; }
+  dragSrcName = name;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', name);
+  setTimeout(() => e.target.classList.add('dragging'), 0);
+}
+
+function onDragEnd(e) {
+  e.target.classList.remove('dragging');
+  document.querySelectorAll('.ccard.drag-over').forEach(el => el.classList.remove('drag-over'));
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.ccard.drag-over').forEach(el => el.classList.remove('drag-over'));
+  const target = e.target.closest('.ccard');
+  if (target && target.dataset.name !== dragSrcName) {
+    target.classList.add('drag-over');
+  }
+}
+
+// ── 手機觸控拖曳 ──────────────────────────────────────────────────────────
+let _touchClone = null;   // 拖曳時跟隨手指的複製卡片
+let _touchSrc   = null;   // 被拖曳的原始卡片元素
+let _touchOffX  = 0;
+let _touchOffY  = 0;
+
+function onTouchStart(e) {
+  if (!dragMode) return;
+  const card = e.currentTarget;
+  dragSrcName = card.dataset.name;
+  _touchSrc = card;
+
+  const rect = card.getBoundingClientRect();
+  const touch = e.touches[0];
+  _touchOffX = touch.clientX - rect.left;
+  _touchOffY = touch.clientY - rect.top;
+
+  // 建立跟隨手指的視覺複製
+  _touchClone = card.cloneNode(true);
+  _touchClone.style.cssText = `
+    position:fixed; z-index:9999; pointer-events:none; opacity:.85;
+    width:${rect.width}px; left:${rect.left}px; top:${rect.top}px;
+    border-radius:var(--radius); box-shadow:var(--shadow-lg);
+    transition:none;
+  `;
+  document.body.appendChild(_touchClone);
+  card.classList.add('dragging');
+  e.preventDefault();
+}
+
+function onTouchMove(e) {
+  if (!_touchClone || !dragMode) return;
+  e.preventDefault();
+  const touch = e.touches[0];
+  _touchClone.style.left = (touch.clientX - _touchOffX) + 'px';
+  _touchClone.style.top  = (touch.clientY - _touchOffY) + 'px';
+
+  // 找出手指下方的目標卡片
+  _touchClone.style.display = 'none';
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  _touchClone.style.display = '';
+  document.querySelectorAll('.ccard.drag-over').forEach(c => c.classList.remove('drag-over'));
+  const target = el ? el.closest('.ccard') : null;
+  if (target && target.dataset.name !== dragSrcName) {
+    target.classList.add('drag-over');
+  }
+}
+
+function onTouchEnd(e) {
+  if (!_touchClone || !dragMode) return;
+  e.preventDefault();
+
+  // 清理複製元素
+  _touchClone.remove(); _touchClone = null;
+  if (_touchSrc) { _touchSrc.classList.remove('dragging'); _touchSrc = null; }
+
+  // 找出落點目標
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  document.querySelectorAll('.ccard.drag-over').forEach(c => c.classList.remove('drag-over'));
+  const targetCard = el ? el.closest('.ccard') : null;
+  const targetName = targetCard ? targetCard.dataset.name : null;
+
+  if (!dragSrcName || !targetName || dragSrcName === targetName) return;
+
+  // 確認同群組
+  if (db[dragSrcName]?.fixed !== db[targetName]?.fixed) {
+    toast('⚠ 只能在同一負責人群組內調整順序', true); return;
+  }
+
+  const group = db[dragSrcName]?.fixed || '未分類';
+  const allInGroup = Object.keys(db).filter(n => (db[n].fixed || '未分類') === group);
+  let ordered = getGroupNames(group, allInGroup);
+
+  const srcIdx = ordered.indexOf(dragSrcName);
+  ordered.splice(srcIdx, 1);
+  const newTgtIdx = ordered.indexOf(targetName);
+  ordered.splice(newTgtIdx >= 0 ? newTgtIdx : ordered.length, 0, dragSrcName);
+
+  groupOrder[group] = ordered;
+  saveOrder();
+  renderGrid();
+  if (dragMode) attachDragEvents();
+}
+
+function onDrop(e, groupName) {
+  e.preventDefault();
+  document.querySelectorAll('.ccard.drag-over').forEach(el => el.classList.remove('drag-over'));
+
+  const targetCard = e.target.closest('.ccard');
+  const targetName = targetCard ? targetCard.dataset.name : null;
+  if (!dragSrcName || dragSrcName === targetName) return;
+
+  // 確認兩張卡片在同一群組
+  if (db[dragSrcName]?.fixed !== db[targetName]?.fixed &&
+      !(db[dragSrcName]?.fixed === undefined && db[targetName]?.fixed === undefined)) {
+    toast('⚠ 只能在同一負責人群組內調整順序', true); return;
+  }
+
+  // 取得目前排序，將 src 插入到 target 前
+  const group = db[dragSrcName]?.fixed || '未分類';
+  const allInGroup = Object.keys(db).filter(n => (db[n].fixed || '未分類') === group);
+  let ordered = getGroupNames(group, allInGroup);
+
+  const srcIdx = ordered.indexOf(dragSrcName);
+  const tgtIdx = ordered.indexOf(targetName);
+  if (srcIdx === -1 || tgtIdx === -1) return;
+
+  ordered.splice(srcIdx, 1);
+  const newTgtIdx = ordered.indexOf(targetName);
+  ordered.splice(newTgtIdx >= 0 ? newTgtIdx : ordered.length, 0, dragSrcName);
+
+  groupOrder[group] = ordered;
+  saveOrder();
+  renderGrid();
+  if (dragMode) attachDragEvents();
+}
+
+// ══════════════════════════════════════════════════════════
+//  BACKEND TABLE
+// ══════════════════════════════════════════════════════════
+function renderTable() {
+  const q = (document.getElementById('q-back').value || '').toLowerCase().trim();
+  const onlyWarn = document.getElementById('chk-warn3').checked;
+  const warn3 = getWarn3Set();
+  const sortedHist = [...historyLog].sort((a,b) => a.date < b.date ? -1 : 1);
+  const pastDates  = sortedHist.map(h => h.date).filter(d => d !== todayStr);
+  const todayEntry = getTodayEntry();
+  const todayEditLog = todayEntry ? (todayEntry.editLog || {}) : {};
+
+  // ★ 只顯示今日操作時間，移除歷史最終打勾欄
+  let thHtml = '<th style="min-width:110px">客戶</th><th>負責人</th>';
+  thHtml += '<th style="min-width:200px;">今日操作時間</th><th style="text-align:center;">今日狀態</th><th style="text-align:center;">連續未叫</th><th></th>';
+  document.getElementById('history-thead-row').innerHTML = thHtml;
+
+  let html = '';
+  Object.keys(db).forEach(n => {
+    const d = db[n];
+    if (q && !n.toLowerCase().includes(q) && !(d.fixed||'').toLowerCase().includes(q)) return;
+    const isWarn = warn3.has(n);
+    if (onlyWarn && !isWarn) return;
+
+    let streak = 0;
+    for (let i = sortedHist.length-1; i >= 0; i--) {
+      const s = sortedHist[i].records && sortedHist[i].records[n];
+      if (!s || s === '未叫貨') streak++; else break;
+    }
+
+    const bc = d.status === '有叫貨' ? 'ordered' : d.status === '今日不叫貨' ? 'no-order' : (isWarn ? 'warn3' : 'unordered');
+    html += `<tr class="${isWarn ? 'row-warn' : ''}">`;
+    html += `<td style="font-weight:700;">${isWarn ? '<span style="color:var(--amber);">⚠ </span>' : ''}${esc(n)}</td>`;
+    html += `<td style="color:var(--ink2);">${esc(d.fixed||'—')}</td>`;
+
+    // 歷史欄已移除
+
+    const logs = todayEditLog[n] || [];
+    html += '<td>';
+    if (!logs.length) { html += '<span class="tl-empty">尚無記錄</span>'; }
+    else {
+      html += '<ul class="tl-list">';
+      logs.forEach(log => {
+        const dc = log.status === '有叫貨' ? 'ordered' : log.status === '今日不叫貨' ? 'no-order' : 'unordered';
+        const userIcon = log.icon || '👤';
+        const userName = log.user || '—';
+        const iconHtml = userIcon && userIcon.endsWith('.png')
+          ? `<img src="${userIcon}" style="width:16px;height:16px;border-radius:50%;object-fit:contain;vertical-align:middle;">`
+          : `<span>${esc(userIcon)}</span>`;
+        html += `<li class="tl-item">
+          <span class="tl-dot ${dc}"></span>
+          <span class="tl-time">${esc(log.time)}</span>
+          <span class="tl-status">${esc(log.status)}</span>
+          <span class="tl-user" style="background:var(--line2);border-radius:99px;padding:1px 7px;font-size:10px;font-weight:600;color:var(--ink2);margin-left:2px;display:inline-flex;align-items:center;gap:4px;">${iconHtml}${esc(userName)}</span>
+        </li>`;
+      });
+      html += '</ul>';
+    }
+    html += '</td>';
+
+    html += `<td style="text-align:center;"><span class="badge ${bc}">${d.status}</span></td>`;
+    html += '<td style="text-align:center;">';
+    const isManualWarn = manualWarn3.has(n);
+    if (isWarn) {
+      const label = isManualWarn && !streak ? '手動' : streak + '天';
+      html += `<span class="warn-pill" title="${isManualWarn ? '包含手動標示' : '系統自動辨識'}">⚠ ${label}</span>`;
+    } else if (streak && d.status === '未叫貨') {
+      html += `<span style="font-size:12px;color:var(--ink3);">${streak}天</span>`;
+    } else {
+      html += '<span style="color:var(--line);">—</span>';
+    }
+    html += '</td>';
+
+    const nn = esc(n);
+    const warnBtnLabel = isManualWarn ? '✅ 已標示' : '⚠ 標示未叫';
+    const warnBtnColor = isManualWarn ? 'background:#fef3c7;color:#d97706;border:1px solid #d97706;' : '';
+    html += `<td style="white-space:nowrap;">
+      <button class="btn btn-ghost btn-sm" onclick="openEditModal(null,'${nn}')" title="編輯" style="padding:3px 7px;"><img src="edit.png" alt="編輯" style="width:16px;height:16px;vertical-align:middle;"></button>
+      <button class="btn btn-sm" style="margin-left:4px;${warnBtnColor}" onclick="toggleManualWarn3('${nn}')">${warnBtnLabel}</button>
+      <button class="btn btn-danger btn-sm" style="margin-left:4px" onclick="confirmDeleteHistory('${nn}')">刪除</button>
+    </td></tr>`;
+  });
+
+  const colSpan = 4 + pastDates.length + 2;
+  document.getElementById('backend-tbody').innerHTML = html ||
+    `<tr><td colspan="${colSpan}" style="text-align:center;color:var(--ink3);padding:32px">查無資料</td></tr>`;
+}
+
+function confirmDeleteHistory(n) {
+  showConfirm('確定刪除客戶「' + n + '」？\n同時清除其所有歷史記錄。', () => {
+    historyLog.forEach(h => {
+      if (h.records) delete h.records[n];
+      if (h.editLog) delete h.editLog[n];
+    });
+    delete db[n];
+    localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+    localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+    buildFixedFilter(); renderAll();
+    toast('✅ 已刪除 ' + n);
+    const ts = touchTs();
+    pushInBackground(
+      () => _pushOne('zhongxin_v4', db),
+      () => _pushOne('zhongxin_hist_v4', historyLog),
+      () => _pushOne('zhongxin_ts_v1', ts)
+    );
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  PRINT
+// ══════════════════════════════════════════════════════════
+let importedWbData = null;
+function renderPrint() { importedWbData ? renderPrintFromExcel() : renderPrintDefault(); }
+
+// ── 列印樣式控制 ─────────────────────────────────────────
+function applyPrintStyle() {
+  const rowH     = parseInt(document.getElementById('ctrl-row-h')?.value || 22);
+  const colW     = parseInt(document.getElementById('ctrl-col-w')?.value || 28);
+  const nameW    = parseInt(document.getElementById('ctrl-name-w')?.value || 90);
+  const fontSize = parseInt(document.getElementById('ctrl-font-size')?.value || 11);
+  const fontFam  = document.getElementById('ctrl-font-family')?.value || 'system-ui,sans-serif';
+  const border   = document.getElementById('ctrl-border')?.value || 'all';
+
+  const table = document.getElementById('print-table');
+  if (!table) return;
+
+  table.style.fontSize   = fontSize + 'px';
+  table.style.fontFamily = fontFam;
+
+  // 套用到所有 th/td
+  table.querySelectorAll('th, td').forEach(cell => {
+    cell.style.height = rowH + 'px';
+    cell.style.lineHeight = rowH + 'px';
+    cell.style.padding = '0 2px';
+
+    const isName = cell.classList.contains('name-cell');
+    cell.style.minWidth = isName ? nameW + 'px' : colW + 'px';
+    cell.style.width    = isName ? nameW + 'px' : colW + 'px';
+
+    // 格線邏輯
+    if (border === 'none') {
+      cell.style.border = 'none';
+    } else if (border === 'has-text') {
+      const hasText = cell.textContent.trim() !== '';
+      cell.style.border = hasText ? '1px solid #000' : 'none';
+    } else {
+      cell.style.border = '1px solid #000';
+    }
+  });
+}
+
+function resetPrintStyle() {
+  document.getElementById('ctrl-row-h').value      = 22;
+  document.getElementById('ctrl-col-w').value      = 28;
+  document.getElementById('ctrl-name-w').value     = 90;
+  document.getElementById('ctrl-font-size').value  = 11;
+  document.getElementById('ctrl-font-family').value = 'system-ui,sans-serif';
+  document.getElementById('ctrl-border').value     = 'all';
+  applyPrintStyle();
+}
+
+function renderPrintDefault() {
+  // 未匯入 Excel 時，顯示提示而非預設表格
+  document.getElementById('print-table').innerHTML = '';
+  const wrap = document.getElementById('print-placeholder');
+  if (wrap) wrap.style.display = 'flex';
+}
+
+function importExcel(input) {
+  const file = input.files[0]; if (!file) return;
+  const statusEl = document.getElementById('import-status');
+  statusEl.style.display='block'; statusEl.textContent='讀取中…';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      // 保留原始 arrayBuffer，匯出時直接在原始 workbook 上改，才能保住格式
+      const rawBuf = e.target.result;
+      const wb = XLSX.read(new Uint8Array(rawBuf), {
+        type: 'array',
+        cellStyles: true,   // 保留儲存格樣式
+        cellNF: true,       // 保留數字格式
+        cellDates: true,    // 保留日期格式
+      });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header:1, defval:null });
+      if (!rows.length) { statusEl.textContent='⚠ 檔案無資料'; return; }
+      const headerRow = rows[0];
+      const todayDay  = today.getDate();
+      const todayColIndices = [];
+      headerRow.forEach((v,i) => { if (v===todayDay) todayColIndices.push(i); });
+      if (!todayColIndices.length) { statusEl.textContent=`⚠ 找不到今日（${todayDay}日）欄位`; return; }
+      // 同時保留原始 wb 物件，供匯出時直接修改使用
+      importedWbData = { rows, todayColIndices, headerRow, wb, wsName: wb.SheetNames[0] };
+      document.getElementById('btn-export-excel').style.display='inline-flex';
+      statusEl.style.color='var(--grn)';
+      statusEl.textContent=`✅ 已載入「${file.name}」，今日（${todayDay}日）識別 ${todayColIndices.length} 個欄`;
+      renderPrintFromExcel();
+      document.getElementById('print-controls').style.display = 'flex';
+      setTimeout(applyPrintStyle, 150);
+    } catch(err) { statusEl.style.color='var(--red)'; statusEl.textContent='⚠ '+err.message; }
+  };
+  reader.readAsArrayBuffer(file); input.value='';
+}
+
+function renderPrintFromExcel() {
+  const ph = document.getElementById('print-placeholder');
+  if (ph) ph.style.display = 'none';
+  const { rows, todayColIndices, headerRow } = importedWbData;
+  const CPG=7, warn3=getWarn3Set();
+  const ordSet = new Set(Object.keys(db).filter(n => db[n].status==='有叫貨'));
+  let html='<thead><tr>';
+  headerRow.forEach((v,c) => {
+    const it = todayColIndices.includes(c);
+    html += `<th style="${it?'background:#dbeafe;':''}">${esc(v!=null?String(v):'')}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  for (let r=1;r<rows.length;r++) {
+    const row=rows[r]; if(!row||row.every(v=>v===null)) continue;
+    html+='<tr>';
+    for (let c=0;c<row.length;c++) {
+      const v=row[c], it=todayColIndices.includes(c), in_=c%CPG===0;
+      let ct='', cs='';
+      if (in_&&v) {
+        const cn=String(v), iw=warn3.has(cn)&&db[cn]&&db[cn].status==='未叫貨';
+        ct=(iw?'⚠ ':'')+esc(cn);
+        cs='font-weight:600;text-align:left;padding-left:6px;white-space:nowrap;'+(iw?'background:#fffbeb;color:var(--amber-dk);':'');
+      } else if (it) {
+        let cn=null;
+        for (let nc=c-1;nc>=0;nc--) { if(nc%CPG===0&&row[nc]!=null){cn=String(row[nc]);break;} }
+        if(cn&&ordSet.has(cn)){ct='V';cs='font-weight:700;color:var(--grn);background:var(--grn-bg)';} else cs='background:var(--blu-bg);';
+      }
+      html+=`<td style="${cs}">${ct}</td>`;
+    }
+    html+='</tr>';
+  }
+  document.getElementById('print-table').innerHTML=html+'</tbody>';
+}
+
+function exportExcel() {
+  if (!importedWbData) return;
+  const { rows, todayColIndices, wb, wsName } = importedWbData;
+  const CPG = 7;
+  const ordSet = new Set(Object.keys(db).filter(n => db[n].status === '有叫貨'));
+
+  // 直接操作原始 worksheet，完整保留原始格式、字型、格線、合併儲存格
+  const ws = wb.Sheets[wsName];
+
+  for (let r = 1; r < rows.length; r++) {
+    const row = rows[r];
+    if (!row) continue;
+    for (const c of todayColIndices) {
+      // ★ 只在同一組（CPG欄）內找名稱欄，不跨組
+      const groupStart = c - (c % CPG);
+      const rawCn = row[groupStart];
+      // 排除月份標題（例如「7月」）和非字串值，只接受真正的客戶名稱
+      const cn = (rawCn != null && typeof rawCn === 'string' && !rawCn.match(/^\d+月$/) && rawCn.trim() !== '')
+        ? rawCn.trim()
+        : null;
+
+      const cellAddr = XLSX.utils.encode_cell({ r: r, c: c });
+
+      if (cn && ordSet.has(cn)) {
+        // 有叫貨：寫入 V，完整保留原儲存格樣式（s 屬性）
+        if (!ws[cellAddr]) ws[cellAddr] = {};
+        // 只更新值和類型，樣式 (ws[cellAddr].s) 完全不動
+        ws[cellAddr].v = 'V';
+        ws[cellAddr].t = 's';
+        if (ws[cellAddr].w !== undefined) ws[cellAddr].w = 'V'; // 顯示值
+      } else {
+        // 未叫貨：清空值，樣式完全保留
+        if (ws[cellAddr]) {
+          ws[cellAddr].v = '';
+          ws[cellAddr].t = 's';
+          if (ws[cellAddr].w !== undefined) ws[cellAddr].w = '';
+        }
+      }
+    }
+  }
+
+  const ds = today.getFullYear() +
+    String(today.getMonth()+1).padStart(2,'0') +
+    String(today.getDate()).padStart(2,'0');
+
+  // ── 套用控制面板的設定到匯出的 Excel ──────────────────
+  const fontSize  = parseInt(document.getElementById('ctrl-font-size')?.value || 11);
+  const borderSetting = document.getElementById('ctrl-border')?.value || 'all';
+
+  // 只修改有 V 的儲存格和名稱欄的樣式
+  Object.keys(ws).forEach(addr => {
+    if (addr.startsWith('!')) return;
+    const cell = ws[addr];
+    if (!cell) return;
+
+    // 判斷是否需要格線
+    const hasValue = cell.v && String(cell.v).trim() !== '';
+    const showBorder = borderSetting === 'none' ? false
+                     : borderSetting === 'has-text' ? hasValue
+                     : true;
+
+    // 套用樣式
+    if (!cell.s) cell.s = {};
+    cell.s.font = { ...( cell.s.font || {}), sz: fontSize };
+    if (showBorder) {
+      const border = { style: 'thin', color: { rgb: '000000' } };
+      cell.s.border = { top: border, bottom: border, left: border, right: border };
+    } else {
+      cell.s.border = {};
+    }
+    cell.s.alignment = { ...( cell.s.alignment || {}), horizontal: 'center', vertical: 'center', wrapText: false };
+  });
+
+  // ★ 用 xlsx 格式寫出，完整保留原始格式（格線、字型、合併儲存格）
+  XLSX.writeFile(wb, '打勾單_' + ds + '.xlsx', {
+    bookType: 'xlsx',
+    type: 'binary',
+    cellStyles: true
+  });
+  toast('✅ Excel 已匯出');
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════════════
+function openAddModal() {
+  editing=null;
+  document.getElementById('modal-title').textContent='新增客戶';
+  document.getElementById('m-name').value='';
+  document.getElementById('m-status').value='未叫貨';
+  document.getElementById('m-fixed').value='';
+  document.getElementById('m-date').value=todayISO;
+  document.getElementById('btn-del').style.display='none';
+  document.getElementById('overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-name').focus(),100);
+}
+function openEditModal(e, n) {
+  if(e) e.stopPropagation();
+  editing=n;
+  const d=db[n];
+  document.getElementById('modal-title').textContent='編輯：'+n;
+  document.getElementById('m-name').value=n;
+  document.getElementById('m-status').value=d.status;
+  document.getElementById('m-fixed').value=d.fixed||'';
+  document.getElementById('m-date').value=(d.date||'').replace(/\//g,'-')||todayISO;
+  document.getElementById('btn-del').style.display='inline-flex';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+function bgClose(e) { if(e.target===document.getElementById('overlay')) closeModal(); }
+
+function saveClient() {
+  const name=document.getElementById('m-name').value.trim();
+  const status=document.getElementById('m-status').value;
+  const fixed=document.getElementById('m-fixed').value.trim();
+  const dateStr=(document.getElementById('m-date').value||'').replace(/-/g,'/');
+  if (!name) { alert('請輸入客戶名稱'); return; }
+
+  if (editing) {
+    if (name!==editing && db[name]) { alert('該名稱已存在'); return; }
+    if (name!==editing) {
+      db[name]={...db[editing]};
+      delete db[editing];
+      historyLog.forEach(h=>{
+        if(h.records&&h.records[editing]!==undefined){h.records[name]=h.records[editing];delete h.records[editing];}
+        if(h.editLog&&h.editLog[editing]!==undefined){h.editLog[name]=h.editLog[editing];delete h.editLog[editing];}
+      });
+    }
+    db[name].status=status; db[name].fixed=fixed;
+    db[name].date=status==='未叫貨'?'':(dateStr||todayStr);
+  } else {
+    if (db[name]) { alert('該名稱已存在'); return; }
+    db[name]={ status, date:status!=='未叫貨'?(dateStr||todayStr):'', fixed };
+  }
+  // ★ 先更新本地 + 畫面
+  localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+  localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+  closeModal(); buildFixedFilter(); renderAll();
+  toast('✅ 儲存成功');
+  // 背景推送
+  const ts = touchTs();
+  pushInBackground(
+    () => _pushOne('zhongxin_v4', db),
+    () => _pushOne('zhongxin_hist_v4', historyLog),
+    () => _pushOne('zhongxin_ts_v1', ts)
+  );
+}
+
+function deleteClient() {
+  if (!editing) return;
+  showConfirm('確定刪除「'+editing+'」？', ()=>{
+    historyLog.forEach(h=>{
+      if(h.records) delete h.records[editing];
+      if(h.editLog) delete h.editLog[editing];
+    });
+    delete db[editing]; closeModal();
+    localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+    localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+    buildFixedFilter(); renderAll();
+    toast('已刪除 '+editing);
+    const ts = touchTs();
+    pushInBackground(
+      () => _pushOne('zhongxin_v4', db),
+      () => _pushOne('zhongxin_hist_v4', historyLog),
+      () => _pushOne('zhongxin_ts_v1', ts)
+    );
+  });
+}
+
+function resetAll() {
+  showConfirm('是否確定重置今日叫貨狀態？\n系統將記錄今日最終叫貨狀態後，所有客戶恢復為「未叫貨」。', ()=>{
+    snapshotOnReset();
+    Object.keys(db).forEach(n=>{ db[n].status='未叫貨'; db[n].date=''; });
+    const entry=getTodayEntry(); if(entry) entry.editLog={};
+    localStorage.setItem('zhongxin_v4', JSON.stringify(db));
+    localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+    // ★ 重置時重新計算 warn3（自動 + 手動合併）並推送，確保所有裝置一致
+    const autoWarn3 = computeWarn3();
+    autoWarn3.forEach(n => manualWarn3.add(n));
+    // 今日已叫貨的客戶從 warn3 移除
+    Object.keys(db).forEach(n => {
+      if (db[n].status === '有叫貨' || db[n].status === '今日不叫貨') manualWarn3.delete(n);
+    });
+    localStorage.setItem('zhongxin_warn3_v1', JSON.stringify([...manualWarn3]));
+
+    renderAll();
+    hideResetReminder();  // 重置後關閉提醒
+    toast('✅ 今日狀態已記錄並重置');
+    const ts = touchTs();
+    const warn3Arr = [...manualWarn3];
+    pushInBackground(
+      () => _pushOne('zhongxin_v4', db),
+      () => _pushOne('zhongxin_hist_v4', historyLog),
+      () => _pushOne('zhongxin_warn3_v1', warn3Arr),
+      () => _pushOne('zhongxin_ts_v1', ts)
+    );
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  UPDATE ALL DATES
+// ══════════════════════════════════════════════════════════
+function updateAllDates() {
+  // 只更新狀態為「有叫貨」或「今日不叫貨」的客戶日期（未叫貨不異動）
+  const targets = Object.keys(db).filter(n => db[n].status !== '未叫貨');
+  if (!targets.length) { toast('目前沒有已叫貨或今日不叫的客戶'); return; }
+  showConfirm(`將 ${targets.length} 位已叫貨／今日不叫貨的客戶日期更新為今日（${todayStr}）？`, ()=>{
+    targets.forEach(n => { db[n].date = todayStr; });
+    save(); renderAll();
+    toast(`✅ 已更新 ${targets.length} 位客戶日期為今日`);
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+//  CONFIRM DIALOG
+// ══════════════════════════════════════════════════════════
+function showConfirm(msg, onOk) {
+  document.getElementById('confirm-msg').textContent=msg;
+  document.getElementById('confirm-overlay').classList.add('open');
+  document.getElementById('confirm-ok').onclick=async ()=>{
+    document.getElementById('confirm-overlay').classList.remove('open'); await onOk();
+  };
+  document.getElementById('confirm-cancel').onclick=()=>{
+    document.getElementById('confirm-overlay').classList.remove('open');
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════
+function switchTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id+'-page').classList.add('active');
+  btn.classList.add('active');
+  if (id === 'analytics') renderAnalytics();
+  if (id === 'backend')   renderTable();     // 切到後台時重新渲染，確保反映最新操作
+  if (id === 'check')     { updateStats(); renderGrid(); }  // 切回打勾單時更新統計
+}
+
+// ══════════════════════════════════════════════════════════
+//  USER IDENTITY
+// ══════════════════════════════════════════════════════════
+function updateUserTag() {
+  const name = currentUser.name || '';
+  const icon = currentUser.icon || '';
+  const avatar = document.getElementById('user-avatar');
+  const tag    = document.getElementById('user-tag-name');
+  if (avatar) {
+    if (icon && icon.endsWith('.png')) {
+      avatar.innerHTML = `<img src="${icon}" style="width:24px;height:24px;object-fit:contain;border-radius:50%;">`;
+    } else {
+      avatar.textContent = icon || '👤';
+    }
+  }
+  if (tag) tag.textContent = name || '設定暱稱';
+}
+
+function openUserModal() {
+  const input = document.getElementById('user-name-input');
+  input.value = currentUser.name || '';
+
+  // 繪製 icon 選擇器
+  const row = document.getElementById('user-icon-row');
+  row.innerHTML = USER_ICONS.map(ic =>
+    `<div class="user-icon-btn${ic === currentUser.icon ? ' selected' : ''}"
+      onclick="selectUserIcon('${ic}')" data-icon="${ic}">
+      <img src="${ic}" alt="${ic}" style="width:100%;height:100%;object-fit:contain;">
+    </div>`
+  ).join('');
+
+  document.getElementById('user-overlay').classList.add('open');
+  setTimeout(() => input.focus(), 150);
+}
+
+function closeUserModal() {
+  document.getElementById('user-overlay').classList.remove('open');
+}
+
+function selectUserIcon(icon) {
+  currentUser.icon = icon;
+  document.querySelectorAll('.user-icon-btn').forEach(el => {
+    el.classList.toggle('selected', el.dataset.icon === icon);
+  });
+}
+
+function saveUserName() {
+  const name = document.getElementById('user-name-input').value.trim().slice(0, 6);
+  if (!name) { document.getElementById('user-name-input').focus(); return; }
+  currentUser.name = name;
+  if (!currentUser.icon) currentUser.icon = USER_ICONS[Math.floor(Math.random() * USER_ICONS.length)];
+  localStorage.setItem('zhongxin_user_v1', JSON.stringify(currentUser));
+  // 同步留言板暱稱
+  const authorEl = document.getElementById('notice-author');
+  if (authorEl) authorEl.value = name;
+  localStorage.setItem('zhongxin_notice_author', name);
+  updateUserTag();
+  closeUserModal();
+  toast(`✅ 暱稱已設定為「${name}」`);
+}
+
+// ══════════════════════════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════════════════════════
+let analyticsYear  = today.getFullYear();
+let analyticsMonth = today.getMonth(); // 0-indexed
+
+// ── 手動輸入趨勢數據 Modal ──────────────────────────────
+function openManualDataModal() {
+  const today = new Date();
+  const iso = today.toISOString().slice(0,10);
+  document.getElementById('manual-date').value = iso;
+  fillManualFormFromDate(iso);
+  document.getElementById('manual-overlay').classList.add('open');
+}
+function closeManualDataModal() {
+  document.getElementById('manual-overlay').classList.remove('open');
+}
+function fillManualFormFromDate(iso) {
+  const dateStr = iso.replace(/-/g, '/');
+  const ex = manualData[dateStr];
+  document.getElementById('manual-ord').value = ex ? ex.ord : '';
+  document.getElementById('manual-un').value  = ex ? ex.un  : '';
+  document.getElementById('manual-no').value  = ex ? ex.no  : '';
+  document.getElementById('btn-manual-del').style.display = ex ? 'inline-flex' : 'none';
+}
+function saveManualDataForm() {
+  const iso = document.getElementById('manual-date').value;
+  if (!iso) { alert('請選擇日期'); return; }
+  const dateStr = iso.replace(/-/g, '/');
+  manualData[dateStr] = {
+    ord: parseInt(document.getElementById('manual-ord').value) || 0,
+    un:  parseInt(document.getElementById('manual-un').value)  || 0,
+    no:  parseInt(document.getElementById('manual-no').value)  || 0,
+  };
+  saveManualData();
+  closeManualDataModal();
+  renderAnalytics();
+  toast('✅ ' + dateStr + ' 數據已儲存');
+}
+function deleteManualData() {
+  const iso = document.getElementById('manual-date').value;
+  const dateStr = iso.replace(/-/g, '/');
+  showConfirm('確定刪除 ' + dateStr + ' 的手動數據？\n刪除後將恢復自動計算。', () => {
+    delete manualData[dateStr];
+    saveManualData();
+    closeManualDataModal();
+    renderAnalytics();
+    toast('已刪除，恢復自動計算');
+  });
+}
+
+// ── 刪除每日明細某一天 ──────────────────────────────────
+function deleteAnalyticsDay(dateStr) {
+  showConfirm(`確定刪除 ${dateStr.slice(5)} 的叫貨記錄？\n此操作會從歷史快照中移除該天資料，無法復原。`, () => {
+    // 從 historyLog 移除該天
+    historyLog = historyLog.filter(h => h.date !== dateStr);
+    // 若有手動輸入也一起刪除
+    if (manualData[dateStr]) {
+      delete manualData[dateStr];
+      saveManualData();
+    }
+    localStorage.setItem('zhongxin_hist_v4', JSON.stringify(historyLog));
+    renderAnalytics();
+    toast('✅ 已刪除 ' + dateStr.slice(5) + ' 的記錄');
+    const ts = touchTs();
+    pushInBackground(
+      () => _pushOne('zhongxin_hist_v4', historyLog),
+      () => _pushOne('zhongxin_ts_v1', ts)
+    );
+  });
+}
+
+function analyticsChangeMonth(delta) {
+  analyticsMonth += delta;
+  if (analyticsMonth < 0)  { analyticsMonth = 11; analyticsYear--; }
+  if (analyticsMonth > 11) { analyticsMonth = 0;  analyticsYear++; }
+  renderAnalytics();
+}
+
+function renderAnalytics() {
+  const y = analyticsYear, m = analyticsMonth;
+  const monthStr = `${y}年 ${m+1}月`;
+  document.getElementById('analytics-month-label').textContent = monthStr;
+
+  // 取得該月所有日期的資料
+  // historyLog: [{date:'2025/07/01', records:{name:status}}, ...]
+  // 今日資料從 db 直接取
+  const daysInMonth = new Date(y, m+1, 0).getDate();
+  const dayData = []; // [{date, ord, un, no, total}]
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${y}/${String(m+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+    let ord=0, un=0, no=0;
+
+    // ★ 優先使用手動輸入數據
+    if (manualData[dateStr]) {
+      ord = manualData[dateStr].ord || 0;
+      un  = manualData[dateStr].un  || 0;
+      no  = manualData[dateStr].no  || 0;
+      dayData.push({ date: dateStr, day: d, ord, un, no, total: ord+un+no, manual: true });
+      continue;
+    }
+
+    if (dateStr === todayStr) {
+      // 今日：從當前 db 取
+      Object.values(db).forEach(v => {
+        if (v.status === '有叫貨')     ord++;
+        else if (v.status === '今日不叫貨') no++;
+        else un++;
+      });
+    } else {
+      // 歷史：從 historyLog 取
+      const entry = historyLog.find(h => h.date === dateStr);
+      if (entry && entry.records) {
+        const total = Object.keys(db).length;
+        Object.values(entry.records).forEach(s => {
+          if (s === '有叫貨')     ord++;
+          else if (s === '今日不叫貨') no++;
+          else un++;
+        });
+        // 有些客戶可能沒有記錄，視為未叫貨
+        const recorded = ord + un + no;
+        un += Math.max(0, total - recorded);
+      } else {
+        // 無資料的日期跳過（未來的日期或沒有重置的日期）
+        dayData.push({ date: dateStr, day: d, ord: null, un: null, no: null, total: null });
+        continue;
+      }
+    }
+    const total = ord + un + no;
+    dayData.push({ date: dateStr, day: d, ord, un, no, total });
+  }
+
+  const validDays = dayData.filter(d => d.total !== null);
+
+  // ── 摘要卡片 ──────────────────────────────────────────
+  const totalOrd = validDays.reduce((s, d) => s + d.ord, 0);
+  const avgOrd   = validDays.length ? Math.round(totalOrd / validDays.length) : 0;
+  const maxOrd   = validDays.length ? Math.max(...validDays.map(d => d.ord)) : 0;
+  const todayData = dayData.find(d => d.date === todayStr);
+  const todayOrd  = todayData?.ord ?? 0;
+  const todayPct  = todayData?.total ? Math.round(todayOrd / todayData.total * 100) : 0;
+
+  document.getElementById('analytics-summary').innerHTML = `
+    <div class="summary-card">
+      <div class="summary-card-label"><span style="color:var(--grn)">●</span> 今日已叫貨</div>
+      <div class="summary-card-val" style="color:var(--grn-dk)">${todayOrd}</div>
+      <div class="summary-card-sub">共 ${todayData?.total ?? 0} 家・${todayPct}%</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label"><span style="color:var(--red)">●</span> 今日未叫貨</div>
+      <div class="summary-card-val" style="color:var(--red-dk)">${todayData?.un ?? 0}</div>
+      <div class="summary-card-sub">今日不叫 ${todayData?.no ?? 0} 家</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label"><span style="color:var(--accent)">●</span> 月平均叫貨</div>
+      <div class="summary-card-val" style="color:var(--accent)">${avgOrd}</div>
+      <div class="summary-card-sub">共 ${validDays.length} 天資料</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-card-label"><span style="color:var(--amber)">●</span> 單日最高叫貨</div>
+      <div class="summary-card-val" style="color:var(--amber-dk)">${maxOrd}</div>
+      <div class="summary-card-sub">本月峰值</div>
+    </div>`;
+
+  if (!validDays.length) {
+    document.getElementById('analytics-chart').innerHTML =
+      '<div class="analytics-empty"><div class="analytics-empty-icon">📭</div>本月尚無叫貨記錄<br><small style="color:var(--ink3);font-size:12px;margin-top:6px;display:block;">每日按「重置今日」後才會記錄當天快照</small></div>';
+    document.getElementById('analytics-table').innerHTML = '';
+    return;
+  }
+
+  // ── SVG 折線圖 ──────────────────────────────────────
+  renderLineChart(dayData, daysInMonth);
+
+  // ── 每日明細表 ──────────────────────────────────────
+  renderAnalyticsTable(dayData);
+}
+
+function renderLineChart(dayData, daysInMonth) {
+  const W = Math.max(600, daysInMonth * 28);
+  const H = 220;
+  const PAD = { top: 20, right: 20, bottom: 36, left: 44 };
+  const cW = W - PAD.left - PAD.right;
+  const cH = H - PAD.top  - PAD.bottom;
+
+  const validDays = dayData.filter(d => d.total !== null);
+  if (!validDays.length) return;
+
+  const maxVal = Math.max(...validDays.map(d => Math.max(d.ord, d.un, d.no)), 1);
+  // 讓 Y 軸最大值稍大，留白
+  const yMax = Math.ceil(maxVal * 1.15 / 10) * 10 || 10;
+
+  const xPos = d => PAD.left + ((d.day - 1) / (daysInMonth - 1 || 1)) * cW;
+  const yPos = v => PAD.top + cH - (v / yMax) * cH;
+
+  // Y 軸格線
+  const yTicks = 4;
+  let gridLines = '', yLabels = '';
+  for (let i = 0; i <= yTicks; i++) {
+    const v = Math.round(yMax * i / yTicks);
+    const y = yPos(v);
+    gridLines += `<line x1="${PAD.left}" y1="${y}" x2="${W-PAD.right}" y2="${y}" stroke="#e5e7eb" stroke-width="1"/>`;
+    yLabels  += `<text x="${PAD.left - 6}" y="${y+4}" text-anchor="end" font-size="10" fill="#9ca3af">${v}</text>`;
+  }
+
+  // X 軸標籤（每 5 天顯示一次）
+  let xLabels = '';
+  dayData.forEach(d => {
+    if (d.day === 1 || d.day % 5 === 0 || d.day === daysInMonth) {
+      xLabels += `<text x="${xPos(d)}" y="${H - PAD.bottom + 16}" text-anchor="middle" font-size="10" fill="#9ca3af">${d.day}</text>`;
+    }
+  });
+
+  // 折線 + 資料點產生器
+  function makePath(key, color) {
+    const pts = validDays.map(d => `${xPos(d)},${yPos(d[key])}`);
+    const path = `M${pts.join(' L')}`;
+    // 面積填色
+    const first = validDays[0], last = validDays.at(-1);
+    const area  = `M${xPos(first)},${yPos(0)} L${pts.join(' L')} L${xPos(last)},${yPos(0)} Z`;
+    let dots = '';
+    validDays.forEach(d => {
+      dots += `<circle cx="${xPos(d)}" cy="${yPos(d[key])}" r="3" fill="${color}" stroke="white" stroke-width="1.5">
+        <title>${d.date.slice(5)}：${d[key]} 家</title>
+      </circle>`;
+    });
+    return `
+      <path d="${area}" fill="${color}" fill-opacity=".08"/>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}`;
+  }
+
+  // 今日標示線
+  const todayEntry = dayData.find(d => d.date === todayStr);
+  let todayLine = '';
+  if (todayEntry) {
+    const tx = xPos(todayEntry);
+    todayLine = `<line x1="${tx}" y1="${PAD.top}" x2="${tx}" y2="${H-PAD.bottom}" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="4,3" opacity=".5"/>
+      <text x="${tx}" y="${PAD.top - 5}" text-anchor="middle" font-size="9" fill="#6366f1" font-weight="600">今日</text>`;
+  }
+
+  // 互動式資料點（hover 顯示 tooltip）
+  function makePathInteractive(key, color) {
+    const pts = validDays.map(d => `${xPos(d)},${yPos(d[key])}`);
+    const path = `M${pts.join(' L')}`;
+    const first = validDays[0], last = validDays.at(-1);
+    const area  = `M${xPos(first)},${yPos(0)} L${pts.join(' L')} L${xPos(last)},${yPos(0)} Z`;
+    let dots = '';
+    validDays.forEach(d => {
+      const cx = xPos(d), cy = yPos(d[key]);
+      const label = esc(`${d.date.slice(5)}  ${d[key]} 家`);
+      dots += `<circle class="chart-dot" cx="${cx}" cy="${cy}" r="4"
+        fill="${color}" stroke="white" stroke-width="2"
+        data-date="${esc(d.date.slice(5))}" data-val="${d[key]}" data-color="${color}"
+        style="cursor:pointer;transition:r .15s,filter .15s;"
+        onmouseenter="showChartTooltip(this,${cx},${cy})"
+        onmouseleave="hideChartTooltip()"
+      />`; 
+    });
+    return `
+      <path d="${area}" fill="${color}" fill-opacity=".08"/>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+      ${dots}`;
+  }
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="font-family:system-ui,sans-serif;overflow:visible;">
+    ${gridLines}
+    ${yLabels}
+    ${xLabels}
+    <text x="${PAD.left + cW/2}" y="${H}" text-anchor="middle" font-size="11" fill="#9ca3af">日期</text>
+    ${makePathInteractive('ord', '#01ab56')}
+    ${makePathInteractive('un',  '#e93e38')}
+    ${makePathInteractive('no',  '#2d79e4')}
+    ${todayLine}
+  </svg>`;
+
+  const wrap = document.getElementById('analytics-chart');
+  wrap.style.position = 'relative';
+  wrap.innerHTML = svg + `
+    <div id="chart-tooltip" style="
+      display:none; position:absolute; pointer-events:none;
+      background:#1f2937; color:#fff;
+      font-size:12px; font-weight:600;
+      padding:6px 12px; border-radius:8px;
+      white-space:nowrap; z-index:10;
+      box-shadow:0 4px 12px rgba(0,0,0,.2);
+      transform:translate(-50%,-110%);
+    "></div>`;
+}
+
+function showChartTooltip(el, cx, cy) {
+  el.setAttribute('r','7');
+  el.style.filter = `drop-shadow(0 0 6px ${el.dataset.color})`;
+  const tt = document.getElementById('chart-tooltip');
+  if (!tt) return;
+  const wrap = document.getElementById('analytics-chart');
+  const svgEl = wrap.querySelector('svg');
+  const svgRect = svgEl.getBoundingClientRect();
+  const wrapRect = wrap.getBoundingClientRect();
+  // 計算 tooltip 位置（相對 wrap）
+  const scaleX = svgRect.width / svgEl.viewBox.baseVal.width;
+  const scaleY = svgRect.height / svgEl.viewBox.baseVal.height;
+  const left = (svgRect.left - wrapRect.left) + cx * scaleX;
+  const top  = (svgRect.top  - wrapRect.top)  + cy * scaleY;
+  tt.style.left = left + 'px';
+  tt.style.top  = top  + 'px';
+  const labels = {'#01ab56':'已叫貨','#e93e38':'未叫貨','#2d79e4':'今日不叫'};
+  tt.innerHTML = `${el.dataset.date}&nbsp;&nbsp;<span style="color:${el.dataset.color}">${labels[el.dataset.color] || ''}</span>&nbsp;${el.dataset.val} 家`;
+  tt.style.display = 'block';
+}
+
+function hideChartTooltip() {
+  document.querySelectorAll('.chart-dot').forEach(el => {
+    el.setAttribute('r','4');
+    el.style.filter = '';
+  });
+  const tt = document.getElementById('chart-tooltip');
+  if (tt) tt.style.display = 'none';
+}
+
+function renderAnalyticsTable(dayData) {
+  const validDays = dayData.filter(d => d.total !== null).reverse(); // 最新在前
+  let html = `<thead><tr style="background:var(--page);">
+    <th style="padding:8px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--ink3);border-bottom:1px solid var(--line);white-space:nowrap;">日期</th>
+    <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:#10b981;border-bottom:1px solid var(--line);">已叫貨</th>
+    <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:#ef4444;border-bottom:1px solid var(--line);">未叫貨</th>
+    <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:#3b82f6;border-bottom:1px solid var(--line);">今日不叫</th>
+    <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:var(--ink3);border-bottom:1px solid var(--line);">總計</th>
+    <th style="padding:8px 12px;text-align:center;font-size:11px;font-weight:600;color:var(--ink3);border-bottom:1px solid var(--line);">叫貨率</th>
+    <th style="padding:8px 12px;border-bottom:1px solid var(--line);width:40px;"></th>
+  </tr></thead><tbody>`;
+
+  validDays.forEach(d => {
+    const isToday = d.date === todayStr;
+    const pct = d.total ? Math.round(d.ord / d.total * 100) : 0;
+    const rowBg = isToday ? 'background:#eef2ff;' : '';
+    html += `<tr style="${rowBg}">
+      <td style="padding:7px 12px;border-bottom:1px solid var(--line2);font-weight:${isToday?700:400};color:${isToday?'var(--accent)':'var(--ink)'};">
+        ${d.date.slice(5)} <span style="font-size:10px;color:var(--ink3);">（${['日','一','二','三','四','五','六'][new Date(d.date.replace(/\//g,'-')).getDay()]}）</span>${isToday ? ' <span style="font-size:10px;color:var(--accent);">(今日)</span>' : ''}
+      </td>
+      <td style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--line2);font-weight:700;color:#065f46;">${d.ord}</td>
+      <td style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--line2);color:#9f1239;">${d.un}</td>
+      <td style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--line2);color:#1e3a8a;">${d.no}</td>
+      <td style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--line2);color:var(--ink2);">${d.total}</td>
+      <td style="padding:7px 12px;text-align:center;border-bottom:1px solid var(--line2);">
+        <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+          <div style="width:50px;height:5px;background:var(--line2);border-radius:99px;overflow:hidden;">
+            <div style="width:${pct}%;height:100%;background:#10b981;border-radius:99px;"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${pct>=80?'var(--grn-dk)':pct>=50?'var(--ink2)':'var(--red-dk)'};">${pct}%</span>
+        </div>
+      </td>
+      <td style="padding:7px 8px;text-align:center;border-bottom:1px solid var(--line2);">
+        ${!isToday ? `<button onclick="deleteAnalyticsDay('${d.date}')" style="background:none;border:none;cursor:pointer;color:var(--ink3);font-size:13px;padding:2px 5px;border-radius:4px;transition:color .15s;" title="刪除此筆" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--ink3)'">✕</button>` : ''}
+      </td>
+    </tr>`;
+  });
+  html += '</tbody>';
+  document.getElementById('analytics-table').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════
+//  UTILS
+// ══════════════════════════════════════════════════════════
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+let _t;
+function toast(msg, isErr) {
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.style.background=isErr?'var(--red)':'var(--ink)';
+  el.classList.add('show'); clearTimeout(_t);
+  _t=setTimeout(()=>el.classList.remove('show'),2500);
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,6 @@
+[
+  {"id":"00000000-0000-0000-0000-00000000000a","email":"admin@zx.test","password":"admin123","role":"admin","display_name":"老闆","icon":"kitty.png"},
+  {"id":"00000000-0000-0000-0000-00000000000b","email":"staff1@zx.test","password":"staff123","role":"staff","display_name":"小美","icon":"chick.png"},
+  {"id":"00000000-0000-0000-0000-00000000000e","email":"staff2@zx.test","password":"staff123","role":"staff","display_name":"阿明","icon":"crab.png"},
+  {"id":"00000000-0000-0000-0000-00000000000c","email":"viewer@zx.test","password":"viewer123","role":"viewer","display_name":"查看者","icon":"snail.png"}
+]
