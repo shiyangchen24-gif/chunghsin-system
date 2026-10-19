@@ -3,6 +3,8 @@
 const path = require('path');
 // 登入畫面預設是「輸入暱稱」：切換到帳號登入（只限管理員的頁面本來就是帳號模式）
 async function acct(page) {
+  // 先等登入框出現（暱稱或帳號模式），再決定要不要切換，避免畫面還沒畫好就判斷
+  await page.waitForSelector('#zx-login-nick:visible, #zx-login-email:visible', { timeout: 15000 });
   if (await page.isVisible('#zx-login-admin')) await page.click('#zx-login-admin');
   await page.waitForSelector('#zx-login-email', { state: 'visible', timeout: 15000 });
 }

@@ -16,5 +16,6 @@ for u in json.load(open('users.json')):
     print(f"insert into auth.users(id,email) values ('{u['id']}','{u['email']}') on conflict do nothing;")
     print(f"insert into public.app_members(user_id,role,display_name,icon) values ('{u['id']}','{u['role']}','{u['display_name']}','{u['icon']}') on conflict (user_id) do update set role=excluded.role;")
 PY
-$P -d zxdev -c "grant select, insert, update, delete on all tables in schema public to anon, authenticated; grant usage, select on all sequences in schema public to authenticated; notify pgrst, 'reload schema';" >/dev/null
+$P -d zxdev -f $SQL/15_api_grants.sql >/dev/null 2>&1 || { echo "FAIL 15_api_grants"; exit 1; }   # 比照正式環境：資料表授權只靠 15
+$P -d zxdev -c "notify pgrst, 'reload schema';" >/dev/null
 echo "zxdev ready"

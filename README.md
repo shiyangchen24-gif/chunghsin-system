@@ -18,7 +18,7 @@
 | `tools/devices.html` | 裝置管理（暱稱裝置、IP 紀錄、停用、關閉暱稱登入；只限管理員） |
 | `tools/migrate.html` | 資料搬移工具（三個舊專案 → 新專案，只限管理員） |
 | `supabase/sql/` | 依序執行的 SQL（見下方「部署步驟」） |
-| `supabase/test/` | SQL 測試（`run_all.sh`，102 項） |
+| `supabase/test/` | SQL 測試（`run_all.sh`，104 項） |
 | `devstack/` | 本機測試堆疊與瀏覽器 E2E 測試（`run_e2e.sh`） |
 | `src/` | 由原版程式組出新版的建置腳本（`build_*.py`）與新版程式來源 |
 | `original/` | 三個原版網站（對照用，不部署） |
@@ -31,7 +31,8 @@
 
 **側邊欄**：桌機固定在左側，可收合成只剩圖示（會記住設定）；手機與平板（寬度小於 900px）從左下角按鈕開啟抽屜，按 Esc 或點旁邊關閉。管理員登入後才會多出「裝置管理」與「資料搬移」項目。列印時側邊欄完全隱藏，不影響原本的列印與 Excel 格式。
 
-1. **建立結構**：在新專案的 SQL Editor 依序執行 `02_core_shared` → `03_tick` → `04_report` → `05_quote` → `06_import_staging` → `12_dashboard`（儀表板彙總）→ `13_nickname_access`（暱稱使用＋裝置 IP）→ `14_analytics`（異常分析與經營月報）。新專案是空的，所以 `01_backup` 可以略過。
+1. **建立結構**：在新專案的 SQL Editor 依序執行 `02_core_shared` → `03_tick` → `04_report` → `05_quote` → `06_import_staging` → `12_dashboard`（儀表板彙總）→ `13_nickname_access`（暱稱使用＋裝置 IP）→ `14_analytics`（異常分析與經營月報）→ `15_api_grants`（**必跑**：明確授權網頁存取資料表）。
+   Supabase 自 2026-05-30 起的新專案、2026-10-30 起所有專案，新資料表不再自動開放給網頁（Data API），沒跑 15 網頁會出現 `permission denied`（42501）。之後若新增資料表，也要再跑一次 15。新專案是空的，所以 `01_backup` 可以略過。
 2. **Realtime 設定**：Dashboard → Realtime → Settings，關閉「Allow public access」，只讓登入成員收到私有頻道的推播。
    **開啟暱稱使用**：Authentication → Sign In / Providers → 開啟「Allow anonymous sign-ins」。沒開的話，輸入暱稱時會提示「暱稱登入尚未開啟」，只能用帳號登入。
 3. **建立管理員帳號**：Authentication → Users → Add user，然後修改 `11_members_template.sql` 裡的 Email 與角色後執行。一般同仁不需要帳號，輸入暱稱即可使用。

@@ -218,3 +218,9 @@ do $$ begin
   set local role anon;
   perform public.boss_report('2026-10-01', '2026-10-31'); raise exception 'should fail';
 exception when insufficient_privilege then raise notice 'PASS: anon cannot call boss_report'; end $$;
+
+-- 19. Data API 授權（Supabase 2026-10-30 起不再自動授權 public 新資料表）：authenticated 全部有權限、anon 沒有
+select pg_temp.assert(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind in ('r','p','v') and not has_table_privilege('authenticated', c.oid, 'select')), 'every public table/view granted to authenticated (15_api_grants)');
+select pg_temp.assert(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind in ('r','p') and not c.relrowsecurity), 'every granted table has RLS enabled');
