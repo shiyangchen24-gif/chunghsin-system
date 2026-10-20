@@ -19,7 +19,7 @@ ICONS = pathlib.Path('/home/user/nitaaa1119-ai/chun-shin-ltd.')
 OUT = ROOT / 'tick'
 HERE = ROOT / 'src' / 'tick'
 SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
-VERSION = '2026-10-18-zx-v1'
+VERSION = '2026-10-20-zx-v2'
 
 
 def remove_function(s, signature):

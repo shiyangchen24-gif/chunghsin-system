@@ -34,8 +34,11 @@ function findUser(id) {
   return USERS.find(x => x.id === id) || (/^[0-9a-f-]{36}$/.test(id) ? { id, email: '', anonymous: true } : null);
 }
 
+// 測試用：縮短 token 有效時間、讓接下來 N 次續期暫時失敗（503）或永久失效（400），模擬正式環境的續期問題
+const authCfg = { ttl: 3600, failRefresh: 0, revokeRefresh: 0 };
+
 function issue(user) {
-  const exp = Math.floor(Date.now() / 1000) + 3600;
+  const exp = Math.floor(Date.now() / 1000) + authCfg.ttl;
   const access_token = jwt.sign({ sub: user.id, email: user.email, role: 'authenticated', aud: 'authenticated', exp,
                                   is_anonymous: !!user.anonymous }, SECRET);
   return {
@@ -75,6 +78,10 @@ const server = http.createServer(async (req, res) => {
   if (u.pathname === '/__meter') return sendJson(res, 200, meter);
   if (u.pathname === '/__realtime/down') { wsBlocked = true; for (const ws of sockets) ws.terminate(); return sendJson(res, 200, { down: true }); }
   if (u.pathname === '/__realtime/up') { wsBlocked = false; return sendJson(res, 200, { down: false }); }
+  if (u.pathname === '/__auth/config') {
+    for (const k of ['ttl', 'failRefresh', 'revokeRefresh']) if (u.query[k] != null) authCfg[k] = +u.query[k];
+    return sendJson(res, 200, authCfg);
+  }
   if (u.pathname === '/__dev_config') return sendJson(res, 200, { url: 'http://' + req.headers.host, anonKey: ANON_KEY });
   if (u.pathname === '/__meter/reset') { meter.started = Date.now(); meter.http = {}; Object.assign(meter.ws, { frames: 0, bytes: 0, heartbeats: 0, broadcasts: 0 }); return sendJson(res, 200, { ok: true }); }
 
@@ -85,6 +92,8 @@ const server = http.createServer(async (req, res) => {
       let user;
       if (u.query.grant_type === 'password') user = USERS.find(x => x.email === body.email && x.password === body.password);
       else if (u.query.grant_type === 'refresh_token') {
+        if (authCfg.failRefresh > 0) { authCfg.failRefresh--; return sendJson(res, 503, { msg: 'temporarily unavailable (dev)' }, 'POST /auth/token'); }
+        if (authCfg.revokeRefresh > 0) { authCfg.revokeRefresh--; return sendJson(res, 400, { error: 'invalid_grant', error_description: 'Invalid Refresh Token: Already Used', msg: 'Invalid Refresh Token: Already Used' }, 'POST /auth/token'); }
         const id = Buffer.from(body.refresh_token || '', 'base64').toString();
         user = findUser(id);
       }
@@ -170,12 +179,21 @@ function onNotify(n) {
     wsSend(ws, { topic, event: 'broadcast', payload: { type: 'broadcast', event: msg.event, payload: msg.payload }, ref: null });
   }
 }
+// 資料庫重建時連線會斷：同一時間只排一次重連，並關掉舊連線（原本 error 事件與連線失敗會各排一次，連線數倍增）
+let reconnectTimer = null;
+function scheduleReconnect(c, why) {
+  if (c) { c.removeAllListeners('error'); c.on('error', () => {}); c.end().catch(() => {}); }
+  if (pg === c) pg = null;
+  if (reconnectTimer) return;
+  console.warn('pg reconnecting:', why);
+  reconnectTimer = setTimeout(() => { reconnectTimer = null; connectPg(); }, 1000);
+}
 async function connectPg() {
   const c = new Client({ host: '/var/tmp/zxsock', port: 5544, user: 'postgres', database: DB });
-  c.on('error', e => { console.warn('pg error, reconnecting:', e.message); setTimeout(connectPg, 1000); });
+  c.on('error', e => scheduleReconnect(c, e.message));
   c.on('notification', onNotify);
   try { await c.connect(); await c.query('listen zx_rt'); pg = c; console.log('pg listen ok'); }
-  catch (e) { console.warn('pg connect failed, retrying:', e.message); setTimeout(connectPg, 1000); }
+  catch (e) { scheduleReconnect(c, e.message); }
 }
 
 async function isMember(token) {

@@ -14,7 +14,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / 'original' / 'quote'
 OUT = ROOT / 'quote'
 HERE = ROOT / 'src' / 'quote'
-FRONTEND_VERSION = '2026-10-18-zx-v1'
+FRONTEND_VERSION = '2026-10-20-zx-v2'
 SUPABASE_JS = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js'
 
 

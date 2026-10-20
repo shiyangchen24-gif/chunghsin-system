@@ -11,7 +11,7 @@ for i in $(seq 1 40); do
   sleep 0.5
 done
 status=0
-for t in ${@:-e2e_nav.js e2e_tick.js e2e_report.js e2e_quote.js e2e_access.js e2e_migrate.js}; do
+for t in ${@:-e2e_nav.js e2e_tick.js e2e_report.js e2e_quote.js e2e_access.js e2e_session.js e2e_migrate.js}; do
   echo "=== $t"
   # 搬移測試需要「空的新專案」：先重建為空庫
   if [ "$t" = "e2e_migrate.js" ]; then ./setup_db.sh --empty >/dev/null 2>&1

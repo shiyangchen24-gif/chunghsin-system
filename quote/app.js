@@ -1,7 +1,7 @@
 /* ===================== 報價單匯出系統 - 前端邏輯（三站整合版） ===================== */
 // Supabase 連線由 ../shared/zx-auth.js 在登入後建立（全域 sb）；URL 與 anon key 集中在 ../shared/zx-config.js。
 // service_role／secret key 絕對不可放在前端。
-const FRONTEND_VERSION = '2026-10-18-zx-v1';
+const FRONTEND_VERSION = '2026-10-20-zx-v2';
 let sb = null;
 let sbInitError = '';
 let ZXC = null;

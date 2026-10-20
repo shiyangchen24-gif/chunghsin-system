@@ -120,9 +120,8 @@
       host.querySelector('[data-zx-rename]').onclick = async function () {
         var n = (prompt('新的暱稱（最多 12 字）', member.display_name || '') || '').trim();
         if (!n) return;
-        var r = await sb.rpc('device_register', { p_nickname: n });
-        if (r.error || !r.data.ok) { alert('暱稱更新失敗：' + (r.error ? r.error.message : r.data.reason)); return; }
-        try { localStorage.setItem('zx-nickname', n); } catch (x) {}
+        var r = await registerNickname(n);
+        if (r.error || r.reason) { alert('暱稱更新失敗：' + (r.error || REG_MSG[r.reason] || r.reason)); return; }
         member.display_name = r.data.display_name;
         renderUserChip(member, user);
       };
@@ -131,6 +130,70 @@
     host.querySelector('[data-zx-logout]').onclick = function () {
       sb.auth.signOut().finally(function () { location.reload(); });
     };
+  }
+
+  /* ---------------- 登入狀態的穩定性 ----------------
+   * 登入 token 約 1 小時到期，需要用 refresh token 續期。續期偶爾會暫時失敗（網路不穩、切換頁面時請求被中斷、
+   * 分頁在背景太久計時器被瀏覽器暫停）。這時 supabase-js 會「悄悄改用匿名金鑰」送出請求，伺服器把裝置當成陌生人：
+   * 讀不到成員資料、登記暱稱出現 permission denied。以下三件事避免這種情況：
+   *   1. validSession()：確定拿到伺服器認可、未過期的登入；暫時失敗就重試，不會直接當成「沒登入」
+   *   2. guardedFetch：已登入卻要用匿名金鑰送出資料請求時，先續期再送
+   *   3. 真的失去登入（refresh token 失效）時，若這個瀏覽器登記過暱稱，自動以同一暱稱重新登記，不跳出畫面 */
+  var loggedIn = false;
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function retryable(e) {
+    if (!e) return false;
+    return e.name === 'AuthRetryableFetchError' || e.status === 0 || e.status >= 500 ||
+           /fetch|network|timed? ?out|lock/i.test(e.message || '');
+  }
+  async function validSession() {
+    for (var i = 0; i < 5; i++) {
+      var r = await sb.auth.getSession();
+      var s = r.data && r.data.session;
+      if (s && s.expires_at && s.expires_at * 1000 - Date.now() > 30000) return s;
+      if (!s && !retryable(r.error)) return null;            // 這個瀏覽器確實沒有登入
+      var rr = await sb.auth.refreshSession();
+      if (rr.data && rr.data.session) return rr.data.session;
+      if (rr.error && !retryable(rr.error)) return null;      // refresh token 已失效：登入真的遺失
+      syncBadge('catching-up', '正在恢復登入連線…');
+      await wait(400 * Math.pow(2, i));                       // 暫時失敗：0.4、0.8、1.6、3.2 秒後重試
+    }
+    throw new Error('連線不穩定，暫時無法確認登入狀態');
+  }
+  function guardedFetch(base) {
+    return async function (input, init) {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      if (loggedIn && init && init.headers && url.indexOf('/rest/v1/') > -1) {
+        var h = new Headers(init.headers);
+        if (h.get('Authorization') === 'Bearer ' + cfg.anonKey) {
+          var s = await validSession().catch(function () { return null; });
+          if (s) { h.set('Authorization', 'Bearer ' + s.access_token); init = Object.assign({}, init, { headers: h }); }
+        }
+      }
+      return base(input, init);
+    };
+  }
+  function nickSaved() { try { return localStorage.getItem('zx-nickname') || ''; } catch (e) { return ''; } }
+
+  // 以暱稱登記（必要時先匿名登入）；權限錯誤代表登入已失效 → 清掉本機登入、重新匿名登入後再試一次
+  async function registerNickname(nick) {
+    for (var attempt = 0; attempt < 2; attempt++) {
+      var s = await validSession().catch(function () { return null; });
+      if (!s) {
+        var a = await sb.auth.signInAnonymously();
+        if (a.error) return { error: /anonymous/i.test(a.error.message) ? '暱稱登入尚未開啟（Supabase 需開啟 Anonymous sign-ins），請改用帳號登入。' : a.error.message };
+        s = a.data.session;
+      }
+      var r = await sb.rpc('device_register', { p_nickname: nick });
+      if (!r.error) {
+        if (!r.data.ok) return { reason: r.data.reason };
+        try { localStorage.setItem('zx-nickname', nick); } catch (x) {}
+        return { session: s, data: r.data };
+      }
+      if (r.error.code !== '42501' && !/JWT|permission denied/i.test(r.error.message)) return { error: r.error.message };
+      await sb.auth.signOut({ scope: 'local' });
+    }
+    return { error: '登入狀態異常，請重新整理頁面後再試一次。' };
   }
 
   async function loadMember(user) {
@@ -146,18 +209,41 @@
 
     sb = global.supabase.createClient(cfg.url, cfg.anonKey, {
       auth: { persistSession: true, autoRefreshToken: true, storageKey: 'zx-auth-' + cfg.url.replace(/\W/g, '') },
-      global: opts.fetch ? { fetch: opts.fetch } : undefined,
+      global: { fetch: guardedFetch(opts.fetch || global.fetch.bind(global)) },
       realtime: { params: { eventsPerSecond: 20 } }
     });
     global.sb = sb;
 
-    var sessionRes = await sb.auth.getSession();
-    var session = sessionRes.data.session;
+    var session = null;
+    try { session = await validSession(); }
+    catch (e) { console.warn('[zx-auth]', e.message); session = (await sb.auth.getSession()).data.session; }
+    // 登入真的遺失，但這個瀏覽器之前登記過暱稱：自動以同一暱稱重新登記，不跳出登入畫面
+    if (!session && nickSaved() && !opts.accountOnly) {
+      var re = await registerNickname(nickSaved());
+      if (re.session) session = re.session;
+    }
     if (!session) session = await askLogin(opts, null);
 
-    var member;
-    try { member = await loadMember(session.user); }
-    catch (e) { member = null; console.error('[zx-auth] 讀取成員資料失敗', e); }
+    // 讀成員資料：失敗（例如連線中斷）不等於「不是成員」，先續期重試，不要直接請使用者重新登記
+    var member = null, memberErr = null;
+    for (var i = 0; i < 4; i++) {
+      try { member = await loadMember(session.user); memberErr = null; break; }
+      catch (e) {
+        memberErr = e; console.warn('[zx-auth] 讀取成員資料失敗，重試中', e.message || e);
+        await wait(500 * (i + 1));
+        session = (await validSession().catch(function () { return null; })) || session;
+      }
+    }
+    if (memberErr) {
+      var ov0 = loginOverlay(opts.title || '忠欣蔬果', opts.logo);
+      ov0.hidden = false;
+      ov0.querySelector('.zx-login-nick').hidden = true;
+      ov0.querySelector('.zx-login-acct').hidden = false;
+      ov0.querySelector('.zx-login-err').textContent = '連線不穩定，暫時讀不到登入資料（' + (memberErr.message || memberErr) + '）。';
+      ov0.querySelector('.zx-login-acct').onsubmit = function (e) { e.preventDefault(); location.reload(); };
+      ov0.querySelector('.zx-login-btn').textContent = '重新連線';
+      return null;
+    }
     // 匿名裝置還沒輸入暱稱（例如上次中途關閉）→ 再請他輸入一次
     if (!member && session.user.is_anonymous && !opts.accountOnly) {
       session = await askLogin(opts, session);
@@ -177,8 +263,9 @@
     sb.rpc('device_touch').then(function (r) { if (r.error) console.warn('[zx-auth] device_touch', r.error.message); });
     renderUserChip(member, session.user);
     sb.realtime.setAuth(session.access_token);
+    loggedIn = true;
     sb.auth.onAuthStateChange(function (ev, s) {
-      if (ev === 'SIGNED_OUT') location.reload();
+      if (ev === 'SIGNED_OUT') { loggedIn = false; location.reload(); }   // 重新載入後，有暱稱的裝置會自動重新登記
       if (s && s.access_token) sb.realtime.setAuth(s.access_token);
     });
 
@@ -195,7 +282,7 @@
   var REG_MSG = { blocked: '這個裝置已被管理員停用，請聯絡管理員。', disabled: '目前已關閉暱稱登入，請改用帳號登入。' };
 
   // 登入畫面：預設「輸入暱稱」（匿名登入＋登記裝置），也可切換成管理員帳號登入
-  //   existing：已有匿名 session 但尚未登記暱稱時傳入，不再重新匿名登入
+  //   existing：已有匿名登入但尚未登記暱稱時傳入（只用來隱藏「管理員登入」，登記時仍會確認登入是否有效）
   function askLogin(opts, existing) {
     return new Promise(function (resolve) {
       var ov = loginOverlay(opts.title || '忠欣蔬果', opts.logo);
@@ -222,20 +309,13 @@
         var btn = nickForm.querySelector('.zx-login-start');
         btn.disabled = true; btn.textContent = '準備中…';
         var done = function (msg) { btn.disabled = false; btn.textContent = '開始使用'; if (msg) err.textContent = msg; };
-        var s = existing || (await sb.auth.getSession()).data.session;
-        if (!s) {
-          var a = await sb.auth.signInAnonymously();
-          if (a.error) return done(/anonymous/i.test(a.error.message) ? '暱稱登入尚未開啟（Supabase 需開啟 Anonymous sign-ins），請改用帳號登入。' : a.error.message);
-          s = a.data.session;
+        var res = await registerNickname(nick);
+        if (res.error) return done(res.error);
+        if (res.reason) {
+          if (res.reason === 'disabled') await sb.auth.signOut({ scope: 'local' });
+          return done(REG_MSG[res.reason] || res.reason);
         }
-        var r = await sb.rpc('device_register', { p_nickname: nick });
-        if (r.error) return done(r.error.message);
-        if (!r.data.ok) {
-          if (r.data.reason === 'disabled') await sb.auth.signOut();
-          existing = null;
-          return done(REG_MSG[r.data.reason] || r.data.reason);
-        }
-        try { localStorage.setItem('zx-nickname', nick); } catch (x) {}
+        var s = res.session;
         done();
         ov.hidden = true;
         resolve(s);

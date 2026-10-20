@@ -98,10 +98,10 @@ def main():
 
     scripts = (
         f'<script src="{SUPABASE_JS}"></script>\n'
-        '<script src="../shared/zx-nav.js" data-site="report" data-root="../"></script>\n'
-        '<script src="../shared/zx-config.js"></script>\n'
-        '<script src="../shared/zx-sync.js"></script>\n'
-        '<script src="../shared/zx-auth.js"></script>\n\n'
+        '<script src="../shared/zx-nav.js?v=2026-10-20-zx-v2" data-site="report" data-root="../"></script>\n'
+        '<script src="../shared/zx-config.js?v=2026-10-20-zx-v2"></script>\n'
+        '<script src="../shared/zx-sync.js?v=2026-10-20-zx-v2"></script>\n'
+        '<script src="../shared/zx-auth.js?v=2026-10-20-zx-v2"></script>\n\n'
         '<script>\n/* ===================== 原版保留（列印預覽／匯出 Excel／行內編輯表單，逐字未改） ===================== */\n'
         + kept +
         '\n</script>\n\n<script>\n'

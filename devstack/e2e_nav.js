@@ -30,6 +30,7 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   await A.goto(BASE + '/');
   check(await A.isVisible('.zx-sidebar'), 'home page shows the sidebar');
   check((await current(A)) === 'home', 'home item highlighted on home page');
+  await A.waitForSelector('#zx-login', { state: 'visible', timeout: 15000 });
   check(await A.isVisible('#zx-login-nick'), 'dashboard asks for a nickname (no account needed)');
   await loginAcct(A, 'admin@zx.test', 'admin123');
   await A.waitForFunction(() => !document.querySelector('#kpis').classList.contains('skeleton'), null, { timeout: 15000 });

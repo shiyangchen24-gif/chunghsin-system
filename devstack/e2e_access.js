@@ -26,6 +26,7 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   // 1. 新裝置：只輸入暱稱就能用
   const N = await mk('203.0.113.21');
   await N.goto(BASE + '/');
+  await N.waitForSelector('#zx-login', { state: 'visible', timeout: 15000 });
   check(await N.isVisible('#zx-login-nick') && await N.isHidden('#zx-login-email'), 'login screen asks only for a nickname');
   await N.screenshot({ path: path.join(SHOTS, 'access-login.png') });
   await N.click('.zx-login-start');
@@ -70,6 +71,7 @@ function check(c, m) { console.log((c ? 'PASS: ' : 'FAIL: ') + m); if (!c) failu
   // 3. 管理員：裝置管理看得到 IP，可停用
   const A = await mk('198.51.100.5');
   await A.goto(BASE + '/tools/devices.html');
+  await A.waitForSelector('#zx-login', { state: 'visible', timeout: 15000 });
   check(await A.isVisible('#zx-login-email') && await A.isHidden('#zx-login-nick'), 'devices page asks for an admin account (no nickname option)');
   await loginAcct(A, 'admin@zx.test', 'admin123');
   await A.waitForSelector('#rows tr[data-id]', { timeout: 15000 });
