@@ -126,6 +126,10 @@ def main():
     <span id="zx-sync-badge" class="sync-badge" data-state="pending" role="status" aria-live="polite">連線中…</span>
     <span id="zx-user-chip"></span>
   </div>''')
+    # 指定營業日（只限管理員；權限由伺服器 tick_set_service_date 再檢查一次）
+    html = must_replace(html, '<button class="btn btn-reset" onclick="resetAll()">↺ 重置今日</button>',
+                        '<button class="btn btn-reset" onclick="resetAll()">↺ 重置今日</button>\n'
+                        '      <button class="btn btn-date zx-admin-only" onclick="openServiceDateModal()">📅 指定營業日</button>')
     html = must_replace(html, '<div class="series-strip-wrap no-print"><div class="series-strip" id="series-strip"></div></div>',
                         '<div class="series-strip-wrap no-print"><div class="series-strip" id="series-strip"></div>'
                         '<button type="button" class="btn btn-ghost btn-sm series-admin-btn" onclick="openSeriesModal()">⚙ 系列設定</button></div>')

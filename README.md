@@ -18,7 +18,7 @@
 | `tools/devices.html` | 裝置管理（暱稱裝置、IP 紀錄、停用、關閉暱稱登入；只限管理員） |
 | `tools/migrate.html` | 資料搬移工具（三個舊專案 → 新專案，只限管理員） |
 | `supabase/sql/` | 依序執行的 SQL（見下方「部署步驟」） |
-| `supabase/test/` | SQL 測試（`run_all.sh`，110 項） |
+| `supabase/test/` | SQL 測試（`run_all.sh`，117 項） |
 | `devstack/` | 本機測試堆疊與瀏覽器 E2E 測試（`run_e2e.sh`） |
 | `src/` | 由原版程式組出新版的建置腳本（`build_*.py`）與新版程式來源 |
 | `original/` | 三個原版網站（對照用，不部署） |
@@ -31,7 +31,7 @@
 
 **側邊欄**：桌機固定在左側，可收合成只剩圖示（會記住設定）；手機與平板（寬度小於 900px）從左下角按鈕開啟抽屜，按 Esc 或點旁邊關閉。管理員登入後才會多出「裝置管理」與「資料搬移」項目。列印時側邊欄完全隱藏，不影響原本的列印與 Excel 格式。
 
-1. **建立結構**：在新專案的 SQL Editor 依序執行 `02_core_shared` → `03_tick` → `04_report` → `05_quote` → `06_import_staging` → `12_dashboard`（儀表板彙總）→ `13_nickname_access`（暱稱使用＋裝置 IP）→ `14_analytics`（異常分析與經營月報）→ `15_api_grants`（**必跑**：明確授權網頁存取資料表）→ `16_warn3_reset`（三天未叫歸 0 功能）。
+1. **建立結構**：在新專案的 SQL Editor 依序執行 `02_core_shared` → `03_tick` → `04_report` → `05_quote` → `06_import_staging` → `12_dashboard`（儀表板彙總）→ `13_nickname_access`（暱稱使用＋裝置 IP）→ `14_analytics`（異常分析與經營月報）→ `15_api_grants`（**必跑**：明確授權網頁存取資料表）→ `16_warn3_reset`（三天未叫歸 0 功能）→ `17_service_date`（指定營業日）。
    Supabase 自 2026-05-30 起的新專案、2026-10-30 起所有專案，新資料表不再自動開放給網頁（Data API），沒跑 15 網頁會出現 `permission denied`（42501）。之後若新增資料表，也要再跑一次 15。新專案是空的，所以 `01_backup` 可以略過。
 2. **Realtime 設定**：Dashboard → Realtime → Settings，關閉「Allow public access」，只讓登入成員收到私有頻道的推播。
    **開啟暱稱使用**：Authentication → Sign In / Providers → 開啟「Allow anonymous sign-ins」。沒開的話，輸入暱稱時會提示「暱稱登入尚未開啟」，只能用帳號登入。
@@ -88,7 +88,7 @@
 - 「三天未叫」改由伺服器自動計算（連續 3 個工作天未叫貨），手動標示仍保留。
 - 系列統計改存資料庫，新增「⚙ 系列設定」可自行新增系列與店家。
 - 歷史不再只保留 6 天。刪除客戶改為「從打勾單移除、保留歷史」。
-- 「📅 更新日期」按鈕已移除：日期改由伺服器營業日管理，這個功能已無作用。
+- 「📅 更新日期」按鈕已移除：日期改由伺服器營業日管理。管理員可用「📅 指定營業日」直接指定日期（往後指定會結束目前這天並保留紀錄；往前指定只在目前這天還沒有打勾時可以）。
 - 頁首原本的「打勾單／異常表交接表」切換標籤，改由共用側邊欄取代。
 - 修正原版小 bug：卡片底部會出現「ed」字樣（`'ordered'.slice(5)`）。
 

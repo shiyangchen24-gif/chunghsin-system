@@ -18,5 +18,6 @@ for u in json.load(open('users.json')):
 PY
 $P -d zxdev -f $SQL/15_api_grants.sql >/dev/null 2>&1 || { echo "FAIL 15_api_grants"; exit 1; }   # 比照正式環境：資料表授權只靠 15
 $P -d zxdev -f $SQL/16_warn3_reset.sql >/dev/null 2>&1 || { echo "FAIL 16_warn3_reset"; exit 1; }
+$P -d zxdev -f $SQL/17_service_date.sql >/dev/null 2>&1 || { echo "FAIL 17_service_date"; exit 1; }
 $P -d zxdev -c "notify pgrst, 'reload schema';" >/dev/null
 echo "zxdev ready"

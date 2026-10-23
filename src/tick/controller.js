@@ -383,6 +383,54 @@ function confirmDeleteHistory(n) {
   showConfirm('確定刪除客戶「' + n + '」？\n（新版保留歷史紀錄，只從打勾單移除）', () => hideCustomer(n));
 }
 
+// 指定營業日（管理員）：往後＝結束目前營業日並開指定日期；往前＝目前營業日沒有打勾時才能退回
+const SD_REASON = {
+  has_ticks: '目前營業日已經有客戶打勾，不能退回前面的日期（避免勾選資料遺失）。',
+  later_days: '指定日期之後還有已結束的營業日，不能退回到這一天。'
+};
+function openServiceDateModal() {
+  if (!ZXC.can.delete) { toast('⚠ 指定營業日只限管理員', true); return; }
+  let m = document.getElementById('sd-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'sd-modal'; m.className = 'sd-modal'; m.hidden = true;
+    m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-labelledby', 'sd-title');
+    m.innerHTML = `<div class="sd-card">
+      <h3 id="sd-title">📅 指定營業日</h3>
+      <p>目前營業日：<b id="sd-current"></b><br>往後指定會結束目前這天並保留紀錄；往前指定只在目前這天還沒有打勾時可以。</p>
+      <input type="date" id="sd-date" aria-label="營業日">
+      <div class="sd-err" id="sd-err" role="alert"></div>
+      <div class="sd-acts"><button class="btn btn-ghost" id="sd-cancel">取消</button><button class="btn btn-primary" id="sd-ok">確定</button></div>
+    </div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click', e => { if (e.target === m) m.hidden = true; });
+    m.addEventListener('keydown', e => { if (e.key === 'Escape') m.hidden = true; if (e.key === 'Enter') setServiceDate(); });
+    m.querySelector('#sd-cancel').onclick = () => { m.hidden = true; };
+    m.querySelector('#sd-ok').onclick = setServiceDate;
+  }
+  m.querySelector('#sd-current').textContent = todayStr;
+  m.querySelector('#sd-date').value = serviceDateISO;
+  m.querySelector('#sd-err').textContent = '';
+  m.hidden = false;
+  m.querySelector('#sd-date').focus();
+}
+async function setServiceDate() {
+  const m = document.getElementById('sd-modal');
+  const v = m.querySelector('#sd-date').value;
+  const err = m.querySelector('#sd-err');
+  if (!v) { err.textContent = '請選擇日期'; return; }
+  const btn = m.querySelector('#sd-ok');
+  btn.disabled = true;
+  const r = await sb.rpc('tick_set_service_date', { p_date: v });
+  btn.disabled = false;
+  if (r.error) { err.textContent = '設定失敗：' + r.error.message; return; }
+  if (!r.data.ok) { err.textContent = SD_REASON[r.data.reason] || r.data.reason; return; }
+  m.hidden = true;
+  countsLoadedMonths.clear();
+  await loadEverything();
+  toast(r.data.changed ? '✅ 營業日已改為 ' + isoToSlash(r.data.open) : '營業日本來就是 ' + isoToSlash(r.data.open));
+}
+
 // 重置：伺服器結束目前營業日、開新的一天（兩台同時按只有一台會成功）
 function resetAll() {
   if (!ZXC.can.write) { toast('⚠ 唯讀帳號無法重置', true); return; }

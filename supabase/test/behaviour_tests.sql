@@ -248,3 +248,35 @@ do $$ declare d date; i int; begin
   end loop;
 end $$;
 select pg_temp.assert((select count(*) from public.v_tick_warn3) > 0, 'after 3 more closed days without orders: flagged again');
+
+-- 21. 指定營業日（呼叫與檢查分成兩個語句：同一語句內看不到函式剛做的變更）
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000b',false);
+do $$ begin perform public.tick_set_service_date('2030-01-01'); raise exception 'should fail'; exception when insufficient_privilege then raise notice 'PASS: staff cannot set service date'; end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000a',false);
+select set_config('zx.sd0', (select service_date::text from public.tick_service_days where status='open'), false);
+select set_config('zx.sd1', (current_setting('zx.sd0')::date + 5)::text, false);
+select set_config('zx.r', public.tick_set_service_date(current_setting('zx.sd1')::date)::text, false);
+select pg_temp.assert(current_setting('zx.r')::jsonb->>'ok' = 'true'
+  and (select service_date::text from public.tick_service_days where status='open') = current_setting('zx.sd1')
+  and (select status from public.tick_service_days where service_date = current_setting('zx.sd0')::date) = 'closed', 'admin sets a later service date: old day closed, new day open');
+select set_config('zx.r', public.tick_set_service_date(current_setting('zx.sd1')::date)::text, false);
+select pg_temp.assert(current_setting('zx.r')::jsonb->>'changed' = 'false', 'same date → no change');
+-- 往前：回到原本那天（新的一天沒有打勾）→ 原本那天重新打開，誤開的一天被移除
+select set_config('zx.r', public.tick_set_service_date(current_setting('zx.sd0')::date)::text, false);
+select pg_temp.assert(current_setting('zx.r')::jsonb->>'ok' = 'true'
+  and (select service_date::text from public.tick_service_days where status='open') = current_setting('zx.sd0')
+  and not exists (select 1 from public.tick_service_days where service_date = current_setting('zx.sd1')::date), 'admin goes back to the previous day when the new day has no ticks');
+-- 往前但目前營業日已有打勾 → 拒絕，不丟資料
+select public.tick_set_service_date(current_setting('zx.sd1')::date);
+reset role;
+insert into public.daily_order_status (service_date, customer_code, status)
+  select current_setting('zx.sd1')::date, customer_code, '有叫貨' from public.tick_customers where is_listed limit 1;
+set role authenticated;
+select set_config('zx.r', public.tick_set_service_date(current_setting('zx.sd0')::date)::text, false);
+select pg_temp.assert(current_setting('zx.r')::jsonb->>'reason' = 'has_ticks'
+  and (select service_date::text from public.tick_service_days where status='open') = current_setting('zx.sd1'), 'going back refused when the open day already has ticks');
+select pg_temp.assert((select count(*) from public.tick_service_days where status='open') = 1, 'exactly one open service day');
+reset role;
+select set_config('request.jwt.claim.sub','',false);
+select set_config('zx.r', public.tick_set_service_date(current_setting('zx.sd1')::date + 1)::text, false);
+select pg_temp.assert(current_setting('zx.r')::jsonb->>'ok' = 'true', 'tick_set_service_date runs from SQL Editor (no login)');

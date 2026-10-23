@@ -83,6 +83,18 @@
   html.zx-readonly [onclick="resetAll()"], html.zx-readonly [onclick="openAddModal()"],
   html.zx-readonly [onclick="clearAllHistory()"], html.zx-readonly [onclick="updateAllDates()"] { display: none !important; }
   [onclick="updateAllDates()"] { display: none !important; }   /* 新版由伺服器管理營業日，不需要手動更新日期 */
+  html:not([data-zx-role="admin"]) .zx-admin-only { display: none !important; }
+  .sd-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
+              background: rgba(16, 24, 20, .35); padding: 16px; }
+  .sd-modal[hidden] { display: none; }
+  .sd-card { background: var(--zx-surface); border: 1px solid var(--zx-border); border-radius: var(--radius-card);
+             box-shadow: var(--zx-shadow-pop); padding: 22px; width: 100%; max-width: 380px; }
+  .sd-card h3 { margin: 0 0 6px; font-size: 17px; }
+  .sd-card p { margin: 0 0 14px; color: var(--zx-text-2); font-size: 13.5px; line-height: 1.6; }
+  .sd-card input { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid var(--zx-border);
+                   border-radius: var(--radius-input); }
+  .sd-card .sd-err { color: #B4231E; font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .sd-card .sd-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
   @media (max-width: 760px) {
     .topbar { flex-wrap: wrap; height: auto !important; padding: 10px 14px !important; gap: 8px; position: relative !important; top: auto !important; }

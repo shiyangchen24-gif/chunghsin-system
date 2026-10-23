@@ -1032,6 +1032,18 @@ tbody tr.row-warn:hover td { background: #fef3c7; }
   html.zx-readonly [onclick="resetAll()"], html.zx-readonly [onclick="openAddModal()"],
   html.zx-readonly [onclick="clearAllHistory()"], html.zx-readonly [onclick="updateAllDates()"] { display: none !important; }
   [onclick="updateAllDates()"] { display: none !important; }   /* 新版由伺服器管理營業日，不需要手動更新日期 */
+  html:not([data-zx-role="admin"]) .zx-admin-only { display: none !important; }
+  .sd-modal { position: fixed; inset: 0; z-index: 1200; display: flex; align-items: center; justify-content: center;
+              background: rgba(16, 24, 20, .35); padding: 16px; }
+  .sd-modal[hidden] { display: none; }
+  .sd-card { background: var(--zx-surface); border: 1px solid var(--zx-border); border-radius: var(--radius-card);
+             box-shadow: var(--zx-shadow-pop); padding: 22px; width: 100%; max-width: 380px; }
+  .sd-card h3 { margin: 0 0 6px; font-size: 17px; }
+  .sd-card p { margin: 0 0 14px; color: var(--zx-text-2); font-size: 13.5px; line-height: 1.6; }
+  .sd-card input { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid var(--zx-border);
+                   border-radius: var(--radius-input); }
+  .sd-card .sd-err { color: #B4231E; font-size: 13px; min-height: 18px; margin-top: 8px; }
+  .sd-card .sd-acts { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 
   @media (max-width: 760px) {
     .topbar { flex-wrap: wrap; height: auto !important; padding: 10px 14px !important; gap: 8px; position: relative !important; top: auto !important; }
@@ -1184,6 +1196,7 @@ tbody tr.row-warn:hover td { background: #fef3c7; }
       <button class="btn btn-date" onclick="updateAllDates()">📅 更新日期</button>
       <button class="btn btn-ghost" onclick="openAddModal()">＋ 新增</button>
       <button class="btn btn-reset" onclick="resetAll()">↺ 重置今日</button>
+      <button class="btn btn-date zx-admin-only" onclick="openServiceDateModal()">📅 指定營業日</button>
     </div>
   </div>
 
@@ -3334,6 +3347,54 @@ function deleteClient() {
 }
 function confirmDeleteHistory(n) {
   showConfirm('確定刪除客戶「' + n + '」？\n（新版保留歷史紀錄，只從打勾單移除）', () => hideCustomer(n));
+}
+
+// 指定營業日（管理員）：往後＝結束目前營業日並開指定日期；往前＝目前營業日沒有打勾時才能退回
+const SD_REASON = {
+  has_ticks: '目前營業日已經有客戶打勾，不能退回前面的日期（避免勾選資料遺失）。',
+  later_days: '指定日期之後還有已結束的營業日，不能退回到這一天。'
+};
+function openServiceDateModal() {
+  if (!ZXC.can.delete) { toast('⚠ 指定營業日只限管理員', true); return; }
+  let m = document.getElementById('sd-modal');
+  if (!m) {
+    m = document.createElement('div');
+    m.id = 'sd-modal'; m.className = 'sd-modal'; m.hidden = true;
+    m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-labelledby', 'sd-title');
+    m.innerHTML = `<div class="sd-card">
+      <h3 id="sd-title">📅 指定營業日</h3>
+      <p>目前營業日：<b id="sd-current"></b><br>往後指定會結束目前這天並保留紀錄；往前指定只在目前這天還沒有打勾時可以。</p>
+      <input type="date" id="sd-date" aria-label="營業日">
+      <div class="sd-err" id="sd-err" role="alert"></div>
+      <div class="sd-acts"><button class="btn btn-ghost" id="sd-cancel">取消</button><button class="btn btn-primary" id="sd-ok">確定</button></div>
+    </div>`;
+    document.body.appendChild(m);
+    m.addEventListener('click', e => { if (e.target === m) m.hidden = true; });
+    m.addEventListener('keydown', e => { if (e.key === 'Escape') m.hidden = true; if (e.key === 'Enter') setServiceDate(); });
+    m.querySelector('#sd-cancel').onclick = () => { m.hidden = true; };
+    m.querySelector('#sd-ok').onclick = setServiceDate;
+  }
+  m.querySelector('#sd-current').textContent = todayStr;
+  m.querySelector('#sd-date').value = serviceDateISO;
+  m.querySelector('#sd-err').textContent = '';
+  m.hidden = false;
+  m.querySelector('#sd-date').focus();
+}
+async function setServiceDate() {
+  const m = document.getElementById('sd-modal');
+  const v = m.querySelector('#sd-date').value;
+  const err = m.querySelector('#sd-err');
+  if (!v) { err.textContent = '請選擇日期'; return; }
+  const btn = m.querySelector('#sd-ok');
+  btn.disabled = true;
+  const r = await sb.rpc('tick_set_service_date', { p_date: v });
+  btn.disabled = false;
+  if (r.error) { err.textContent = '設定失敗：' + r.error.message; return; }
+  if (!r.data.ok) { err.textContent = SD_REASON[r.data.reason] || r.data.reason; return; }
+  m.hidden = true;
+  countsLoadedMonths.clear();
+  await loadEverything();
+  toast(r.data.changed ? '✅ 營業日已改為 ' + isoToSlash(r.data.open) : '營業日本來就是 ' + isoToSlash(r.data.open));
 }
 
 // 重置：伺服器結束目前營業日、開新的一天（兩台同時按只有一台會成功）

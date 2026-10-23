@@ -155,6 +155,27 @@ async function cardClass(page, n) { return page.$eval(card(n), e => e.className)
   await A.waitForTimeout(500);
   await A.screenshot({ path: path.join(SHOTS, 'tick-desktop.png') });
 
+  // 指定營業日：只有管理員看得到按鈕；往後指定 → 另一台自動切換；目前這天已有打勾時不能往前退
+  check(await A.isHidden('[onclick="openServiceDateModal()"]'), 'staff does not see 指定營業日');
+  const M = await mk(1280, 860);
+  await login(M, BASE, 'tick', 'admin@zx.test', 'admin123', ready);
+  const cur = await M.evaluate(() => serviceDateISO);
+  const next = await M.evaluate(d => { const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + 3);
+    return x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0') + '-' + String(x.getDate()).padStart(2, '0'); }, cur);
+  await M.click('[onclick="openServiceDateModal()"]');
+  await M.fill('#sd-date', next); await M.click('#sd-ok');
+  await M.waitForFunction(d => serviceDateISO === d, next, { timeout: 8000 });
+  await A.waitForFunction(d => serviceDateISO === d, next, { timeout: 8000 });
+  check(true, `admin sets service date ${cur} → ${next}; other device switched automatically`);
+  await A.click(card('神秘店'));
+  await A.waitForFunction(n => document.querySelector(`.ccard[data-name="${n}"]`).className.includes(' ordered'), '神秘店', { timeout: 8000 });
+  await M.waitForTimeout(1000);
+  await M.click('[onclick="openServiceDateModal()"]');
+  await M.fill('#sd-date', cur); await M.click('#sd-ok');
+  await M.waitForFunction(() => /已經有客戶打勾/.test(document.getElementById('sd-err').textContent), null, { timeout: 8000 });
+  check((await M.evaluate(() => serviceDateISO)) === next, 'going back refused once the day has ticks (no data lost)');
+  await M.click('#sd-cancel');
+
   check(errors.length === 0, 'no page errors' + (errors.length ? ': ' + errors.slice(0, 3).join(' | ') : ''));
   await browser.close();
   console.log(failures ? `\n${failures} FAILED` : '\nALL PASSED');
