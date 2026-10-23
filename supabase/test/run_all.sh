@@ -6,11 +6,11 @@ cd "$(dirname "$0")"
 P="psql -h ${PGHOST:-/var/tmp/zxsock} -p ${PGPORT:-5544} -U postgres -v ON_ERROR_STOP=1 -q"
 $P -c "drop database if exists zx" -c "create database zx" >/dev/null
 $P -d zx -f supabase_stub.sql >/dev/null
-for f in 01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard 13_nickname_access 14_analytics 15_api_grants \
-         01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard 13_nickname_access 14_analytics 15_api_grants; do   # 每個檔跑兩次 = 冪等測試
+for f in 01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard 13_nickname_access 14_analytics 15_api_grants 16_warn3_reset \
+         01_backup 02_core_shared 03_tick 04_report 05_quote 06_import_staging 12_dashboard 13_nickname_access 14_analytics 15_api_grants 16_warn3_reset; do   # 每個檔跑兩次 = 冪等測試
   $P -d zx -f ../sql/$f.sql >/dev/null 2>&1 || { echo "FAIL: $f"; $P -d zx -f ../sql/$f.sql 2>&1 | grep ERROR | head -3; exit 1; }
 done
-echo "PASS: 01-06,12-15 executed twice on an empty project (idempotent)"
+echo "PASS: 01-06,12-16 executed twice on an empty project (idempotent)"
 $P -d zx -f staging_sim.sql >/dev/null
 for f in 07_backfill 07_backfill; do
   $P -d zx -f ../sql/$f.sql >/dev/null 2>&1 || { echo "FAIL: $f"; $P -d zx -f ../sql/$f.sql 2>&1 | grep ERROR | head -3; exit 1; }

@@ -224,3 +224,27 @@ select pg_temp.assert(not exists (select 1 from pg_class c join pg_namespace n o
   where n.nspname = 'public' and c.relkind in ('r','p','v') and not has_table_privilege('authenticated', c.oid, 'select')), 'every public table/view granted to authenticated (15_api_grants)');
 select pg_temp.assert(not exists (select 1 from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind in ('r','p') and not c.relrowsecurity), 'every granted table has RLS enabled');
+
+-- 20. 三天未叫歸 0：起算日 = 目前營業日，清除手動標示；之後要再連續 3 個工作天未叫才會出現
+set role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-00000000000b',false);
+do $$ begin perform public.tick_warn3_reset(); raise exception 'should fail'; exception when insufficient_privilege then raise notice 'PASS: staff cannot reset 三天未叫'; end $$;
+reset role;
+insert into public.tick_warn3_overrides (customer_code, mode, set_on)
+  select customer_code, 'add', (select service_date from public.tick_service_days where status='open') from public.tick_customers where is_listed limit 1
+  on conflict do nothing;
+-- 讓一位客戶確定有連續 3 天以上未叫（先結束數天）
+select pg_temp.assert((select count(*) from public.v_tick_warn3) > 0, 'before reset: some customers flagged 三天未叫');
+select set_config('request.jwt.claim.sub','',false);
+select set_config('zx.w3', public.tick_warn3_reset()::text, false);
+select pg_temp.assert((current_setting('zx.w3')::jsonb->>'ok')::boolean, 'tick_warn3_reset runs from SQL Editor (no login)');
+select pg_temp.assert((select count(*) from public.v_tick_warn3) = 0 and (select count(*) from public.tick_warn3_overrides) = 0, 'after reset: 三天未叫 = 0 and manual marks cleared');
+select pg_temp.assert((select coalesce(max(streak), 0) from public.v_tick_streak) = 0, 'after reset: consecutive-unordered streak = 0');
+-- 之後 3 個營業日都沒叫貨 → 重新出現
+do $$ declare d date; i int; begin
+  for i in 1..3 loop
+    select service_date into d from public.tick_service_days where status = 'open';
+    update public.tick_service_days set status = 'closed' where service_date = d;
+    insert into public.tick_service_days (service_date) values (d + 1);
+  end loop;
+end $$;
+select pg_temp.assert((select count(*) from public.v_tick_warn3) > 0, 'after 3 more closed days without orders: flagged again');

@@ -17,5 +17,6 @@ for u in json.load(open('users.json')):
     print(f"insert into public.app_members(user_id,role,display_name,icon) values ('{u['id']}','{u['role']}','{u['display_name']}','{u['icon']}') on conflict (user_id) do update set role=excluded.role;")
 PY
 $P -d zxdev -f $SQL/15_api_grants.sql >/dev/null 2>&1 || { echo "FAIL 15_api_grants"; exit 1; }   # 比照正式環境：資料表授權只靠 15
+$P -d zxdev -f $SQL/16_warn3_reset.sql >/dev/null 2>&1 || { echo "FAIL 16_warn3_reset"; exit 1; }
 $P -d zxdev -c "notify pgrst, 'reload schema';" >/dev/null
 echo "zxdev ready"
